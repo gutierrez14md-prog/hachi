@@ -1,0 +1,73 @@
+import { Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { useApp } from '../ctx'
+import { db, newId } from '../db'
+import { today } from '../lib/date'
+import { Field, PhotoPicker, Sheet } from '../parts'
+import type { Journal } from '../types'
+
+export function JournalForm(props: { plantId?: string; id?: string }) {
+  const { plants, journal, close, toast } = useApp()
+  const existing = journal.find((j) => j.id === props.id)
+  const [f, setF] = useState<Journal>(
+    () =>
+      existing ?? {
+        id: newId(),
+        plantId: props.plantId ?? (plants.length === 1 ? plants[0].id : ''),
+        date: today(),
+        text: '',
+        at: Date.now(),
+      },
+  )
+  const set = (patch: Partial<Journal>) => setF((v) => ({ ...v, ...patch }))
+  const ok = f.plantId && f.date && (f.photoId || f.text.trim())
+
+  const save = async () => {
+    await db.journal.put({ ...f, text: f.text.trim() })
+    toast(existing ? '保存しました' : '生長記録を追加しました')
+    close()
+  }
+  const remove = async () => {
+    if (!confirm('この生長記録を削除しますか？')) return
+    if (f.photoId) await db.photos.delete(f.photoId)
+    await db.journal.delete(f.id)
+    close()
+  }
+
+  return (
+    <Sheet
+      title={existing ? '生長記録を編集' : '生長記録'}
+      action={
+        <button className="btn primary sm" disabled={!ok} onClick={save}>
+          保存
+        </button>
+      }
+    >
+      {!plants.length && <p className="none">先に植物を追加してください</p>}
+      <PhotoPicker id={f.photoId} onChange={(photoId) => set({ photoId })} />
+      <Field label="植物">
+        <select value={f.plantId} onChange={(e) => set({ plantId: e.target.value })}>
+          <option value="" disabled>
+            選択してください
+          </option>
+          {plants.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label="日付">
+        <input type="date" value={f.date} max={today()} onChange={(e) => set({ date: e.target.value })} />
+      </Field>
+      <Field label="ひとこと">
+        <textarea rows={4} value={f.text} onChange={(e) => set({ text: e.target.value })} placeholder="新芽が出た、花が咲いた…" />
+      </Field>
+      {existing && (
+        <button className="btn danger full" onClick={remove}>
+          <Trash2 size={16} /> この記録を削除
+        </button>
+      )}
+    </Sheet>
+  )
+}
