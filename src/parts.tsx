@@ -1,9 +1,10 @@
-import { Camera, X } from 'lucide-react'
+import { Camera, Wand2, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useApp } from './ctx'
 import { db } from './db'
 import { savePhoto } from './lib/photo'
 import type { Plant } from './types'
+import { BackdropStudio } from './views/BackdropStudio'
 
 /** アプリのシンボル (鉢植え)。lucide のアイコンと同じ線の太さ・使い方に合わせている */
 export function PotIcon({ size = 24 }: { size?: number }) {
@@ -61,23 +62,41 @@ export function SciName({ plant: p }: { plant: Pick<Plant, 'scientificName' | 'c
 }
 
 export function PhotoPicker({ id, onChange }: { id?: string; onChange: (id: string) => void }) {
+  const [studio, setStudio] = useState(false)
   return (
-    <label className="picker">
-      <Photo id={id} className="picker-img" />
-      <span className="picker-badge">
-        <Camera size={16} />
-        {id ? '写真を変更' : '写真を追加'}
-      </span>
-      <input
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={async (e) => {
-          const file = e.target.files?.[0]
-          if (file) onChange(await savePhoto(file))
-        }}
-      />
-    </label>
+    <>
+      <label className="picker">
+        <Photo id={id} className="picker-img" />
+        <span className="picker-badge">
+          <Camera size={16} />
+          {id ? '写真を変更' : '写真を追加'}
+        </span>
+        <input
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={async (e) => {
+            const file = e.target.files?.[0]
+            if (file) onChange(await savePhoto(file))
+          }}
+        />
+      </label>
+      {id && (
+        <button type="button" className="btn ghost sm preset" onClick={() => setStudio(true)}>
+          <Wand2 size={15} /> 背景を変える
+        </button>
+      )}
+      {studio && id && (
+        <BackdropStudio
+          photoId={id}
+          onClose={() => setStudio(false)}
+          onDone={(next) => {
+            onChange(next)
+            setStudio(false)
+          }}
+        />
+      )}
+    </>
   )
 }
 
