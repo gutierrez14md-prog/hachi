@@ -935,9 +935,39 @@ input::-webkit-date-and-time-value {
   align-items: center;
   gap: 4px;
 }
-.with-x input {
+.with-x > .suggest {
   flex: 1;
   min-width: 0;
+}
+/* 学名の候補 (GBIF)。入力欄のすぐ下に重ねて出す */
+.suggest {
+  position: relative;
+  display: block;
+}
+.suggest-list {
+  position: absolute;
+  inset: calc(100% + 4px) 0 auto;
+  z-index: 2;
+  display: grid;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+}
+.suggest-list button {
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+.suggest-list b {
+  display: block;
+}
+.suggest-list button:active {
+  background: var(--surface2);
+}
+.suggest-src {
+  padding: 4px 10px 2px;
+  text-align: right;
+  font-size: 10.5px;
 }
 .care-h .req {
   margin-left: auto;

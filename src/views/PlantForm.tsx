@@ -8,6 +8,7 @@ import { Field, PhotoPicker, Sheet } from '../parts'
 import { defaultCare } from '../presets'
 import type { Plant, SchedType } from '../types'
 import { CareEditor, cleanCare, hasInterval } from './CareEditor'
+import { searchName, searchSci, SuggestInput } from './SciInput'
 
 const MAX_NAMES = 4
 
@@ -101,18 +102,28 @@ export function PlantForm({ id }: { id?: string }) {
       <PhotoPicker id={f.photoId} onChange={(photoId) => set({ photoId })} />
 
       <Field label="名前" required>
-        <input value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="例: モンステラ" />
+        <SuggestInput
+          search={searchName}
+          value={f.name}
+          onChange={(name) => set({ name })}
+          // 和名を入れ、学名がまだ空ならそれも入れる (入力済みの学名は上書きしない)
+          onPick={(h) => {
+            set({ name: h.ja ?? h.sci })
+            if (!names[0].trim()) setNames([h.sci, ...names.slice(1)])
+          }}
+          placeholder="例: モンステラ"
+        />
       </Field>
       {names.map((name, i) => (
         <Field key={i} label={hybrid ? `学名 ${i + 1}` : '学名'}>
           <span className="with-x">
-            <input
-              className="sci"
+            <SuggestInput
+              sci
+              search={searchSci}
               value={name}
-              onChange={(e) => setNames(names.map((n, j) => (j === i ? e.target.value : n)))}
+              onChange={(v) => setNames(names.map((n, j) => (j === i ? v : n)))}
+              onPick={(h) => setNames(names.map((n, j) => (j === i ? h.sci : n)))}
               placeholder={i === 0 ? '例: Monstera deliciosa' : '交配親の学名'}
-              autoCapitalize="off"
-              spellCheck={false}
             />
             {names.length > 1 && (
               <button type="button" className="icon-btn muted" onClick={() => setNames(names.filter((_, j) => j !== i))} aria-label={`学名 ${i + 1} を外す`}>
