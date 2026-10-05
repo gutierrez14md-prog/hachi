@@ -51,6 +51,11 @@ export default function App() {
     if (depth.current > 0) history.go(-Math.min(n, depth.current))
   }, [])
 
+  // シートを開いている間は、うしろの画面をスクロールさせない
+  useEffect(() => {
+    document.body.style.overflow = stack.length ? 'hidden' : ''
+  }, [stack.length])
+
   const showToast = useCallback((msg: string, undo?: () => void) => setToast({ msg, undo, n: Date.now() }), [])
   useEffect(() => {
     if (!toast) return
@@ -106,6 +111,7 @@ export default function App() {
   return (
     <Ctx.Provider value={ctx}>
       <main className="page">
+        <span className="brand">Hachi</span>
         {tab === 'home' && <Home />}
         {tab === 'cal' && <CalendarView />}
         {tab === 'tl' && <Timeline />}
@@ -113,11 +119,13 @@ export default function App() {
       </main>
 
       <nav className="nav">
-        {tabs.slice(0, 2).map(tabBtn)}
-        <button className="nav-add" onClick={() => open({ k: 'menu' })} aria-label="追加">
-          <Plus size={26} />
-        </button>
-        {tabs.slice(2).map(tabBtn)}
+        <div className="nav-in">
+          {tabs.map(tabBtn)}
+          <button className="nav-add" onClick={() => open({ k: 'menu' })}>
+            <Plus size={16} strokeWidth={2.5} />
+            Log
+          </button>
+        </div>
       </nav>
 
       {stack.map((o, i) => {

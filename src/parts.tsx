@@ -1,4 +1,4 @@
-import { Camera, ChevronLeft } from 'lucide-react'
+import { Camera, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useApp } from './ctx'
 import { db } from './db'
@@ -64,19 +64,24 @@ export function PhotoPicker({ id, onChange }: { id?: string; onChange: (id: stri
   )
 }
 
-/** 全画面で重なる画面の枠 */
+/**
+ * 重ねて開く画面の枠。画面の端から少し離した角丸のカードで、action (保存など) は
+ * スクロールせず常に下に見える。背景のタップと × で閉じる。
+ */
 export function Sheet({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   const { close } = useApp()
   return (
-    <div className="sheet">
-      <header className="sheet-h">
-        <button className="icon-btn" onClick={() => close()} aria-label="戻る">
-          <ChevronLeft />
+    <div className="backdrop" onClick={(e) => e.target === e.currentTarget && close()}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label={title || undefined}>
+        <button className="sheet-x" onClick={() => close()} aria-label="閉じる">
+          <X size={16} strokeWidth={2.2} />
         </button>
-        <h2>{title}</h2>
-        <div className="sheet-act">{action}</div>
-      </header>
-      <div className="sheet-b">{children}</div>
+        <div className="sheet-b">
+          {title && <h2 className="sheet-t">{title}</h2>}
+          {children}
+        </div>
+        {action && <div className="sheet-f">{action}</div>}
+      </div>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 // Hachi service worker: オフライン用キャッシュ + ケアのリマインド通知
 const CACHE = 'hachi-v1'
 const REMINDER = 'hachi-reminder'
+const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com']
 
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()))
@@ -8,7 +9,23 @@ self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()))
 // ネットワーク優先。失敗したらキャッシュから返す (初回表示後はオフラインで動く)
 self.addEventListener('fetch', (e) => {
   const req = e.request
-  if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return
+  if (req.method !== 'GET') return
+  const url = new URL(req.url)
+  // Web フォントは中身が変わらないのでキャッシュ優先 (オフラインでも同じ書体で出す)
+  if (FONT_HOSTS.includes(url.hostname)) {
+    e.respondWith(
+      caches.open(CACHE).then(
+        async (c) =>
+          (await c.match(req)) ||
+          fetch(req).then((res) => {
+            if (res.ok) c.put(req, res.clone())
+            return res
+          }),
+      ),
+    )
+    return
+  }
+  if (url.origin !== location.origin) return
   e.respondWith(
     fetch(req)
       .then((res) => {

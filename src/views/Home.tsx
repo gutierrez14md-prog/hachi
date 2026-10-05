@@ -67,10 +67,22 @@ export function Home() {
 
   return (
     <>
-      <header className="top">
+      <section className="hero-card">
+        <div>
+          <p className="eyebrow">今日のケア</p>
+          <p className="hero-n">
+            {dueNow.length ? (
+              <>
+                {dueNow.length}
+                <small>株</small>
+              </>
+            ) : (
+              '完了'
+            )}
+          </p>
+        </div>
         <p className="eyebrow">{fmtDay(t)}</p>
-        <h1>{dueNow.length ? `今日のケア ${dueNow.length}株` : '今日のケアは完了'}</h1>
-      </header>
+      </section>
 
       {dueNow.length > 0 && (
         <section className="card due">

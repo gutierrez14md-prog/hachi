@@ -23,8 +23,8 @@ export function PlantDetail({ id }: { id: string }) {
     <Sheet
       title=""
       action={
-        <button className="icon-btn" onClick={() => open({ k: 'plantForm', id })} aria-label="編集">
-          <Pencil size={20} />
+        <button className="btn ghost" onClick={() => open({ k: 'plantForm', id })}>
+          <Pencil size={16} /> 編集
         </button>
       }
     >

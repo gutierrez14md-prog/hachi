@@ -1,7 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { applyFont, getFont } from './lib/appearance'
 import './styles.css'
+
+applyFont(getFont())
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

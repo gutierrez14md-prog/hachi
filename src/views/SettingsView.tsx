@@ -1,5 +1,7 @@
 import { Bell, Download, Upload } from 'lucide-react'
+import { useState } from 'react'
 import { useApp } from '../ctx'
+import { applyFont, applyTheme, FONTS, getFont, getTheme } from '../lib/appearance'
 import { db } from '../db'
 import { exportBackup, importBackup } from '../lib/backup'
 import { enableNotifications, testNotification } from '../lib/reminder'
@@ -10,6 +12,8 @@ export function SettingsView() {
   const { settings, plants, logs, journal, toast } = useApp()
   const save = (patch: Partial<Settings>) => db.settings.put({ ...settings, ...patch })
   const supported = 'Notification' in window
+  const [theme, setTheme] = useState(getTheme)
+  const [font, setFont] = useState(getFont)
 
   const toggleNotify = async (on: boolean) => {
     if (!on) return save({ notify: false })
@@ -22,6 +26,39 @@ export function SettingsView() {
       <header className="top">
         <h1>設定</h1>
       </header>
+
+      <h3 className="sec">テーマ</h3>
+      <div className="seg">
+        {(['light', 'dark'] as const).map((v) => (
+          <button
+            key={v}
+            className={theme === v ? 'on' : ''}
+            onClick={() => {
+              applyTheme(v)
+              setTheme(v)
+            }}
+          >
+            {v === 'light' ? 'Light' : 'Dark'}
+          </button>
+        ))}
+      </div>
+
+      <h3 className="sec">フォント</h3>
+      <div className="fonts">
+        {FONTS.map((f) => (
+          <button
+            key={f.id}
+            className={font === f.id ? 'on' : ''}
+            onClick={() => {
+              applyFont(f.id)
+              setFont(f.id)
+            }}
+          >
+            <b>{f.label}</b>
+            <small>{f.desc}</small>
+          </button>
+        ))}
+      </div>
 
       <h3 className="sec">リマインド</h3>
       <section className="card">

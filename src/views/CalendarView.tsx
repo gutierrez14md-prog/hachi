@@ -48,27 +48,29 @@ export function CalendarView() {
 
   return (
     <>
-      <header className="top row">
-        <h1>
-          {ym.y}年{ym.m + 1}月
-        </h1>
+      <header className="cal-head">
+        <button className="sq" onClick={() => move(-1)} aria-label="前の月">
+          <ChevronLeft size={20} />
+        </button>
         <div className="row">
-          <button
-            className="btn ghost sm"
-            onClick={() => {
-              setYm({ y: new Date().getFullYear(), m: new Date().getMonth() })
-              setSel(t)
-            }}
-          >
-            今日
-          </button>
-          <button className="icon-btn" onClick={() => move(-1)} aria-label="前の月">
-            <ChevronLeft />
-          </button>
-          <button className="icon-btn" onClick={() => move(1)} aria-label="次の月">
-            <ChevronRight />
-          </button>
+          <h1>
+            {ym.y}年{ym.m + 1}月
+          </h1>
+          {!t.startsWith(first.slice(0, 7)) && (
+            <button
+              className="chip"
+              onClick={() => {
+                setYm({ y: new Date().getFullYear(), m: new Date().getMonth() })
+                setSel(t)
+              }}
+            >
+              今日
+            </button>
+          )}
         </div>
+        <button className="sq" onClick={() => move(1)} aria-label="次の月">
+          <ChevronRight size={20} />
+        </button>
       </header>
 
       <section className="card cal">
