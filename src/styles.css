@@ -930,6 +930,15 @@ input::-webkit-date-and-time-value {
   font-size: 10px;
   font-weight: 700;
 }
+.with-x {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.with-x input {
+  flex: 1;
+  min-width: 0;
+}
 .care-h .req {
   margin-left: auto;
 }

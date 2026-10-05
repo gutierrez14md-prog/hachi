@@ -1,4 +1,4 @@
-import { Archive as ArchiveIcon, Trash2 } from 'lucide-react'
+import { Archive as ArchiveIcon, Plus, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { SCHED } from '../care'
 import { useApp } from '../ctx'
@@ -8,6 +8,8 @@ import { Field, PhotoPicker, Sheet } from '../parts'
 import { defaultCare } from '../presets'
 import type { Plant, SchedType } from '../types'
 import { CareEditor, cleanCare, hasInterval } from './CareEditor'
+
+const MAX_NAMES = 4
 
 export function PlantForm({ id }: { id?: string }) {
   const { plants, allPlants, groups, settings, close, toast } = useApp()
@@ -41,11 +43,18 @@ export function PlantForm({ id }: { id?: string }) {
     if (!existing) applyPreset(groups.find((g) => g.id === groupId))
   }
 
+  // ハイブリッドは交配親の学名を 4 つまで持つ。一覧や検索に使う scientificName は、それを × でつないだもの
+  const hybrid = !!f.scientificNames
+  const names = f.scientificNames ?? [f.scientificName]
+  const setNames = (list: string[]) => set(hybrid ? { scientificNames: list } : { scientificName: list[0] ?? '' })
+
   const save = async () => {
+    const parents = names.map((n) => n.trim()).filter(Boolean)
     const plant: Plant = {
       ...f,
       name: f.name.trim(),
-      scientificName: f.scientificName.trim(),
+      scientificName: parents.join(' × '),
+      scientificNames: hybrid ? parents : undefined,
       location: f.location.trim(),
       purchasePlace: f.purchasePlace?.trim(),
       // 水やりは必須 (オフにはできない)
@@ -94,16 +103,42 @@ export function PlantForm({ id }: { id?: string }) {
       <Field label="名前" required>
         <input value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="例: モンステラ" />
       </Field>
-      <Field label="学名">
+      {names.map((name, i) => (
+        <Field key={i} label={hybrid ? `学名 ${i + 1}` : '学名'}>
+          <span className="with-x">
+            <input
+              className="sci"
+              value={name}
+              onChange={(e) => setNames(names.map((n, j) => (j === i ? e.target.value : n)))}
+              placeholder={i === 0 ? '例: Monstera deliciosa' : '交配親の学名'}
+              autoCapitalize="off"
+              spellCheck={false}
+            />
+            {names.length > 1 && (
+              <button type="button" className="icon-btn muted" onClick={() => setNames(names.filter((_, j) => j !== i))} aria-label={`学名 ${i + 1} を外す`}>
+                <X size={16} />
+              </button>
+            )}
+          </span>
+        </Field>
+      ))}
+      <label className="line toggle">
+        <span className="line-main">
+          <b>ハイブリッド（交配種）</b>
+        </span>
         <input
-          className="sci"
-          value={f.scientificName}
-          onChange={(e) => set({ scientificName: e.target.value })}
-          placeholder="例: Monstera deliciosa"
-          autoCapitalize="off"
-          spellCheck={false}
+          type="checkbox"
+          className="switch"
+          checked={hybrid}
+          // オフにしたら 1 つ目の学名だけ残す
+          onChange={(e) => set({ scientificNames: e.target.checked ? [f.scientificName, ''] : undefined, scientificName: names[0] })}
         />
-      </Field>
+      </label>
+      {hybrid && names.length < MAX_NAMES && (
+        <button type="button" className="btn ghost sm preset" onClick={() => setNames([...names, ''])}>
+          <Plus size={15} /> 学名を追加
+        </button>
+      )}
       <Field label="分類">
         <select value={f.groupId ?? ''} onChange={(e) => pickGroup(e.target.value)}>
           <option value="">なし</option>

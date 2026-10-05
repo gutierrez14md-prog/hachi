@@ -21,7 +21,10 @@ export type CareSettings = Record<SchedType, Schedule>
 export interface Plant {
   id: string
   name: string
+  /** 表示・検索・並び替えに使う学名。ハイブリッドは交配親を「 × 」でつないだもの */
   scientificName: string
+  /** ハイブリッド (交配種) のときだけ: 交配親の学名 (4 つまで) */
+  scientificNames?: string[]
   location: string
   profile: string
   photoId?: string
