@@ -2,49 +2,51 @@
 import { deflateSync, crc32 } from 'node:zlib'
 import { writeFileSync } from 'node:fs'
 
-// モノトーン: アプリのインク色の地に、明るいアガベのシルエット
-const BG = [0x17, 0x24, 0x1d]
-const FG = [0xec, 0xf0, 0xed]
+// アプリを開いたときの鉢のマーク (src/parts.tsx の PotIcon) と同じ絵: 白地にインク色の線
+const BG = [0xff, 0xff, 0xff]
+const FG = [0x17, 0x24, 0x1d]
 const hex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('')
 
-// アガベ: 株元 BASE から扇形に広がる葉。[真上からの角度 (度), 長さ]。座標は 0..1
-const BASE = [0.5, 0.76]
-const LEAVES = [
-  [0, 0.48], [21, 0.47], [-21, 0.47], [42, 0.44], [-42, 0.44],
-  [63, 0.4], [-63, 0.4], [84, 0.34], [-84, 0.34], [104, 0.24], [-104, 0.24],
-]
-const HALF_WIDTH = 0.05
-// 葉の幅の変わり方 (u = 株元 0 → 先端 1): 株元は細く、中ほどでふくらみ、先端は鋭くとがる
-const profile = (u) => (u < 0.38 ? 0.4 + 0.6 * Math.sin((u / 0.38) * (Math.PI / 2)) : ((1 - u) / 0.62) ** 0.85)
+// 3 次ベジェを折れ線にする
+const cubic = (p0, p1, p2, p3) =>
+  Array.from({ length: 17 }, (_, i) => {
+    const t = i / 16, u = 1 - t
+    return [0, 1].map((k) => u ** 3 * p0[k] + 3 * u * u * t * p1[k] + 3 * u * t * t * p2[k] + t ** 3 * p3[k])
+  })
 
-function inLeaf(x, y, [deg, len]) {
-  const a = (deg * Math.PI) / 180
-  const ax = Math.sin(a), ay = -Math.cos(a)
-  const dx = x - BASE[0], dy = y - BASE[1]
-  const u = (dx * ax + dy * ay) / len
-  return u >= 0 && u <= 1 && Math.abs(dx * ay - dy * ax) < HALF_WIDTH * profile(u)
+// PotIcon の線。24x24 の座標のまま (形を変えるときは PotIcon の path も合わせる)
+const LINES = [
+  [[12, 12], [12, 7]], // 茎
+  [...cubic([12, 9], [9.2, 9], [7.5, 7.3], [7.5, 4.5]), ...cubic([7.5, 4.5], [10.3, 4.5], [12, 6.2], [12, 9])], // 左の葉
+  [...cubic([12, 7], [12, 4.7], [13.5, 3], [16.2, 3]), ...cubic([16.2, 3], [16.2, 5.5], [14.5, 7], [12, 7])], // 右の葉
+  [[5, 12], [19, 12], [19, 15], [5, 15], [5, 12]], // 鉢の縁
+  [[6.5, 15], [7.7, 21], [16.3, 21], [17.5, 15]], // 鉢の胴
+]
+const STROKE = 2
+// 24x24 の絵を、アイコンの中央に SCALE 倍 (アイコンの幅 = 1) で置く
+const SCALE = 0.58 / 24
+const place = ([x, y]) => [0.5 + (x - 12) * SCALE, 0.5 + (y - 12) * SCALE]
+const SEGMENTS = LINES.flatMap((line) => line.slice(1).map((p, i) => [place(line[i]), place(p)]))
+
+function distToSegment(x, y, [[ax, ay], [bx, by]]) {
+  const dx = bx - ax, dy = by - ay
+  const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy || 1)))
+  return Math.hypot(x - ax - dx * t, y - ay - dy * t)
 }
 
-const sample = (x, y) => (LEAVES.some((leaf) => inLeaf(x, y, leaf)) ? FG : BG)
+// 線からの距離が太さの半分以内なら線の色 (端と角は自然に丸くなる)
+const sample = (x, y) => (SEGMENTS.some((s) => distToSegment(x, y, s) < (STROKE * SCALE) / 2) ? FG : BG)
 
-// 同じ形を SVG (ブラウザのタブ用) にも書き出す
+// 同じ絵を SVG (ブラウザのタブ用) にも書き出す
 function svg() {
-  const paths = LEAVES.map(([deg, len]) => {
-    const a = (deg * Math.PI) / 180
-    const ax = Math.sin(a), ay = -Math.cos(a)
-    const side = (sign) =>
-      Array.from({ length: 21 }, (_, i) => {
-        const u = i / 20
-        const w = HALF_WIDTH * profile(u) * sign
-        return [(BASE[0] + ax * len * u + ay * w) * 100, (BASE[1] + ay * len * u - ax * w) * 100]
-      })
-    const pts = [...side(1), ...side(-1).reverse()].map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
-    return `    <polygon points="${pts.join(' ')}"/>`
+  const lines = LINES.map((line) => {
+    const pts = line.map((p) => place(p).map((v) => (v * 100).toFixed(2)).join(','))
+    return `    <polyline points="${pts.join(' ')}"/>`
   })
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <rect width="100" height="100" rx="22" fill="${hex(BG)}"/>
-  <g fill="${hex(FG)}">
-${paths.join('\n')}
+  <g fill="none" stroke="${hex(FG)}" stroke-width="${(STROKE * SCALE * 100).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round">
+${lines.join('\n')}
   </g>
 </svg>
 `
