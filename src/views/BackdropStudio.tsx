@@ -6,8 +6,8 @@ import { backdropCss, BACKDROPS, compose, cutOut, hasAlpha } from '../lib/cutout
 const SIZE = 1200
 
 /**
- * 写真の植物を切り抜いて、選んだ背景に載せ替える (試作)。
- * 元の写真は消さず、できあがりを新しい写真として保存して onDone に渡す
+ * 写真の植物を切り抜いて、選んだ背景に載せ替える。
+ * できあがりを新しい写真として保存して onDone に渡す (元の写真は、使われなくなれば次の起動時に sweepPhotos が消す)
  */
 export function BackdropStudio({ photoId, onDone, onClose }: { photoId: string; onDone: (photoId: string) => void; onClose: () => void }) {
   const canvas = useRef<HTMLCanvasElement>(null)

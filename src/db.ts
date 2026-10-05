@@ -38,6 +38,20 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export const newId = () => crypto.randomUUID()
 
+/**
+ * どの植物・生長記録からも使われていない写真を消す (写真の差し替えや、背景を変える前の元写真、
+ * 保存せずに閉じたフォームで選んだ写真)。開いているフォームの写真を消さないよう、起動時にだけ呼ぶ
+ */
+export async function sweepPhotos() {
+  await db.transaction('rw', db.plants, db.journal, db.photos, async () => {
+    const used = new Set<string>()
+    await db.plants.each((p) => p.photoId && used.add(p.photoId))
+    await db.journal.each((j) => j.photoId && used.add(j.photoId))
+    const unused = (await db.photos.toCollection().primaryKeys()).filter((id) => !used.has(id))
+    await db.photos.bulkDelete(unused)
+  })
+}
+
 /** 植物と、それに紐づく記録・写真をまとめて削除する */
 export async function deletePlant(id: string) {
   await db.transaction('rw', db.plants, db.logs, db.journal, db.photos, async () => {
