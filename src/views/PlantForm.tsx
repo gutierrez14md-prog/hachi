@@ -1,40 +1,17 @@
-import { Trash2 } from 'lucide-react'
+import { Archive as ArchiveIcon, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { CARE, careVar, SCHED } from '../care'
+import { SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db, deletePlant, newId } from '../db'
 import { today } from '../lib/date'
 import { Field, PhotoPicker, Sheet } from '../parts'
-import type { Plant, SchedType, Schedule } from '../types'
-
-const DEFAULT_CARE: Record<SchedType, Schedule> = {
-  water: { enabled: true, days: 7, offMode: 'custom', offDays: 14 },
-  fertilizer: { enabled: false, days: 30, offMode: 'pause', offDays: 60 },
-  tonic: { enabled: false, days: 14, offMode: 'pause', offDays: 30 },
-}
-
-const num = (v: string) => Math.max(0, parseInt(v) || 0)
-
-export function MonthChips({ value, onChange }: { value: number[]; onChange: (v: number[]) => void }) {
-  return (
-    <div className="months">
-      {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-        <button
-          type="button"
-          key={m}
-          className={`chip ${value.includes(m) ? 'on' : ''}`}
-          onClick={() => onChange(value.includes(m) ? value.filter((x) => x !== m) : [...value, m])}
-        >
-          {m}月
-        </button>
-      ))}
-    </div>
-  )
-}
+import { defaultCare } from '../presets'
+import type { Plant, SchedType } from '../types'
+import { CareEditor, cleanCare } from './CareEditor'
 
 export function PlantForm({ id }: { id?: string }) {
-  const { plants, settings, close, toast } = useApp()
-  const existing = plants.find((p) => p.id === id)
+  const { plants, allPlants, groups, settings, close, toast } = useApp()
+  const existing = allPlants.find((p) => p.id === id)
   const [f, setF] = useState<Plant>(
     () =>
       existing ?? {
@@ -44,7 +21,7 @@ export function PlantForm({ id }: { id?: string }) {
         location: '',
         profile: '',
         dormantMonths: settings.dormantMonths,
-        care: DEFAULT_CARE,
+        care: defaultCare(),
         createdDay: today(),
       },
   )
@@ -52,14 +29,26 @@ export function PlantForm({ id }: { id?: string }) {
   const [last, setLast] = useState<Record<SchedType, string>>({ water: '', fertilizer: '', tonic: '' })
 
   const set = (patch: Partial<Plant>) => setF((v) => ({ ...v, ...patch }))
-  const setCare = (type: SchedType, patch: Partial<Schedule>) =>
-    setF((v) => ({ ...v, care: { ...v.care, [type]: { ...v.care[type], ...patch } } }))
   const locations = [...new Set(plants.map((p) => p.location).filter(Boolean))]
+  const group = groups.find((g) => g.id === f.groupId)
+
+  const applyPreset = (g = group) => {
+    if (g) setF((v) => ({ ...v, care: structuredClone(g.care), dormantMonths: [...g.dormantMonths], profile: v.profile || g.profile }))
+  }
+  const pickGroup = (groupId: string) => {
+    set({ groupId: groupId || undefined })
+    // 新規のときは選んだ分類のプリセットから始める。編集中は、調整済みの設定を黙って上書きしない
+    if (!existing) applyPreset(groups.find((g) => g.id === groupId))
+  }
 
   const save = async () => {
-    const plant: Plant = { ...f, name: f.name.trim(), scientificName: f.scientificName.trim(), location: f.location.trim(), care: { ...f.care } }
-    for (const s of SCHED) {
-      plant.care[s] = { ...plant.care[s], days: Math.max(1, plant.care[s].days), offDays: Math.max(1, plant.care[s].offDays) }
+    const plant: Plant = {
+      ...f,
+      name: f.name.trim(),
+      scientificName: f.scientificName.trim(),
+      location: f.location.trim(),
+      purchasePlace: f.purchasePlace?.trim(),
+      care: cleanCare(f.care),
     }
     await db.plants.put(plant)
     if (!existing) {
@@ -75,6 +64,13 @@ export function PlantForm({ id }: { id?: string }) {
     }
     toast(existing ? '保存しました' : `${plant.name}を追加しました`)
     close()
+  }
+
+  // 枯れた・手放した株を、記録と写真を残したまま一覧と予定から外す
+  const archive = async () => {
+    await db.plants.update(f.id, { archivedDay: today() })
+    toast(`${f.name}をアーカイブに移しました`, () => db.plants.update(f.id, { archivedDay: undefined }))
+    close(2)
   }
 
   const remove = async () => {
@@ -107,6 +103,21 @@ export function PlantForm({ id }: { id?: string }) {
           spellCheck={false}
         />
       </Field>
+      <Field label="分類">
+        <select value={f.groupId ?? ''} onChange={(e) => pickGroup(e.target.value)}>
+          <option value="">なし</option>
+          {groups.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
+          ))}
+        </select>
+      </Field>
+      {existing && group && (
+        <button className="btn ghost sm preset" onClick={() => applyPreset()}>
+          「{group.name}」のケア設定を反映
+        </button>
+      )}
       <Field label="置き場所">
         <input
           value={f.location}
@@ -125,60 +136,51 @@ export function PlantForm({ id }: { id?: string }) {
           rows={4}
           value={f.profile}
           onChange={(e) => set({ profile: e.target.value })}
-          placeholder="日当たり、用土、購入日、気をつけることなど"
+          placeholder="日当たり、用土、気をつけることなど"
         />
       </Field>
 
+      <h3 className="sec">入手</h3>
+      <div className="grid2">
+        <Field label="入手日">
+          <input type="date" max={today()} value={f.purchaseDate ?? ''} onChange={(e) => set({ purchaseDate: e.target.value })} />
+        </Field>
+        <Field label="購入金額 (円)">
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            value={f.purchasePrice ?? ''}
+            onChange={(e) => set({ purchasePrice: e.target.value === '' ? null : Math.max(0, Number(e.target.value) || 0) })}
+          />
+        </Field>
+      </div>
+      <Field label="購入場所">
+        <input value={f.purchasePlace ?? ''} onChange={(e) => set({ purchasePlace: e.target.value })} placeholder="例: 園芸店、イベント、通販" />
+      </Field>
+
       <h3 className="sec">ケアの設定</h3>
-      {SCHED.map((s) => {
-        const c = f.care[s]
-        const { Icon, label } = CARE[s]
-        return (
-          <section key={s} className="card care" style={careVar(s)}>
-            <label className="care-h">
-              <span className="care-ic">
-                <Icon size={18} />
-              </span>
-              <b>{label}</b>
-              <input type="checkbox" className="switch" checked={c.enabled} onChange={(e) => setCare(s, { enabled: e.target.checked })} />
-            </label>
-            {c.enabled && (
-              <div className="care-b">
+      <CareEditor
+        care={f.care}
+        dormantMonths={f.dormantMonths}
+        onChange={set}
+        extra={
+          existing
+            ? undefined
+            : (s) => (
                 <label className="inline">
-                  生長期
-                  <input type="number" inputMode="numeric" min={1} value={c.days || ''} onChange={(e) => setCare(s, { days: num(e.target.value) })} />
-                  日ごと
+                  最後に実施した日
+                  <input type="date" max={today()} value={last[s]} onChange={(e) => setLast({ ...last, [s]: e.target.value })} />
                 </label>
-                <label className="inline">
-                  休眠期
-                  <select value={c.offMode} onChange={(e) => setCare(s, { offMode: e.target.value as Schedule['offMode'] })}>
-                    <option value="same">生長期と同じ</option>
-                    <option value="custom">間隔を変える</option>
-                    <option value="pause">お休み</option>
-                  </select>
-                  {c.offMode === 'custom' && (
-                    <>
-                      <input type="number" inputMode="numeric" min={1} value={c.offDays || ''} onChange={(e) => setCare(s, { offDays: num(e.target.value) })} />
-                      日ごと
-                    </>
-                  )}
-                </label>
-                {!existing && (
-                  <label className="inline">
-                    最後に実施した日
-                    <input type="date" max={today()} value={last[s]} onChange={(e) => setLast({ ...last, [s]: e.target.value })} />
-                  </label>
-                )}
-              </div>
-            )}
-          </section>
-        )
-      })}
+              )
+        }
+      />
 
-      <h3 className="sec">休眠期の月</h3>
-      <p className="hint">選んだ月は「休眠期」の間隔で予定を立てます。夏に休む種類は夏の月を選んでください。</p>
-      <MonthChips value={f.dormantMonths} onChange={(dormantMonths) => set({ dormantMonths })} />
-
+      {existing && !existing.archivedDay && (
+        <button className="btn ghost full preset" onClick={archive}>
+          <ArchiveIcon size={16} /> アーカイブに移す
+        </button>
+      )}
       {existing && (
         <button className="btn danger full" onClick={remove}>
           <Trash2 size={16} /> この植物を削除

@@ -455,6 +455,10 @@ input[type='number'] {
   background: var(--hero);
   color: var(--hero-ink);
 }
+.hero-stats {
+  display: flex;
+  gap: 28px;
+}
 .hero-card .eyebrow {
   color: inherit;
   opacity: 0.7;
@@ -868,6 +872,209 @@ input[type='number'] {
   flex: none;
   font-weight: 700;
   text-decoration: underline;
+}
+
+/* ---------- 分類・月ごとの間隔・入手情報・過去の写真 ---------- */
+button.line {
+  width: 100%;
+}
+.line.add {
+  justify-content: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.line.toggle {
+  margin-bottom: 8px;
+}
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.month-grid label {
+  display: grid;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.month-grid input[type='number'] {
+  width: 100%;
+  padding: 7px 2px;
+}
+.care-b .hint {
+  margin: 0;
+}
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.grid2 .field {
+  min-width: 0;
+}
+.btn.preset {
+  margin: -4px 0 14px;
+}
+.btn.full.preset {
+  margin: 20px 0 0;
+}
+.hint.lead {
+  margin: 0 0 16px;
+}
+.facts {
+  margin: 14px 0 0;
+  padding: 2px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 0;
+  font-size: 13.5px;
+}
+.facts div + div {
+  border-top: 1px solid var(--line);
+}
+.facts dt {
+  flex: none;
+  color: var(--muted);
+}
+.facts dd {
+  margin: 0;
+  text-align: right;
+}
+.facts + .card {
+  margin-top: 14px;
+}
+.past-list {
+  display: grid;
+  gap: 8px;
+}
+.past-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.past-item img {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.past-item input {
+  flex: 1;
+  min-width: 0;
+}
+/* 過去の写真: 枠を点線にして、このアプリで記録したものと見分ける */
+.entry.past {
+  box-shadow: none;
+  border: 1.5px dashed var(--line);
+}
+.past-tag {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---------- アーカイブ・延期・使い方 ---------- */
+.sheet-f {
+  display: flex;
+  gap: 8px;
+}
+.sheet-f .btn {
+  flex: 1;
+}
+.banner {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+}
+.btn.archive-link {
+  margin-top: 14px;
+  color: var(--muted);
+}
+.empty .btn.archive-link {
+  width: auto;
+}
+.due-acts {
+  align-items: center;
+}
+.opts {
+  display: grid;
+  gap: 8px;
+}
+.opts button {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.fold {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 26px;
+  padding: 11px 12px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+}
+.fold .flip {
+  rotate: 180deg;
+}
+.guide {
+  display: grid;
+  gap: 14px;
+  margin-top: 8px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.guide h4 {
+  margin: 0 0 4px;
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+.guide ul {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+}
+.guide li {
+  display: flex;
+  gap: 8px;
+}
+.guide li::before {
+  content: '·';
 }
 
 /* ---------- forms & detail ---------- */

@@ -1,26 +1,32 @@
 import type { CareLog, Plant, SchedType, Schedule } from '../types'
 import { addDays, fromKey, monthOf, toKey, today } from './date'
 
-const isDormant = (p: Plant, key: string) => p.dormantMonths.includes(monthOf(key))
+type Season = Pick<Plant, 'dormantMonths'>
 
-/** 休眠期は休止の設定なら、次に生長期へ入る月の 1 日まで送る */
-function skipPause(p: Plant, s: Schedule, key: string): string | null {
-  if (s.offMode !== 'pause') return key
+/** その日の時点での間隔 (日)。0 = その月はお休み */
+export function intervalOn(p: Season, s: Schedule, key: string): number {
+  const m = monthOf(key)
+  if (s.monthly) return Math.max(0, s.monthly[m - 1] || 0)
+  if (!p.dormantMonths.includes(m)) return Math.max(1, s.days)
+  if (s.offMode === 'pause') return 0
+  return Math.max(1, s.offMode === 'custom' ? s.offDays : s.days)
+}
+
+/** お休みの月なら、次に再開する月の 1 日まで送る */
+function skipPause(p: Season, s: Schedule, key: string): string | null {
   let d = key
   for (let i = 0; i < 13; i++) {
-    if (!isDormant(p, d)) return d
+    if (intervalOn(p, s, d) > 0) return d
     const dt = fromKey(d)
     d = toKey(new Date(dt.getFullYear(), dt.getMonth() + 1, 1))
   }
-  return null // 12 か月すべて休眠 = 予定なし
+  return null // 12 か月すべてお休み = 予定なし
 }
 
-/** last に実施したとして、その次の予定日 */
-function nextAfter(p: Plant, s: Schedule, last: string): string | null {
-  const dormant = isDormant(p, last)
-  if (dormant && s.offMode === 'pause') return skipPause(p, s, last)
-  const days = Math.max(1, dormant && s.offMode === 'custom' ? s.offDays : s.days)
-  return skipPause(p, s, addDays(last, days))
+/** last に実施したとして、その次の予定日。間隔は「実施した月」のものを使う */
+function nextAfter(p: Season, s: Schedule, last: string): string | null {
+  const days = intervalOn(p, s, last)
+  return skipPause(p, s, days ? addDays(last, days) : last)
 }
 
 export function lastDone(logs: CareLog[], type: string): string | null {
@@ -34,8 +40,13 @@ export function nextDue(p: Plant, type: SchedType, logs: CareLog[]): string | nu
   const s = p.care[type]
   if (!s.enabled) return null
   const last = lastDone(logs, type)
-  return last ? nextAfter(p, s, last) : skipPause(p, s, p.createdDay)
+  const due = last ? nextAfter(p, s, last) : skipPause(p, s, p.createdDay)
+  const until = p.snooze?.[type]
+  return due && until && until > due ? until : due
 }
+
+/** 次の予定が「延期」で後ろへ送られているか */
+export const isSnoozed = (p: Plant, type: SchedType, due: string | null) => !!due && p.snooze?.[type] === due
 
 /**
  * 「今の予定どおりにケアし続けたら」の見込み日を from..to の範囲で返す。

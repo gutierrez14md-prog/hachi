@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { CareLog, CareType, Journal, Plant, Settings } from './types'
+import type { CareLog, CareType, Group, Journal, Plant, Settings } from './types'
 
 /** タブの上に重ねて開く画面 */
 export type Overlay =
@@ -8,9 +8,17 @@ export type Overlay =
   | { k: 'plant'; id: string }
   | { k: 'log'; plantId?: string; type?: CareType; date?: string }
   | { k: 'journal'; plantId?: string; id?: string }
+  | { k: 'past'; plantId?: string }
+  | { k: 'group'; id?: string }
+  | { k: 'snooze'; plantId: string }
+  | { k: 'archive' }
 
 export interface AppCtx {
+  /** 育てている株 (アーカイブを除く) */
   plants: Plant[]
+  /** アーカイブも含む全部。記録から株を引くときなどに使う */
+  allPlants: Plant[]
+  groups: Group[]
   logs: CareLog[]
   journal: Journal[]
   settings: Settings

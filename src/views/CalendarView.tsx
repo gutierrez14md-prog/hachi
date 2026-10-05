@@ -11,7 +11,7 @@ import type { CareLog, CareType, Plant, SchedType } from '../types'
 const DOW = ['日', '月', '火', '水', '木', '金', '土']
 
 export function CalendarView() {
-  const { plants, logs, logsOf, open, record } = useApp()
+  const { plants, allPlants, logs, logsOf, open, record } = useApp()
   const t = today()
   const [ym, setYm] = useState(() => ({ y: new Date().getFullYear(), m: new Date().getMonth() }))
   const [sel, setSel] = useState(t)
@@ -20,7 +20,8 @@ export function CalendarView() {
   const last = toKey(new Date(ym.y, ym.m + 1, 0))
   const lead = new Date(ym.y, ym.m, 1).getDay()
   const days = Array.from({ length: Number(last.slice(8)) }, (_, i) => addDays(first, i))
-  const plantOf = useMemo(() => new Map(plants.map((p) => [p.id, p])), [plants])
+  // 記録済みはアーカイブした株のぶんも出す (予定は育てている株だけ)
+  const plantOf = useMemo(() => new Map(allPlants.map((p) => [p.id, p])), [allPlants])
 
   // 記録済み (過去〜今日) と、今の間隔どおりに続けた場合の予定 (今日〜未来)
   const { done, plan } = useMemo(() => {

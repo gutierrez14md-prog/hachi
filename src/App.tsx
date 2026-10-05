@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CalendarDays, Camera, Droplet, House, Images, Plus, Settings as SettingsIcon } from 'lucide-react'
+import { CalendarDays, Camera, Droplet, History, House, Images, Plus, Settings as SettingsIcon } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CARE } from './care'
 import { Ctx, type AppCtx, type Overlay } from './ctx'
@@ -8,8 +8,11 @@ import { today } from './lib/date'
 import { checkNotify, syncReminder } from './lib/reminder'
 import { PotIcon } from './parts'
 import type { CareLog } from './types'
+import { Archive, Snooze } from './views/Archive'
 import { CalendarView } from './views/CalendarView'
+import { GroupForm } from './views/GroupForm'
 import { Home } from './views/Home'
+import { PastPhotos } from './views/PastPhotos'
 import { JournalForm } from './views/JournalForm'
 import { LogForm } from './views/LogForm'
 import { PlantDetail } from './views/PlantDetail'
@@ -21,9 +24,11 @@ type Tab = 'home' | 'cal' | 'tl' | 'set'
 const NO_LOGS: CareLog[] = []
 
 export default function App() {
-  const plants = useLiveQuery(() => db.plants.toArray())
+  const allPlants = useLiveQuery(() => db.plants.toArray())
+  const plants = useMemo(() => allPlants?.filter((p) => !p.archivedDay), [allPlants])
   const logs = useLiveQuery(() => db.logs.toArray())
   const journal = useLiveQuery(() => db.journal.toArray())
+  const groups = useLiveQuery(() => db.groups.toArray().then((g) => g.sort((a, b) => a.name.localeCompare(b.name, 'ja'))))
   const settings = useLiveQuery(() => db.settings.get('app').then((s) => s ?? DEFAULT_SETTINGS))
 
   const [tab, setTab] = useState<Tab>('home')
@@ -92,9 +97,9 @@ export default function App() {
     return () => clearInterval(id)
   }, [])
 
-  if (!plants || !logs || !journal || !settings) return null
+  if (!allPlants || !plants || !logs || !journal || !groups || !settings) return null
 
-  const ctx: AppCtx = { plants, logs, journal, settings, logsOf, open, replace, close, record, toast: showToast }
+  const ctx: AppCtx = { plants, allPlants, groups, logs, journal, settings, logsOf, open, replace, close, record, toast: showToast }
   const tabs: [Tab, string, typeof House][] = [
     ['home', 'HOME', House],
     ['cal', 'カレンダー', CalendarDays],
@@ -143,6 +148,9 @@ export default function App() {
                   <button onClick={() => replace({ k: 'journal' })}>
                     <Camera /> 生長記録を書く
                   </button>
+                  <button onClick={() => replace({ k: 'past' })}>
+                    <History /> 過去の写真をまとめて追加
+                  </button>
                 </div>
               </div>
             )
@@ -154,6 +162,14 @@ export default function App() {
             return <LogForm key={i} plantId={o.plantId} type={o.type} date={o.date} />
           case 'journal':
             return <JournalForm key={i} plantId={o.plantId} id={o.id} />
+          case 'past':
+            return <PastPhotos key={i} plantId={o.plantId} />
+          case 'group':
+            return <GroupForm key={i} id={o.id} />
+          case 'snooze':
+            return <Snooze key={i} plantId={o.plantId} />
+          case 'archive':
+            return <Archive key={i} />
         }
       })}
 

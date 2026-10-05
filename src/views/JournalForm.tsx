@@ -7,20 +7,24 @@ import { Field, PhotoPicker, Sheet } from '../parts'
 import type { Journal } from '../types'
 
 export function JournalForm(props: { plantId?: string; id?: string }) {
-  const { plants, journal, close, toast } = useApp()
+  const { plants: active, allPlants, journal, close, toast } = useApp()
+  // アーカイブした株は、その株の記録を開いているときだけ選択肢に出す
+  const picked = props.plantId ?? journal.find((j) => j.id === props.id)?.plantId
+  const plants = allPlants.filter((p) => !p.archivedDay || p.id === picked)
   const existing = journal.find((j) => j.id === props.id)
   const [f, setF] = useState<Journal>(
     () =>
       existing ?? {
         id: newId(),
-        plantId: props.plantId ?? (plants.length === 1 ? plants[0].id : ''),
+        plantId: props.plantId ?? (active.length === 1 ? active[0].id : ''),
         date: today(),
         text: '',
         at: Date.now(),
       },
   )
   const set = (patch: Partial<Journal>) => setF((v) => ({ ...v, ...patch }))
-  const ok = f.plantId && f.date && (f.photoId || f.text.trim())
+  // 過去の写真は、撮影日がわからなければ空欄のままでよい
+  const ok = f.plantId && (f.date || f.past) && (f.photoId || f.text.trim())
 
   const save = async () => {
     await db.journal.put({ ...f, text: f.text.trim() })
@@ -57,9 +61,18 @@ export function JournalForm(props: { plantId?: string; id?: string }) {
           ))}
         </select>
       </Field>
-      <Field label="日付">
+      <Field label={f.past ? '撮影日' : '日付'}>
         <input type="date" value={f.date} max={today()} onChange={(e) => set({ date: e.target.value })} />
       </Field>
+      <label className="line toggle">
+        <span className="line-main">
+          <span>
+            <b>過去の写真</b>
+            <small>使い始める前に撮ったもの</small>
+          </span>
+        </span>
+        <input type="checkbox" className="switch" checked={!!f.past} onChange={(e) => set({ past: e.target.checked })} />
+      </label>
       <Field label="ひとこと">
         <textarea rows={4} value={f.text} onChange={(e) => set({ text: e.target.value })} placeholder="新芽が出た、花が咲いた…" />
       </Field>

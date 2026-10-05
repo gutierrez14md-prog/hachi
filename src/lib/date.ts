@@ -28,6 +28,12 @@ export const fmtDay = (k: string) => {
   return `${d.getMonth() + 1}月${d.getDate()}日(${DOW[d.getDay()]})`
 }
 
+/** 年つき。今年以外の日付を出すとき用 */
+export const fmtFull = (k: string) => {
+  const d = fromKey(k)
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+}
+
 /** 今日からの相対表記: 「今日」「あと3日」「2日超過」 */
 export const dueLabel = (k: string) => {
   const n = diffDays(k, today())

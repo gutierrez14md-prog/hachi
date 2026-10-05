@@ -1,34 +1,53 @@
-import { Camera, MapPin, Pencil, Trash2 } from 'lucide-react'
+import { ArchiveRestore, CalendarClock, Camera, History, MapPin, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db } from '../db'
-import { dueLabel, fmtDay, today } from '../lib/date'
-import { lastDone, nextDue } from '../lib/schedule'
+import { dueLabel, fmtDay, fmtFull, today } from '../lib/date'
+import { intervalOn, isSnoozed, lastDone, nextDue } from '../lib/schedule'
 import { Photo, Sheet } from '../parts'
 import { JournalCard, sortJournal } from './Timeline'
 
 export function PlantDetail({ id }: { id: string }) {
-  const { plants, journal, logsOf, open, record } = useApp()
+  const { allPlants, groups, journal, logsOf, open, record, toast } = useApp()
   const [showAll, setShowAll] = useState(false)
-  const p = plants.find((x) => x.id === id)
+  const p = allPlants.find((x) => x.id === id)
   if (!p) return null
+  const archived = !!p.archivedDay
+  const restore = async () => {
+    await db.plants.update(id, { archivedDay: undefined })
+    toast(`${p.name}を元に戻しました`)
+  }
 
   const t = today()
   const logs = [...logsOf(id)].sort((a, b) => b.date.localeCompare(a.date) || b.at - a.at)
   const entries = sortJournal(journal.filter((j) => j.plantId === id))
   const sched = SCHED.filter((s) => p.care[s].enabled)
+  const facts = [
+    ['分類', groups.find((g) => g.id === p.groupId)?.name],
+    ['入手日', p.purchaseDate && fmtFull(p.purchaseDate)],
+    ['購入場所', p.purchasePlace],
+    ['購入金額', p.purchasePrice != null && `¥${p.purchasePrice.toLocaleString('ja-JP')}`],
+  ].filter((f): f is [string, string] => !!f[1])
 
   return (
     <Sheet
       title=""
       action={
-        <button className="btn ghost" onClick={() => open({ k: 'plantForm', id })}>
-          <Pencil size={16} /> 編集
-        </button>
+        <>
+          {archived && (
+            <button className="btn ghost" onClick={restore}>
+              <ArchiveRestore size={16} /> 元に戻す
+            </button>
+          )}
+          <button className="btn ghost" onClick={() => open({ k: 'plantForm', id })}>
+            <Pencil size={16} /> 編集
+          </button>
+        </>
       }
     >
       <Photo id={p.photoId} className="hero" />
+      {archived && <p className="banner">{fmtFull(p.archivedDay!)} にアーカイブ</p>}
       <div className="detail-h">
         <h1>{p.name}</h1>
         {p.scientificName && <i>{p.scientificName}</i>}
@@ -39,14 +58,25 @@ export function PlantDetail({ id }: { id: string }) {
         )}
       </div>
       {p.profile && <p className="profile">{p.profile}</p>}
+      {facts.length > 0 && (
+        <dl className="facts">
+          {facts.map(([k, v]) => (
+            <div key={k}>
+              <dt>{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
 
-      {sched.length > 0 && (
+      {!archived && sched.length > 0 && (
         <section className="card">
           <h3 className="card-t">次のケア</h3>
           {sched.map((s) => {
             const { Icon, label } = CARE[s]
             const due = nextDue(p, s, logs)
             const last = lastDone(logs, s)
+            const every = intervalOn(p, p.care[s], t)
             return (
               <div className="line" key={s}>
                 <span className="care-ic" style={careVar(s)}>
@@ -58,10 +88,16 @@ export function PlantDetail({ id }: { id: string }) {
                       {label} <span className={due && due <= t ? 'late' : 'soft'}>{due ? dueLabel(due) : '予定なし'}</span>
                     </b>
                     <small>
-                      {p.care[s].days}日ごと ・ {last ? `前回 ${fmtDay(last)}` : '記録なし'}
+                      {every ? `今月は${every}日ごと` : '今月はお休み'} ・ {last ? `前回 ${fmtDay(last)}` : '記録なし'}
+                      {isSnoozed(p, s, due) && ' ・ 延期中'}
                     </small>
                   </span>
                 </span>
+                {due && due <= t && (
+                  <button className="icon-btn muted" onClick={() => open({ k: 'snooze', plantId: id })} aria-label={`${label}を延期`}>
+                    <CalendarClock size={18} />
+                  </button>
+                )}
                 <button className="pill" style={careVar(s)} onClick={() => record([id], s)}>
                   記録
                 </button>
@@ -71,26 +107,35 @@ export function PlantDetail({ id }: { id: string }) {
         </section>
       )}
 
-      <h3 className="sec">ケアを記録</h3>
-      <div className="type-grid">
-        {ALL_TYPES.map((ty) => {
-          const { Icon, label } = CARE[ty]
-          return (
-            <button key={ty} style={careVar(ty)} onClick={() => open({ k: 'log', plantId: id, type: ty })}>
-              <span className="care-ic">
-                <Icon size={18} />
-              </span>
-              {label}
-            </button>
-          )
-        })}
-      </div>
+      {!archived && (
+        <>
+          <h3 className="sec">ケアを記録</h3>
+          <div className="type-grid">
+            {ALL_TYPES.map((ty) => {
+              const { Icon, label } = CARE[ty]
+              return (
+                <button key={ty} style={careVar(ty)} onClick={() => open({ k: 'log', plantId: id, type: ty })}>
+                  <span className="care-ic">
+                    <Icon size={18} />
+                  </span>
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
 
       <div className="list-head">
         <h3 className="sec">生長記録</h3>
-        <button className="btn ghost sm" onClick={() => open({ k: 'journal', plantId: id })}>
-          <Camera size={15} /> 追加
-        </button>
+        <span className="row">
+          <button className="btn ghost sm" onClick={() => open({ k: 'past', plantId: id })}>
+            <History size={15} /> 過去の写真
+          </button>
+          <button className="btn ghost sm" onClick={() => open({ k: 'journal', plantId: id })}>
+            <Camera size={15} /> 追加
+          </button>
+        </span>
       </div>
       {entries.length ? (
         <div className="tl">

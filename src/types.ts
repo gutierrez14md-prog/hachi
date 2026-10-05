@@ -9,7 +9,14 @@ export interface Schedule {
   /** 休眠期の扱い: 生長期と同じ / 別の間隔 / 休止 */
   offMode: 'same' | 'custom' | 'pause'
   offDays: number
+  /**
+   * 月ごとの間隔 (1 月〜12 月の 12 個、0 = お休み)。入っていれば上の生長期 / 休眠期より優先する。
+   * 「9 月は 7 日、10 月は 10 日、11 月は 14 日…」のように少しずつ変えるためのもの
+   */
+  monthly?: number[] | null
 }
+
+export type CareSettings = Record<SchedType, Schedule>
 
 export interface Plant {
   id: string
@@ -18,11 +25,32 @@ export interface Plant {
   location: string
   profile: string
   photoId?: string
+  /** 分類 (Group.id) */
+  groupId?: string
   /** 休眠期の月 (1-12) */
   dormantMonths: number[]
-  care: Record<SchedType, Schedule>
+  care: CareSettings
   /** 登録日 YYYY-MM-DD */
   createdDay: string
+  purchasePlace?: string
+  /** 円 */
+  purchasePrice?: number | null
+  /** 入手日 YYYY-MM-DD */
+  purchaseDate?: string
+  /** アーカイブした日。入っている株は一覧・予定・通知から外す (記録と写真は残る) */
+  archivedDay?: string
+  /** 延期: この日までは予定に出さない。次にケアを記録すれば、予定がこの日を越えるので自然に無効になる */
+  snooze?: Partial<Record<SchedType, string>>
+}
+
+/** 分類 (アガベ、サボテン…) と、そのケア設定のプリセット */
+export interface Group {
+  id: string
+  name: string
+  dormantMonths: number[]
+  care: CareSettings
+  /** 育て方メモのひな形 */
+  profile: string
 }
 
 export interface CareLog {
@@ -38,10 +66,12 @@ export interface CareLog {
 export interface Journal {
   id: string
   plantId: string
-  /** YYYY-MM-DD */
+  /** YYYY-MM-DD。past の記録は日付不明 ('') もある */
   date: string
   text: string
   photoId?: string
+  /** このアプリを使い始める前の写真 (ほかのアプリからの移行など) */
+  past?: boolean
   at: number
 }
 

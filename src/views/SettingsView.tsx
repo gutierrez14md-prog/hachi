@@ -1,15 +1,20 @@
-import { Bell, Download, Upload } from 'lucide-react'
+import { Bell, ChevronDown, ChevronRight, Download, Plus, Upload } from 'lucide-react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
 import { applyFont, applyTheme, FONTS, getFont, getTheme } from '../lib/appearance'
 import { db } from '../db'
+import { GUIDE } from '../guide'
 import { exportBackup, importBackup } from '../lib/backup'
 import { enableNotifications, testNotification } from '../lib/reminder'
 import type { Settings } from '../types'
-import { MonthChips } from './PlantForm'
+import { today } from '../lib/date'
+import { intervalOn } from '../lib/schedule'
+import { MonthChips } from './CareEditor'
 
 export function SettingsView() {
-  const { settings, plants, logs, journal, toast } = useApp()
+  const { settings, plants, allPlants, groups, logs, journal, toast, open } = useApp()
+  const [guideOpen, setGuideOpen] = useState(false)
+  const spent = allPlants.reduce((sum, p) => sum + (p.purchasePrice ?? 0), 0)
   const save = (patch: Partial<Settings>) => db.settings.put({ ...settings, ...patch })
   const supported = 'Notification' in window
   const [theme, setTheme] = useState(getTheme)
@@ -92,20 +97,35 @@ export function SettingsView() {
           </div>
         )}
       </section>
-      <p className="hint">
-        {supported
-          ? '指定時刻以降、アプリを開いているとき (バックグラウンド含む) に通知します。Android の Chrome でホーム画面に追加している場合は、アプリを閉じていても届くことがあります。'
-          : 'このブラウザでは通知を使えません。iPhone / iPad は共有メニューから「ホーム画面に追加」すると使えるようになります。'}
-      </p>
+      {!supported && (
+        <p className="hint">このブラウザでは通知を使えません。iPhone / iPad は共有メニューから「ホーム画面に追加」すると使えるようになります。</p>
+      )}
 
-      <h3 className="sec">休眠期の初期設定</h3>
-      <p className="hint">新しく追加する植物の休眠期の初期値です。植物ごとに変更できます。</p>
+      <h3 className="sec">分類</h3>
+      <section className="card">
+        {groups.map((g) => {
+          const every = intervalOn(g, g.care.water, today())
+          return (
+            <button className="line" key={g.id} onClick={() => open({ k: 'group', id: g.id })}>
+              <span className="line-main">
+                <span>
+                  <b>{g.name}</b>
+                  <small>{!g.care.water.enabled ? '水やり予定なし' : every ? `水やり 今月は${every}日ごと` : '水やり 今月はお休み'}</small>
+                </span>
+              </span>
+              <ChevronRight size={18} className="soft" />
+            </button>
+          )
+        })}
+        <button className="line add" onClick={() => open({ k: 'group' })}>
+          <Plus size={16} /> 分類を追加
+        </button>
+      </section>
+
+      <h3 className="sec">休眠期の月（新しい植物の初期値）</h3>
       <MonthChips value={settings.dormantMonths} onChange={(dormantMonths) => save({ dormantMonths })} />
 
       <h3 className="sec">バックアップ</h3>
-      <p className="hint">
-        データはこの端末の中だけに保存されています。機種変更やブラウザのデータ削除に備えて、ときどき書き出しておくと安心です。
-      </p>
       <div className="row gap">
         <button className="btn ghost" onClick={exportBackup}>
           <Download size={16} /> 書き出す
@@ -130,8 +150,34 @@ export function SettingsView() {
         </label>
       </div>
 
+      {/* 説明は画面に置かず、ここにまとめる。長いので、押すまで閉じておく */}
+      <button className="fold" aria-expanded={guideOpen} onClick={() => setGuideOpen((o) => !o)}>
+        使い方
+        <ChevronDown size={18} className={guideOpen ? 'flip' : ''} />
+      </button>
+      {guideOpen && (
+        <div className="guide">
+          {GUIDE.map((sec) => (
+            <section key={sec.title}>
+              <h4>{sec.title}</h4>
+              <ul>
+                {sec.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+
       <p className="hint center">
         植物 {plants.length}株 ・ ケア記録 {logs.length}件 ・ 生長記録 {journal.length}件
+        {spent > 0 && (
+          <>
+            <br />
+            購入金額の合計 ¥{spent.toLocaleString('ja-JP')}
+          </>
+        )}
       </p>
     </>
   )

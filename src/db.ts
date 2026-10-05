@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie'
-import type { CareLog, Journal, PhotoRec, Plant, Settings } from './types'
+import { defaultGroups } from './presets'
+import type { CareLog, Group, Journal, PhotoRec, Plant, Settings } from './types'
 
 class HachiDB extends Dexie {
   plants!: Table<Plant, string>
@@ -7,6 +8,7 @@ class HachiDB extends Dexie {
   journal!: Table<Journal, string>
   photos!: Table<PhotoRec, string>
   settings!: Table<Settings, string>
+  groups!: Table<Group, string>
 
   constructor() {
     super('hachi')
@@ -17,6 +19,11 @@ class HachiDB extends Dexie {
       photos: 'id',
       settings: 'key',
     })
+    // v2: 分類 (ケア設定のプリセット)。すでに使っている端末にも初期の分類を入れる
+    this.version(2)
+      .stores({ groups: 'id' })
+      .upgrade((tx) => tx.table('groups').bulkAdd(defaultGroups()))
+    this.on('populate', (tx) => tx.table('groups').bulkAdd(defaultGroups()))
   }
 }
 

@@ -1,20 +1,24 @@
 import { Images, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
-import { fmtDay } from '../lib/date'
+import { fmtDay, fmtFull, today } from '../lib/date'
 import { Photo } from '../parts'
 import type { Journal } from '../types'
 
+/** 新しい順。日付不明 (過去の写真) はいちばん最後 */
 export const sortJournal = (list: Journal[]) =>
   [...list].sort((a, b) => b.date.localeCompare(a.date) || b.at - a.at)
+
+const entryDate = (date: string) => (!date ? '日付不明' : date.slice(0, 4) === today().slice(0, 4) ? fmtDay(date) : fmtFull(date))
 
 export function JournalCard({ entry, plantName }: { entry: Journal; plantName?: string }) {
   const { open } = useApp()
   return (
-    <article className="entry">
+    <article className={`entry ${entry.past ? 'past' : ''}`}>
       <header>
         <span>
-          <time>{fmtDay(entry.date)}</time>
+          <time>{entryDate(entry.date)}</time>
+          {entry.past && <span className="past-tag">過去の写真</span>}
           {plantName && (
             <button className="entry-plant" onClick={() => open({ k: 'plant', id: entry.plantId })}>
               {plantName}
@@ -32,9 +36,10 @@ export function JournalCard({ entry, plantName }: { entry: Journal; plantName?: 
 }
 
 export function Timeline() {
-  const { plants, journal, open } = useApp()
+  const { plants, allPlants, journal, open } = useApp()
   const [plantId, setPlantId] = useState('')
-  const names = new Map(plants.map((p) => [p.id, p.name]))
+  // アーカイブした株の記録もタイムラインには残す
+  const names = new Map(allPlants.map((p) => [p.id, p.name]))
   const entries = sortJournal(journal).filter((j) => names.has(j.plantId) && (!plantId || j.plantId === plantId))
 
   let month = ''
@@ -61,16 +66,21 @@ export function Timeline() {
           </div>
           <p>写真と一言で、生長の記録を残せます。</p>
           {plants.length > 0 && (
-            <button className="btn primary" onClick={() => open({ k: 'journal', plantId: plantId || undefined })}>
-              生長記録を書く
-            </button>
+            <>
+              <button className="btn primary" onClick={() => open({ k: 'journal', plantId: plantId || undefined })}>
+                生長記録を書く
+              </button>
+              <button className="btn ghost" onClick={() => open({ k: 'past', plantId: plantId || undefined })}>
+                過去の写真をまとめて追加
+              </button>
+            </>
           )}
         </div>
       )}
 
       <div className="tl">
         {entries.map((j) => {
-          const m = `${Number(j.date.slice(0, 4))}年${Number(j.date.slice(5, 7))}月`
+          const m = j.date ? `${Number(j.date.slice(0, 4))}年${Number(j.date.slice(5, 7))}月` : '日付不明'
           const head = m !== month
           month = m
           return (

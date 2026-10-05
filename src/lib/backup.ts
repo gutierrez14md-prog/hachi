@@ -19,6 +19,7 @@ export async function exportBackup() {
     logs: await db.logs.toArray(),
     journal: await db.journal.toArray(),
     settings: await db.settings.toArray(),
+    groups: await db.groups.toArray(),
     photos: await Promise.all(photos.map(async (p) => ({ id: p.id, data: await toDataUrl(p.blob) }))),
   }
   const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }))
@@ -39,7 +40,8 @@ export async function importBackup(file: File) {
       blob: await (await fetch(p.data)).blob(),
     })),
   )
-  await db.transaction('rw', [db.plants, db.logs, db.journal, db.photos, db.settings], async () => {
+  await db.transaction('rw', [db.plants, db.logs, db.journal, db.photos, db.settings, db.groups], async () => {
+    await db.groups.bulkPut(data.groups ?? [])
     await db.plants.bulkPut(data.plants)
     await db.logs.bulkPut(data.logs ?? [])
     await db.journal.bulkPut(data.journal ?? [])

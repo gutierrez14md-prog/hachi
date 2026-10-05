@@ -1,4 +1,4 @@
-import { Check, MapPin, Search, X } from 'lucide-react'
+import { Archive, CalendarClock, Check, MapPin, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
@@ -16,9 +16,10 @@ const SORTS: [Sort, string][] = [
 ]
 
 export function Home() {
-  const { plants, logsOf, open, record } = useApp()
+  const { plants, allPlants, groups, logsOf, open, record } = useApp()
   const [q, setQ] = useState('')
   const [loc, setLoc] = useState('')
+  const [grp, setGrp] = useState('')
   const [sort, setSort] = useState<Sort>(() => (localStorage.getItem('sort') as Sort) || 'water')
   const t = today()
 
@@ -38,11 +39,17 @@ export function Home() {
   const waterDue = dueNow.filter((r) => r.types.includes('water')).map((r) => r.p.id)
 
   const locations = [...new Set(plants.map((p) => p.location).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ja'))
+  // 絞り込みに出すのは、実際に株がある分類だけ
+  const groupName = new Map(groups.map((g) => [g.id, g.name]))
+  const usedGroups = groups.filter((g) => plants.some((p) => p.groupId === g.id))
   const needle = q.trim().toLowerCase()
   const list = rows
     .filter((r) => !loc || r.p.location === loc)
+    .filter((r) => !grp || r.p.groupId === grp)
     .filter(
-      (r) => !needle || [r.p.name, r.p.scientificName, r.p.location].some((v) => v.toLowerCase().includes(needle)),
+      (r) =>
+        !needle ||
+        [r.p.name, r.p.scientificName, r.p.location, groupName.get(r.p.groupId ?? '') ?? ''].some((v) => v.toLowerCase().includes(needle)),
     )
     .sort((a, b) => {
       if (sort === 'name') return a.p.name.localeCompare(b.p.name, 'ja')
@@ -50,6 +57,13 @@ export function Home() {
       if (sort === 'new') return b.p.createdDay.localeCompare(a.p.createdDay) || b.i - a.i
       return (a.due.water ?? '9999').localeCompare(b.due.water ?? '9999') || a.p.name.localeCompare(b.p.name, 'ja')
     })
+
+  const archivedCount = allPlants.length - plants.length
+  const archiveLink = archivedCount > 0 && (
+    <button className="btn ghost full archive-link" onClick={() => open({ k: 'archive' })}>
+      <Archive size={16} /> アーカイブ {archivedCount}株
+    </button>
+  )
 
   if (!plants.length)
     return (
@@ -62,24 +76,28 @@ export function Home() {
         <button className="btn primary" onClick={() => open({ k: 'plantForm' })}>
           最初の植物を追加
         </button>
+        {archiveLink}
       </div>
     )
 
   return (
     <>
       <section className="hero-card">
-        <div>
-          <p className="eyebrow">今日のケア</p>
-          <p className="hero-n">
-            {dueNow.length ? (
-              <>
-                {dueNow.length}
-                <small>株</small>
-              </>
-            ) : (
-              '完了'
-            )}
-          </p>
+        <div className="hero-stats">
+          <div>
+            <p className="eyebrow">今日のケア</p>
+            <p className="hero-n">
+              {dueNow.length}
+              <small>株</small>
+            </p>
+          </div>
+          <div>
+            <p className="eyebrow">育てている株</p>
+            <p className="hero-n">
+              {plants.length}
+              <small>株</small>
+            </p>
+          </div>
         </div>
         <p className="eyebrow">{fmtDay(t)}</p>
       </section>
@@ -105,6 +123,9 @@ export function Home() {
                     </button>
                   )
                 })}
+                <button className="icon-btn muted" onClick={() => open({ k: 'snooze', plantId: p.id })} aria-label={`${p.name}のケアを延期`}>
+                  <CalendarClock size={18} />
+                </button>
               </div>
             </div>
           ))}
@@ -118,7 +139,7 @@ export function Home() {
 
       <div className="search">
         <Search size={18} />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="名前・学名で検索" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="名前・学名・分類で検索" />
         {q && (
           <button onClick={() => setQ('')} aria-label="クリア">
             <X size={16} />
@@ -153,6 +174,19 @@ export function Home() {
           {locations.map((l) => (
             <button key={l} className={`chip ${loc === l ? 'on' : ''}`} onClick={() => setLoc(loc === l ? '' : l)}>
               {l}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {usedGroups.length > 0 && (
+        <div className="chips scroll">
+          <button className={`chip ${!grp ? 'on' : ''}`} onClick={() => setGrp('')}>
+            全分類
+          </button>
+          {usedGroups.map((g) => (
+            <button key={g.id} className={`chip ${grp === g.id ? 'on' : ''}`} onClick={() => setGrp(grp === g.id ? '' : g.id)}>
+              {g.name}
             </button>
           ))}
         </div>
@@ -193,6 +227,7 @@ export function Home() {
         })}
         {!list.length && <li className="none">該当する植物がありません</li>}
       </ul>
+      {archiveLink}
     </>
   )
 }
