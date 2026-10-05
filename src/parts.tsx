@@ -86,10 +86,13 @@ export function Sheet({ title, action, children }: { title: string; action?: Rea
   )
 }
 
-export function Field({ label, children }: { label: string; children: ReactNode }) {
+export function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
   return (
     <label className="field">
-      <span className="field-l">{label}</span>
+      <span className="field-l">
+        {label}
+        {required && <span className="req">必須</span>}
+      </span>
       {children}
     </label>
   )

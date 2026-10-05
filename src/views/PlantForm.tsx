@@ -7,7 +7,7 @@ import { today } from '../lib/date'
 import { Field, PhotoPicker, Sheet } from '../parts'
 import { defaultCare } from '../presets'
 import type { Plant, SchedType } from '../types'
-import { CareEditor, cleanCare } from './CareEditor'
+import { CareEditor, cleanCare, hasInterval } from './CareEditor'
 
 export function PlantForm({ id }: { id?: string }) {
   const { plants, allPlants, groups, settings, close, toast } = useApp()
@@ -48,7 +48,8 @@ export function PlantForm({ id }: { id?: string }) {
       scientificName: f.scientificName.trim(),
       location: f.location.trim(),
       purchasePlace: f.purchasePlace?.trim(),
-      care: cleanCare(f.care),
+      // 水やりは必須 (オフにはできない)
+      care: cleanCare({ ...f.care, water: { ...f.care.water, enabled: true } }),
     }
     await db.plants.put(plant)
     if (!existing) {
@@ -83,14 +84,14 @@ export function PlantForm({ id }: { id?: string }) {
     <Sheet
       title={existing ? '植物を編集' : '植物を追加'}
       action={
-        <button className="btn primary sm" disabled={!f.name.trim()} onClick={save}>
+        <button className="btn primary sm" disabled={!f.name.trim() || !hasInterval(f.care.water)} onClick={save}>
           保存
         </button>
       }
     >
       <PhotoPicker id={f.photoId} onChange={(photoId) => set({ photoId })} />
 
-      <Field label="名前">
+      <Field label="名前" required>
         <input value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="例: モンステラ" />
       </Field>
       <Field label="学名">
@@ -141,20 +142,18 @@ export function PlantForm({ id }: { id?: string }) {
       </Field>
 
       <h3 className="sec">入手</h3>
-      <div className="grid2">
-        <Field label="入手日">
-          <input type="date" max={today()} value={f.purchaseDate ?? ''} onChange={(e) => set({ purchaseDate: e.target.value })} />
-        </Field>
-        <Field label="購入金額 (円)">
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            value={f.purchasePrice ?? ''}
-            onChange={(e) => set({ purchasePrice: e.target.value === '' ? null : Math.max(0, Number(e.target.value) || 0) })}
-          />
-        </Field>
-      </div>
+      <Field label="入手日">
+        <input type="date" max={today()} value={f.purchaseDate ?? ''} onChange={(e) => set({ purchaseDate: e.target.value })} />
+      </Field>
+      <Field label="購入金額 (円)">
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={f.purchasePrice ?? ''}
+          onChange={(e) => set({ purchasePrice: e.target.value === '' ? null : Math.max(0, Number(e.target.value) || 0) })}
+        />
+      </Field>
       <Field label="購入場所">
         <input value={f.purchasePlace ?? ''} onChange={(e) => set({ purchasePlace: e.target.value })} placeholder="例: 園芸店、イベント、通販" />
       </Field>
@@ -164,6 +163,7 @@ export function PlantForm({ id }: { id?: string }) {
         care={f.care}
         dormantMonths={f.dormantMonths}
         onChange={set}
+        required={['water']}
         extra={
           existing
             ? undefined

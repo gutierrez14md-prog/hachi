@@ -23,6 +23,9 @@ export function MonthChips({ value, onChange }: { value: number[]; onChange: (v:
   )
 }
 
+/** 間隔が入っているか (生長期の日数、または月ごとのどこか 1 か月) */
+export const hasInterval = (c: Schedule) => (c.monthly ? c.monthly.some((v) => v > 0) : c.days > 0)
+
 /** 保存前に、空欄や 0 の間隔を使える値に直す */
 export function cleanCare(care: CareSettings): CareSettings {
   const out = { ...care }
@@ -44,7 +47,10 @@ export function CareEditor({
   dormantMonths,
   onChange,
   extra,
+  required,
 }: {
+  /** オン / オフを選ばせず、必ず設定させるケア */
+  required?: SchedType[]
   care: CareSettings
   dormantMonths: number[]
   onChange: (patch: { care?: CareSettings; dormantMonths?: number[] }) => void
@@ -53,13 +59,14 @@ export function CareEditor({
 }) {
   const setCare = (type: SchedType, patch: Partial<Schedule>) =>
     onChange({ care: { ...care, [type]: { ...care[type], ...patch } } })
-  const usesSeason = SCHED.some((s) => care[s].enabled && !care[s].monthly)
+  const usesSeason = SCHED.some((s) => (care[s].enabled || required?.includes(s)) && !care[s].monthly)
 
   return (
     <>
       {SCHED.map((s) => {
         const c = care[s]
         const { Icon, label } = CARE[s]
+        const must = required?.includes(s)
         return (
           <section key={s} className="card care" style={careVar(s)}>
             <label className="care-h">
@@ -67,9 +74,13 @@ export function CareEditor({
                 <Icon size={18} />
               </span>
               <b>{label}</b>
-              <input type="checkbox" className="switch" checked={c.enabled} onChange={(e) => setCare(s, { enabled: e.target.checked })} />
+              {must ? (
+                <span className="req">必須</span>
+              ) : (
+                <input type="checkbox" className="switch" checked={c.enabled} onChange={(e) => setCare(s, { enabled: e.target.checked })} />
+              )}
             </label>
-            {c.enabled && (
+            {(c.enabled || must) && (
               <div className="care-b">
                 <div className="seg">
                   <button type="button" className={c.monthly ? '' : 'on'} onClick={() => setCare(s, { monthly: null })}>

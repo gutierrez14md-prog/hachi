@@ -1,27 +1,53 @@
-// 依存なしで PWA 用 PNG アイコンを生成する (node scripts/gen-icons.mjs)
+// 依存なしでアプリのアイコン (PNG 3 サイズ + SVG) を生成する (node scripts/gen-icons.mjs)
 import { deflateSync, crc32 } from 'node:zlib'
 import { writeFileSync } from 'node:fs'
 
-const BG = [0x2f, 0x5d, 0x46]
-const FG = [0xea, 0xf2, 0xe6]
+// モノトーン: アプリのインク色の地に、明るいアガベのシルエット
+const BG = [0x17, 0x24, 0x1d]
+const FG = [0xec, 0xf0, 0xed]
+const hex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('')
 
-// a-b を両端とするレンズ形 (2 つの円の交差)。public/icon.svg の芽と同じ形
-function lens(x, y, ax, ay, bx, by) {
-  const mx = (ax + bx) / 2, my = (ay + by) / 2
-  const L = Math.hypot(bx - ax, by - ay) / 2
-  const nx = -(by - ay) / (2 * L), ny = (bx - ax) / (2 * L)
-  const k = L * 0.6, R = Math.hypot(L, k)
-  return Math.hypot(x - mx - nx * k, y - my - ny * k) < R && Math.hypot(x - mx + nx * k, y - my + ny * k) < R
+// アガベ: 株元 BASE から扇形に広がる葉。[真上からの角度 (度), 長さ]。座標は 0..1
+const BASE = [0.5, 0.76]
+const LEAVES = [
+  [0, 0.48], [21, 0.47], [-21, 0.47], [42, 0.44], [-42, 0.44],
+  [63, 0.4], [-63, 0.4], [84, 0.34], [-84, 0.34], [104, 0.24], [-104, 0.24],
+]
+const HALF_WIDTH = 0.05
+// 葉の幅の変わり方 (u = 株元 0 → 先端 1): 株元は細く、中ほどでふくらみ、先端は鋭くとがる
+const profile = (u) => (u < 0.38 ? 0.4 + 0.6 * Math.sin((u / 0.38) * (Math.PI / 2)) : ((1 - u) / 0.62) ** 0.85)
+
+function inLeaf(x, y, [deg, len]) {
+  const a = (deg * Math.PI) / 180
+  const ax = Math.sin(a), ay = -Math.cos(a)
+  const dx = x - BASE[0], dy = y - BASE[1]
+  const u = (dx * ax + dy * ay) / len
+  return u >= 0 && u <= 1 && Math.abs(dx * ay - dy * ax) < HALF_WIDTH * profile(u)
 }
 
-// 正規化座標 (0..1) での色。鉢 (縁 + 台形の胴) と、そこから出た芽
-function sample(x, y) {
-  const rim = x > 0.26 && x < 0.74 && y > 0.5 && y < 0.61
-  const inset = 0.31 + ((y - 0.61) / 0.23) * 0.05
-  const body = y >= 0.61 && y < 0.84 && x > inset && x < 1 - inset
-  const stem = Math.abs(x - 0.5) < 0.02 && y > 0.33 && y <= 0.5
-  const sprout = lens(x, y, 0.5, 0.4, 0.32, 0.24) || lens(x, y, 0.5, 0.34, 0.66, 0.19)
-  return rim || body || stem || sprout ? FG : BG
+const sample = (x, y) => (LEAVES.some((leaf) => inLeaf(x, y, leaf)) ? FG : BG)
+
+// 同じ形を SVG (ブラウザのタブ用) にも書き出す
+function svg() {
+  const paths = LEAVES.map(([deg, len]) => {
+    const a = (deg * Math.PI) / 180
+    const ax = Math.sin(a), ay = -Math.cos(a)
+    const side = (sign) =>
+      Array.from({ length: 21 }, (_, i) => {
+        const u = i / 20
+        const w = HALF_WIDTH * profile(u) * sign
+        return [(BASE[0] + ax * len * u + ay * w) * 100, (BASE[1] + ay * len * u - ax * w) * 100]
+      })
+    const pts = [...side(1), ...side(-1).reverse()].map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
+    return `    <polygon points="${pts.join(' ')}"/>`
+  })
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="22" fill="${hex(BG)}"/>
+  <g fill="${hex(FG)}">
+${paths.join('\n')}
+  </g>
+</svg>
+`
 }
 
 function chunk(type, data) {
@@ -64,3 +90,5 @@ for (const size of [180, 192, 512]) {
   writeFileSync(new URL(`../public/icon-${size}.png`, import.meta.url), png(size))
   console.log(`icon-${size}.png`)
 }
+writeFileSync(new URL('../public/icon.svg', import.meta.url), svg())
+console.log('icon.svg')
