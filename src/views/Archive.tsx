@@ -3,7 +3,7 @@ import { useApp } from '../ctx'
 import { db } from '../db'
 import { addDays, fmtFull, today } from '../lib/date'
 import { nextDue } from '../lib/schedule'
-import { Photo, Sheet } from '../parts'
+import { Photo, SciName, Sheet } from '../parts'
 
 /** アーカイブした株の一覧。記録と写真はそのまま見られ、詳細から元に戻せる */
 export function Archive() {
@@ -22,7 +22,7 @@ export function Archive() {
               <Photo id={p.photoId} className="thumb" />
               <span className="plant-text">
                 <b>{p.name}</b>
-                {p.scientificName && <i>{p.scientificName}</i>}
+                <SciName plant={p} />
                 <small>{fmtFull(p.archivedDay!)} にアーカイブ</small>
               </span>
             </button>

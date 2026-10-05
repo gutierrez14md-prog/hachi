@@ -6,11 +6,13 @@ import { db, deletePlant, newId } from '../db'
 import { today } from '../lib/date'
 import { Field, PhotoPicker, Sheet } from '../parts'
 import { defaultCare } from '../presets'
-import type { Plant, SchedType } from '../types'
+import type { Member, Plant, SchedType } from '../types'
 import { CareEditor, cleanCare, hasInterval } from './CareEditor'
-import { searchName, searchSci, SuggestInput } from './SciInput'
+import { CultivarInput, searchName, searchSci, SuggestInput } from './SciInput'
 
 const MAX_NAMES = 4
+const MAX_MEMBERS = 12
+const NEW_MEMBER: Member = { name: '', scientificName: '' }
 
 export function PlantForm({ id }: { id?: string }) {
   const { plants, allPlants, groups, settings, close, toast } = useApp()
@@ -49,13 +51,23 @@ export function PlantForm({ id }: { id?: string }) {
   const names = f.scientificNames ?? [f.scientificName]
   const setNames = (list: string[]) => set(hybrid ? { scientificNames: list } : { scientificName: list[0] ?? '' })
 
+  // 複数の植物をまとめた登録 (寄せ植え・着生)。中身ごとに名前・学名・品種名を持つ
+  const members = f.members
+  const setMember = (i: number, patch: Partial<Member>) => set({ members: members!.map((m, j) => (j === i ? { ...m, ...patch } : m)) })
+
   const save = async () => {
     const parents = names.map((n) => n.trim()).filter(Boolean)
+    const inside = members
+      ?.map((m) => ({ name: m.name.trim(), scientificName: m.scientificName.trim(), cultivar: m.cultivar?.trim() || undefined }))
+      .filter((m) => m.name || m.scientificName || m.cultivar)
     const plant: Plant = {
       ...f,
       name: f.name.trim(),
-      scientificName: parents.join(' × '),
-      scientificNames: hybrid ? parents : undefined,
+      // まとめた登録では、学名と品種名は中身のほうに持つ
+      scientificName: inside ? '' : parents.join(' × '),
+      scientificNames: hybrid && !inside ? parents : undefined,
+      cultivar: inside ? undefined : f.cultivar?.trim() || undefined,
+      members: inside,
       location: f.location.trim(),
       purchasePlace: f.purchasePlace?.trim(),
       // 水やりは必須 (オフにはできない)
@@ -109,11 +121,72 @@ export function PlantForm({ id }: { id?: string }) {
           // 和名を入れ、学名がまだ空ならそれも入れる (入力済みの学名は上書きしない)
           onPick={(h) => {
             set({ name: h.ja ?? h.sci })
-            if (!names[0].trim()) setNames([h.sci, ...names.slice(1)])
+            if (!members && !names[0].trim()) setNames([h.sci, ...names.slice(1)])
           }}
-          placeholder="例: モンステラ"
+          placeholder={members ? '例: 流木のチランジア' : '例: モンステラ'}
         />
       </Field>
+
+      <label className="line toggle">
+        <span className="line-main">
+          <span>
+            <b>複数の植物をまとめる</b>
+            <small>寄せ植え、1 本の木につけた着生植物など</small>
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          className="switch"
+          checked={!!members}
+          // オンにするときは、入力済みの学名・品種名を 1 つ目として引き継ぐ
+          onChange={(e) =>
+            set({ members: e.target.checked ? [{ name: '', scientificName: names[0], cultivar: f.cultivar }, { ...NEW_MEMBER }] : undefined })
+          }
+        />
+      </label>
+
+      {members?.map((m, i) => (
+        <section className="card member" key={i}>
+          <header>
+            <h3 className="card-t">植物 {i + 1}</h3>
+            {members.length > 1 && (
+              <button type="button" className="icon-btn muted" onClick={() => set({ members: members.filter((_, j) => j !== i) })} aria-label={`植物 ${i + 1} を外す`}>
+                <X size={16} />
+              </button>
+            )}
+          </header>
+          <Field label="名前">
+            <SuggestInput
+              search={searchName}
+              value={m.name}
+              onChange={(name) => setMember(i, { name })}
+              onPick={(h) => setMember(i, { name: h.ja ?? h.sci, scientificName: m.scientificName.trim() ? m.scientificName : h.sci })}
+              placeholder="例: イオナンタ"
+            />
+          </Field>
+          <Field label="学名">
+            <SuggestInput
+              sci
+              search={searchSci}
+              value={m.scientificName}
+              onChange={(scientificName) => setMember(i, { scientificName })}
+              onPick={(h) => setMember(i, { scientificName: h.sci })}
+              placeholder="例: Tillandsia ionantha"
+            />
+          </Field>
+          <Field label="品種名">
+            <CultivarInput sci={m.scientificName} value={m.cultivar ?? ''} onChange={(cultivar) => setMember(i, { cultivar })} />
+          </Field>
+        </section>
+      ))}
+      {members && members.length < MAX_MEMBERS && (
+        <button type="button" className="btn ghost sm preset" onClick={() => set({ members: [...members, { ...NEW_MEMBER }] })}>
+          <Plus size={15} /> 植物を追加
+        </button>
+      )}
+
+      {!members && (
+        <>
       {names.map((name, i) => (
         <Field key={i} label={hybrid ? `学名 ${i + 1}` : '学名'}>
           <span className="with-x">
@@ -149,6 +222,11 @@ export function PlantForm({ id }: { id?: string }) {
         <button type="button" className="btn ghost sm preset" onClick={() => setNames([...names, ''])}>
           <Plus size={15} /> 学名を追加
         </button>
+      )}
+      <Field label="品種名">
+        <CultivarInput sci={names[0]} value={f.cultivar ?? ''} onChange={(cultivar) => set({ cultivar })} />
+      </Field>
+        </>
       )}
       <Field label="分類">
         <select value={f.groupId ?? ''} onChange={(e) => pickGroup(e.target.value)}>

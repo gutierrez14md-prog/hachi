@@ -5,7 +5,7 @@ import { useApp } from '../ctx'
 import { db } from '../db'
 import { dueLabel, fmtDay, fmtFull, today } from '../lib/date'
 import { intervalOn, isSnoozed, lastDone, nextDue } from '../lib/schedule'
-import { Photo, Sheet } from '../parts'
+import { Photo, SciName, Sheet } from '../parts'
 import { JournalCard, sortJournal } from './Timeline'
 
 export function PlantDetail({ id }: { id: string }) {
@@ -50,13 +50,29 @@ export function PlantDetail({ id }: { id: string }) {
       {archived && <p className="banner">{fmtFull(p.archivedDay!)} にアーカイブ</p>}
       <div className="detail-h">
         <h1>{p.name}</h1>
-        {p.scientificName && <i>{p.scientificName}</i>}
+        {!p.members?.length && <SciName plant={p} />}
         {p.location && (
           <small>
             <MapPin size={12} /> {p.location}
           </small>
         )}
       </div>
+      {p.members && p.members.length > 0 && (
+        <section className="card members">
+          <h3 className="card-t">植物 {p.members.length}株</h3>
+          {p.members.map((m, i) => (
+            <div className="line" key={i}>
+              <span className="line-main">
+                <span>
+                  <b>{m.name || m.scientificName}</b>
+                  {m.name && <SciName plant={m} />}
+                  {!m.name && m.cultivar && <SciName plant={{ scientificName: '', cultivar: m.cultivar }} />}
+                </span>
+              </span>
+            </div>
+          ))}
+        </section>
+      )}
       {p.profile && <p className="profile">{p.profile}</p>}
       {facts.length > 0 && (
         <dl className="facts">

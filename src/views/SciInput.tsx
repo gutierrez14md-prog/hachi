@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useApp } from '../ctx'
+import { CULTIVARS } from '../presets'
 
-export type Hit = { sci: string; ja?: string; rank: string; family?: string }
+/** sci = 選んだときに入る文字。plain は学名ではない候補 (品種名) で、斜体にしない */
+export type Hit = { sci: string; ja?: string; rank: string; family?: string; plain?: boolean }
 type Result = { hits: Hit[]; source: string }
 type Search = (q: string, signal: AbortSignal) => Promise<Result>
 
@@ -41,6 +44,29 @@ export const searchSci: Search = (q, signal) =>
 export const searchName: Search = (q, signal) => inat(q, signal, ['species', 'subspecies', 'variety', 'form', 'hybrid'])
 
 /**
+ * 品種名 (白鯨 など) の欄。園芸品種のデータベースは無いので、候補は手元から出す:
+ * 同じ学名の株で入力済みのもの → はじめから入っている一覧 (presets.ts) → ほかの株で入力済みのもの
+ */
+export function CultivarInput({ sci, value, onChange }: { sci: string; value: string; onChange: (v: string) => void }) {
+  const { allPlants } = useApp()
+  const search = useMemo<Search>(() => {
+    const key = sci.trim().toLowerCase()
+    const used = allPlants.flatMap((p) => [p, ...(p.members ?? [])]).filter((p) => p.cultivar)
+    const same = used.filter((p) => key && p.scientificName.toLowerCase() === key).map((p) => p.cultivar!)
+    const builtIn = Object.entries(CULTIVARS).flatMap(([k, list]) => (key.includes(k) ? list : []))
+    const pool = [...new Set([...same, ...builtIn, ...used.map((p) => p.cultivar!)])]
+    return async (q) => ({
+      hits: pool
+        .filter((c) => c.toLowerCase().includes(q.toLowerCase()) && c !== q)
+        .slice(0, 8)
+        .map((c) => ({ sci: c, rank: '', plain: true })),
+      source: '',
+    })
+  }, [allPlants, sci])
+  return <SuggestInput eager search={search} value={value} onChange={onChange} onPick={(h) => onChange(h.sci)} placeholder="例: 白鯨" />
+}
+
+/**
  * 候補つきの入力欄。打った文字から候補を出し、選ぶと onPick に渡す。
  * 候補にない名前 (園芸品種・流通名など) もそのまま入力でき、通信できないときは候補が出ないだけ
  */
@@ -51,6 +77,7 @@ export function SuggestInput({
   search,
   placeholder,
   sci,
+  eager,
 }: {
   value: string
   onChange: (v: string) => void
@@ -59,14 +86,16 @@ export function SuggestInput({
   placeholder?: string
   /** 学名の欄 (学名を主に見せ、英字入力向けにする) */
   sci?: boolean
+  /** 欄に入った時点で (何も打たなくても) 候補を出す。手元の一覧から選ぶ欄向け */
+  eager?: boolean
 }) {
-  // 自分で打った文字だけを検索する (編集で開いた直後や、候補を選んだ直後には出さない)
-  const [query, setQuery] = useState('')
+  // 自分で打った文字だけを検索する (編集で開いた直後や、候補を選んだ直後には出さない)。null = 検索しない
+  const [query, setQuery] = useState<string | null>(null)
   const [result, setResult] = useState<Result | null>(null)
 
   useEffect(() => {
-    const q = query.trim()
-    if (q.length < 2) {
+    const q = query?.trim()
+    if (q == null || q.length < (eager ? 0 : 2)) {
       setResult(null)
       return
     }
@@ -75,15 +104,15 @@ export function SuggestInput({
       search(q, ctrl.signal)
         .then(setResult)
         .catch(() => {})
-    }, 300)
+    }, eager ? 0 : 300)
     return () => {
       clearTimeout(timer)
       ctrl.abort()
     }
-  }, [query, search])
+  }, [query, search, eager])
 
   const close = () => {
-    setQuery('')
+    setQuery(null)
     setResult(null)
   }
 
@@ -96,6 +125,7 @@ export function SuggestInput({
           onChange(e.target.value)
           setQuery(e.target.value)
         }}
+        onFocus={() => eager && setQuery(value)}
         onBlur={close}
         placeholder={placeholder}
         autoCapitalize={sci ? 'off' : undefined}
@@ -118,13 +148,13 @@ export function SuggestInput({
                 close()
               }}
             >
-              {sci || !h.ja ? <i>{h.sci}</i> : <b>{h.ja}</b>}
+              {h.plain ? <b>{h.sci}</b> : sci || !h.ja ? <i>{h.sci}</i> : <b>{h.ja}</b>}
               <small>
-                {sci ? [h.ja, h.rank, h.family].filter(Boolean).join(' ・ ') : h.ja ? <i>{h.sci}</i> : h.rank}
+                {sci || h.plain ? [h.ja, h.rank, h.family].filter(Boolean).join(' ・ ') : h.ja ? <i>{h.sci}</i> : h.rank}
               </small>
             </button>
           ))}
-          <small className="suggest-src">候補: {result.source}</small>
+          {result.source && <small className="suggest-src">候補: {result.source}</small>}
         </span>
       )}
     </span>

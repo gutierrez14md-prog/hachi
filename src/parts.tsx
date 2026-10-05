@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useApp } from './ctx'
 import { db } from './db'
 import { savePhoto } from './lib/photo'
+import type { Plant } from './types'
 
 /** アプリのシンボル (鉢植え)。lucide のアイコンと同じ線の太さ・使い方に合わせている */
 export function PotIcon({ size = 24 }: { size?: number }) {
@@ -40,6 +41,22 @@ export function Photo({ id, className = '' }: { id?: string; className?: string 
     <div className={`${className} ph`}>
       <PotIcon />
     </div>
+  )
+}
+
+/**
+ * 名前の下に出す 1 行: 学名 (斜体) と品種名 (' ' で囲む。斜体にしない)。
+ * 複数の植物をまとめた登録は、中身の名前を並べる
+ */
+export function SciName({ plant: p }: { plant: Pick<Plant, 'scientificName' | 'cultivar' | 'members'> }) {
+  if (p.members?.length)
+    return <span className="sci-line">{p.members.map((m) => m.name || m.scientificName).filter(Boolean).join('、')}</span>
+  if (!p.scientificName && !p.cultivar) return null
+  return (
+    <span className="sci-line">
+      <i>{p.scientificName}</i>
+      {p.cultivar && ` '${p.cultivar}'`}
+    </span>
   )
 }
 

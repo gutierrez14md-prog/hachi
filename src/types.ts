@@ -18,6 +18,12 @@ export interface Schedule {
 
 export type CareSettings = Record<SchedType, Schedule>
 
+export interface Member {
+  name: string
+  scientificName: string
+  cultivar?: string
+}
+
 export interface Plant {
   id: string
   name: string
@@ -25,6 +31,13 @@ export interface Plant {
   scientificName: string
   /** ハイブリッド (交配種) のときだけ: 交配親の学名 (4 つまで) */
   scientificNames?: string[]
+  /** 園芸品種名・流通名 (白鯨 など)。学名のあとに ' ' で囲んで出す */
+  cultivar?: string
+  /**
+   * 1 つの鉢や着生木に複数の植物をまとめているとき (寄せ植え、流木につけたチランジアなど) の中身。
+   * 入っていれば、この登録の学名・品種名は使わず、ケアはまとめて 1 つとして扱う
+   */
+  members?: Member[]
   location: string
   profile: string
   photoId?: string

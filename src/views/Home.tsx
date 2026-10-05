@@ -4,8 +4,8 @@ import { CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { dueLabel, fmtDay, today } from '../lib/date'
 import { nextDue } from '../lib/schedule'
-import { Photo, PotIcon } from '../parts'
-import type { SchedType } from '../types'
+import { Photo, PotIcon, SciName } from '../parts'
+import type { Plant, SchedType } from '../types'
 
 type Sort = 'water' | 'name' | 'sci' | 'new'
 const SORTS: [Sort, string][] = [
@@ -37,6 +37,8 @@ export function Home() {
     .map((r) => ({ ...r, types: SCHED.filter((s) => r.due[s] && r.due[s]! <= t) }))
     .filter((r) => r.types.length)
   const waterDue = dueNow.filter((r) => r.types.includes('water')).map((r) => r.p.id)
+  // 上のカードの株数は、まとめた登録 (寄せ植え・着生) の中身も 1 株ずつ数える
+  const heads = (list: Plant[]) => list.reduce((n, p) => n + (p.members?.length || 1), 0)
 
   const locations = [...new Set(plants.map((p) => p.location).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ja'))
   // 絞り込みに出すのは、実際に株がある分類だけ
@@ -49,7 +51,14 @@ export function Home() {
     .filter(
       (r) =>
         !needle ||
-        [r.p.name, r.p.scientificName, r.p.location, groupName.get(r.p.groupId ?? '') ?? ''].some((v) => v.toLowerCase().includes(needle)),
+        [
+          r.p.name,
+          r.p.scientificName,
+          r.p.cultivar,
+          r.p.location,
+          groupName.get(r.p.groupId ?? ''),
+          ...(r.p.members ?? []).flatMap((m) => [m.name, m.scientificName, m.cultivar]),
+        ].some((v) => v?.toLowerCase().includes(needle)),
     )
     .sort((a, b) => {
       if (sort === 'name') return a.p.name.localeCompare(b.p.name, 'ja')
@@ -87,14 +96,14 @@ export function Home() {
           <div>
             <p className="eyebrow">今日のケア</p>
             <p className="hero-n">
-              {dueNow.length}
+              {heads(dueNow.map((r) => r.p))}
               <small>株</small>
             </p>
           </div>
           <div>
             <p className="eyebrow">育てている株</p>
             <p className="hero-n">
-              {plants.length}
+              {heads(plants)}
               <small>株</small>
             </p>
           </div>
@@ -202,7 +211,7 @@ export function Home() {
                 <Photo id={p.photoId} className="thumb" />
                 <span className="plant-text">
                   <b>{p.name}</b>
-                  {p.scientificName && <i>{p.scientificName}</i>}
+                  <SciName plant={p} />
                   <small>
                     {p.location && (
                       <>

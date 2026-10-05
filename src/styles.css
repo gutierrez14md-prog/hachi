@@ -935,6 +935,41 @@ input::-webkit-date-and-time-value {
   align-items: center;
   gap: 4px;
 }
+/* 名前の下の 1 行 (学名 + 品種名、またはまとめた植物の名前) */
+.sci-line {
+  display: block;
+  color: var(--muted);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sci-line i, .plant-text .sci-line i, .detail-h .sci-line i {
+  display: inline;
+  font-size: inherit;
+}
+.detail-h .sci-line {
+  font-size: 15px;
+  white-space: normal;
+}
+.card.members {
+  margin-top: 14px;
+}
+.card.members .sci-line {
+  white-space: normal;
+}
+.card.member {
+  padding: 4px 14px 2px;
+}
+.card.member header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+}
+.card.member .card-t {
+  padding: 0;
+}
 .with-x > .suggest {
   flex: 1;
   min-width: 0;

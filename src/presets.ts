@@ -15,6 +15,17 @@ export const defaultCare = (): CareSettings => ({
   tonic: sched(false, 14, 'pause', 30),
 })
 
+/**
+ * 品種名の候補のうち、はじめから入れておくもの。キーは学名 (小文字) の一部。
+ * 園芸品種を網羅したデータベースは無いので、ここに無い名前は、一度入力すれば次から候補に出る
+ */
+export const CULTIVARS: Record<string, string[]> = {
+  'agave titanota': [
+    '白鯨', 'シーザー', 'ハデス', 'レッドキャットウィーズル', 'スナグルトゥース', 'ブラックアンドブルー',
+    '姫厳竜', '厳竜', '南アフリカダイヤモンド', '農大No.1', 'FO-076', '恐竜牙歯', '狼人', '海王', '金剛',
+  ],
+}
+
 /** 水やりを月ごとの間隔 (1〜12 月、0 = お休み) で持つプリセット */
 const group = (id: string, name: string, dormantMonths: number[], water: number[], profile: string): Group => ({
   id,
