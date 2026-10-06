@@ -1146,6 +1146,12 @@ input::-webkit-date-and-time-value {
   font-size: 14px;
   font-weight: 600;
 }
+.fold.tight {
+  margin-top: 8px;
+}
+.gap-top {
+  margin-top: 16px;
+}
 .fold .flip {
   rotate: 180deg;
 }

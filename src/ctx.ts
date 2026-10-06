@@ -12,6 +12,7 @@ export type Overlay =
   | { k: 'group'; id?: string }
   | { k: 'snooze'; plantId: string }
   | { k: 'archive' }
+  | { k: 'feedback' }
 
 export interface AppCtx {
   /** 育てている株 (アーカイブを除く) */

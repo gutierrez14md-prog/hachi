@@ -169,8 +169,13 @@ export function SettingsView() {
         </label>
       </div>
 
+      <button className="fold" onClick={() => open({ k: 'feedback' })}>
+        リクエストを送る
+        <ChevronRight size={18} />
+      </button>
+
       {/* 説明は画面に置かず、ここにまとめる。長いので、押すまで閉じておく */}
-      <button className="fold" aria-expanded={guideOpen} onClick={() => setGuideOpen((o) => !o)}>
+      <button className="fold tight" aria-expanded={guideOpen} onClick={() => setGuideOpen((o) => !o)}>
         使い方
         <ChevronDown size={18} className={guideOpen ? 'flip' : ''} />
       </button>
