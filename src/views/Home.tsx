@@ -151,35 +151,44 @@ export function Home() {
   return (
     <>
       {weather && sky ? (
-        // 天気を出すとき: 植物のカード (濃い色) と天気のカード (白) を横に並べる。話が別なので枠を分ける
+        // 天気を出すとき: 植物のカード (濃い色) と天気のカード (白) を横に並べる。話が別なので枠を分ける。
+        // どちらも主役の数字は 1 つだけ (今日のケア、今の気温) にして、ほかは小さく添える
         <div className="hero-pair">
           <section className="hero-card">
-            <div className="hero-stats">{stats}</div>
+            {/* 主役の今日のケアを左に大きく、育てている株は右端に小さめに。カードの右側を空けない */}
+            <div className="hero-two">
+              <p className="eyebrow">今日のケア</p>
+              <p className="eyebrow">育てている株</p>
+              <p className="hero-n">
+                {heads(dueNow.map((r) => r.p))}
+                <small>株</small>
+              </p>
+              <p className="hero-n second">
+                {heads(plants)}
+                <small>株</small>
+              </p>
+            </div>
             <p className="hero-sub">
               明日のケア <b>{heads(dueTomorrow)}株</b>
             </p>
           </section>
           <section className="wx-card" aria-label="今日の天気">
             <p className="eyebrow">
-              <span>
-                {fromKey(t).getMonth() + 1}/{fromKey(t).getDate()} {WEEKDAYS[fromKey(t).getDay()]}
-              </span>
-              <span className="wx-hum" aria-label={`湿度${Math.round(weather.humidity)}%`}>
+              {fromKey(t).getMonth() + 1}/{fromKey(t).getDate()} {WEEKDAYS[fromKey(t).getDay()]}
+            </p>
+            <p className="hero-n wx-now" aria-label={`${sky.label} ${Math.round(weather.temp)}度`}>
+              <sky.Icon size={22} />
+              {Math.round(weather.temp)}°
+            </p>
+            <p className="hero-sub wx-sub">
+              <b aria-label={`最高${Math.round(weather.max)}度 最低${Math.round(weather.min)}度`}>
+                {Math.round(weather.max)}° / {Math.round(weather.min)}°
+              </b>
+              <span aria-label={`湿度${Math.round(weather.humidity)}%`}>
                 <Droplets size={12} />
-                {Math.round(weather.humidity)}%
+                <b>{Math.round(weather.humidity)}%</b>
               </span>
             </p>
-            {/* 今の気温はカードの幅に合わせて大きくし、右端に最高 (上) と最低 (下) を積む。右側を空けない */}
-            <div className="wx-main">
-              <p className="hero-n wx-now" aria-label={`${sky.label} ${Math.round(weather.temp)}度`}>
-                <sky.Icon />
-                {Math.round(weather.temp)}°
-              </p>
-              <p className="wx-range" aria-label={`最高${Math.round(weather.max)}度 最低${Math.round(weather.min)}度`}>
-                <span>{Math.round(weather.max)}°</span>
-                <span>{Math.round(weather.min)}°</span>
-              </p>
-            </div>
           </section>
         </div>
       ) : (
