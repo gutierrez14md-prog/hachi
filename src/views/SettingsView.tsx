@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, ChevronRight, Download, Plus, Upload } from 'lucide-react'
+import { Bell, ChevronDown, ChevronRight, CloudSun, Download, Plus, Upload } from 'lucide-react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
 import { applyFont, applyNameFont, applyTheme, FONTS, getFont, getNameFont, getTheme, NAME_FONTS } from '../lib/appearance'
@@ -9,6 +9,7 @@ import { enableNotifications, testNotification } from '../lib/reminder'
 import type { Settings } from '../types'
 import { today } from '../lib/date'
 import { intervalOn } from '../lib/schedule'
+import { clearPlace, getPlace, locate } from '../lib/weather'
 import { careLabel, METHODS } from '../method'
 import { MonthChips } from './CareEditor'
 
@@ -21,6 +22,25 @@ export function SettingsView() {
   const [theme, setTheme] = useState(getTheme)
   const [font, setFont] = useState(getFont)
   const [nameFont, setNameFont] = useState(getNameFont)
+
+  // 天気: オンにしたとき (と「現在地に更新」) にだけ位置情報を取り、以後はその場所を使い続ける
+  const [weatherOn, setWeatherOn] = useState(() => !!getPlace())
+  const [locating, setLocating] = useState(false)
+  const toggleWeather = async (on: boolean) => {
+    if (!on) {
+      clearPlace()
+      return setWeatherOn(false)
+    }
+    setLocating(true)
+    try {
+      await locate()
+      setWeatherOn(true)
+      toast('ホームに今日の天気を出します')
+    } catch (e) {
+      toast((e as Error).message)
+    }
+    setLocating(false)
+  }
 
   const toggleNotify = async (on: boolean) => {
     if (!on) return save({ notify: false })
@@ -83,6 +103,32 @@ export function SettingsView() {
           </button>
         ))}
       </div>
+
+      <h3 className="sec">天気</h3>
+      <section className="card">
+        <label className="line">
+          <span className="care-ic">
+            <CloudSun size={18} />
+          </span>
+          <span className="line-main">
+            <span>
+              <b>ホームに今日の天気を出す</b>
+              <small>現在地の気温・湿度・降水確率</small>
+            </span>
+          </span>
+          <input type="checkbox" className="switch" checked={weatherOn} disabled={locating} onChange={(e) => toggleWeather(e.target.checked)} />
+        </label>
+        {weatherOn && (
+          <div className="line">
+            <span className="line-main">
+              <b>場所</b>
+            </span>
+            <button className="btn ghost sm" disabled={locating} onClick={() => toggleWeather(true)}>
+              {locating ? '取得中…' : '現在地に更新'}
+            </button>
+          </div>
+        )}
+      </section>
 
       <h3 className="sec">リマインド</h3>
       <section className="card">

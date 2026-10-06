@@ -5,6 +5,7 @@ import { useApp } from '../ctx'
 import { diffDays, dueLabel, fmtDay, fmtFull, today } from '../lib/date'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import { nextDue } from '../lib/schedule'
+import { describe, useWeather } from '../lib/weather'
 import { Photo, PotIcon, SciName } from '../parts'
 import type { Plant, SchedType } from '../types'
 
@@ -31,6 +32,8 @@ export function Home() {
   const [method, setMethod] = useState('')
   const [sort, setSort] = useState<Sort>(() => (localStorage.getItem('sort') as Sort) || 'water')
   const t = today()
+  const weather = useWeather(t)
+  const sky = weather && describe(weather.code)
 
   const rows = useMemo(
     () =>
@@ -139,7 +142,23 @@ export function Home() {
             </p>
           </div>
         </div>
-        <p className="eyebrow">{fmtDay(t)}</p>
+        <div className="hero-side">
+          <p className="eyebrow">{fmtDay(t)}</p>
+          {weather && sky && (
+            <>
+              <p className="wx" aria-label={`${sky.label} ${Math.round(weather.temp)}度`}>
+                <sky.Icon size={22} />
+                {Math.round(weather.temp)}°
+              </p>
+              <p className="eyebrow">
+                {sky.label} ・ 湿度 {Math.round(weather.humidity)}%
+              </p>
+              <p className="eyebrow">
+                {Math.round(weather.max)}° / {Math.round(weather.min)}°{weather.rain != null && ` ・ 雨 ${weather.rain}%`}
+              </p>
+            </>
+          )}
+        </div>
       </section>
 
       {dueNow.length > 0 && (

@@ -468,6 +468,22 @@ input[type='number'] {
   display: flex;
   gap: 28px;
 }
+.hero-side {
+  text-align: right;
+}
+/* 今の天気と気温 */
+.wx {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 6px;
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: calc(22px * var(--ds));
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
 .hero-card .eyebrow {
   color: inherit;
   opacity: 0.7;
