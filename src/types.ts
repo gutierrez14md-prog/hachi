@@ -18,6 +18,9 @@ export interface Schedule {
 
 export type CareSettings = Record<SchedType, Schedule>
 
+/** 栽培方法: 土植え / 着生 / 腰水 / 水耕栽培 */
+export type Method = 'soil' | 'mount' | 'bottom' | 'hydro'
+
 export interface Member {
   name: string
   scientificName: string
@@ -43,6 +46,7 @@ export interface Plant {
   photoId?: string
   /** 分類 (Group.id) */
   groupId?: string
+  method?: Method
   /** 休眠期の月 (1-12) */
   dormantMonths: number[]
   care: CareSettings
@@ -63,6 +67,8 @@ export interface Plant {
 export interface Group {
   id: string
   name: string
+  /** この分類でふつうの栽培方法 (チランジアなら着生)。植物を追加するときの初期値になる */
+  method?: Method
   dormantMonths: number[]
   care: CareSettings
   /** 育て方メモのひな形 */

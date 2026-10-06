@@ -5,6 +5,7 @@ import { useApp } from '../ctx'
 import { db } from '../db'
 import { dueLabel, fmtDay, fmtFull, today } from '../lib/date'
 import { intervalOn, isSnoozed, lastDone, nextDue } from '../lib/schedule'
+import { careLabel, METHODS } from '../method'
 import { Photo, SciName, Sheet } from '../parts'
 import { JournalCard, sortJournal } from './Timeline'
 
@@ -25,6 +26,7 @@ export function PlantDetail({ id }: { id: string }) {
   const sched = SCHED.filter((s) => p.care[s].enabled)
   const facts = [
     ['分類', groups.find((g) => g.id === p.groupId)?.name],
+    ['栽培方法', p.method && METHODS[p.method].label],
     ['入手日', p.purchaseDate && fmtFull(p.purchaseDate)],
     ['購入場所', p.purchasePlace],
     ['購入金額', p.purchasePrice != null && `¥${p.purchasePrice.toLocaleString('ja-JP')}`],
@@ -89,7 +91,8 @@ export function PlantDetail({ id }: { id: string }) {
         <section className="card">
           <h3 className="card-t">次のケア</h3>
           {sched.map((s) => {
-            const { Icon, label } = CARE[s]
+            const { Icon } = CARE[s]
+            const label = careLabel(s, p)
             const due = nextDue(p, s, logs)
             const last = lastDone(logs, s)
             const every = intervalOn(p, p.care[s], t)
@@ -128,7 +131,8 @@ export function PlantDetail({ id }: { id: string }) {
           <h3 className="sec">ケアを記録</h3>
           <div className="type-grid">
             {ALL_TYPES.map((ty) => {
-              const { Icon, label } = CARE[ty]
+              const { Icon } = CARE[ty]
+              const label = careLabel(ty, p)
               return (
                 <button key={ty} style={careVar(ty)} onClick={() => open({ k: 'log', plantId: id, type: ty })}>
                   <span className="care-ic">
@@ -167,7 +171,8 @@ export function PlantDetail({ id }: { id: string }) {
       {logs.length ? (
         <section className="card">
           {(showAll ? logs : logs.slice(0, 10)).map((l) => {
-            const { Icon, label } = CARE[l.type]
+            const { Icon } = CARE[l.type]
+            const label = careLabel(l.type, p)
             return (
               <div className="line" key={l.id}>
                 <span className="care-ic" style={careVar(l.type)}>

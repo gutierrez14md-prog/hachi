@@ -6,7 +6,8 @@ import { db, deletePlant, newId } from '../db'
 import { today } from '../lib/date'
 import { Field, PhotoPicker, Sheet } from '../parts'
 import { defaultCare } from '../presets'
-import type { Member, Plant, SchedType } from '../types'
+import { careLabel, METHOD_IDS, METHODS } from '../method'
+import type { Member, Method, Plant, SchedType } from '../types'
 import { CareEditor, cleanCare, hasInterval } from './CareEditor'
 import { CultivarInput, searchName, searchSci, SuggestInput } from './SciInput'
 
@@ -38,7 +39,14 @@ export function PlantForm({ id }: { id?: string }) {
   const group = groups.find((g) => g.id === f.groupId)
 
   const applyPreset = (g = group) => {
-    if (g) setF((v) => ({ ...v, care: structuredClone(g.care), dormantMonths: [...g.dormantMonths], profile: v.profile || g.profile }))
+    if (g)
+      setF((v) => ({
+        ...v,
+        care: structuredClone(g.care),
+        dormantMonths: [...g.dormantMonths],
+        profile: v.profile || g.profile,
+        method: g.method ?? v.method,
+      }))
   }
   const pickGroup = (groupId: string) => {
     set({ groupId: groupId || undefined })
@@ -243,6 +251,16 @@ export function PlantForm({ id }: { id?: string }) {
           「{group.name}」のケア設定を反映
         </button>
       )}
+      <Field label="栽培方法">
+        <select value={f.method ?? ''} onChange={(e) => set({ method: (e.target.value || undefined) as Method | undefined })}>
+          <option value="">未設定</option>
+          {METHOD_IDS.map((m) => (
+            <option key={m} value={m}>
+              {METHODS[m].label}
+            </option>
+          ))}
+        </select>
+      </Field>
       <Field label="置き場所">
         <input
           value={f.location}
@@ -288,6 +306,7 @@ export function PlantForm({ id }: { id?: string }) {
         dormantMonths={f.dormantMonths}
         onChange={set}
         required={['water']}
+        labels={{ water: careLabel('water', f) }}
         extra={
           existing
             ? undefined

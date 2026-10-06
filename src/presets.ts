@@ -1,4 +1,4 @@
-import type { CareSettings, Group, Schedule } from './types'
+import type { CareSettings, Group, Method, Schedule } from './types'
 
 const sched = (enabled: boolean, days: number, offMode: Schedule['offMode'], offDays: number): Schedule => ({
   enabled,
@@ -27,9 +27,10 @@ export const CULTIVARS: Record<string, string[]> = {
 }
 
 /** 水やりを月ごとの間隔 (1〜12 月、0 = お休み) で持つプリセット */
-const group = (id: string, name: string, dormantMonths: number[], water: number[], profile: string): Group => ({
+const group = (id: string, name: string, dormantMonths: number[], water: number[], profile: string, method: Method = 'soil'): Group => ({
   id,
   name,
+  method,
   dormantMonths,
   care: { ...defaultCare(), water: { ...sched(true, 7, 'custom', 14), monthly: water } },
   profile,
@@ -44,7 +45,7 @@ export const defaultGroups = (): Group[] => [
   group('g-euphorbia', 'ユーフォルビア', [12, 1, 2], [30, 30, 21, 10, 7, 7, 7, 7, 7, 10, 14, 30], '寒さに弱い種類が多い。冬は室内でほぼ断水。'),
   group('g-cactus', 'サボテン', [12, 1, 2], [30, 30, 14, 10, 7, 7, 10, 10, 7, 10, 14, 30], '真夏は蒸れに注意。冬は月 1 回ほど。'),
   group('g-caudex', '塊根植物', [11, 12, 1, 2, 3], [0, 0, 0, 14, 7, 7, 7, 7, 7, 10, 21, 0], '葉が落ちたら断水。芽が動いたら少しずつ再開。'),
-  group('g-tillandsia', 'チランジア', [12, 1, 2], [5, 5, 3, 3, 3, 2, 2, 2, 3, 3, 5, 5], '水やり = ミスティング。風通しよく、濡れたままにしない。'),
+  group('g-tillandsia', 'チランジア', [12, 1, 2], [5, 5, 3, 3, 3, 2, 2, 2, 3, 3, 5, 5], '水やり = ミスティング。風通しよく、濡れたままにしない。', 'mount'),
   group('g-fern', 'シダ', [12, 1, 2], [5, 5, 4, 3, 3, 2, 2, 2, 3, 3, 4, 5], '乾燥に弱い。明るい日陰で、土を乾かしきらない。'),
   group('g-foliage', '観葉植物', [12, 1, 2], [14, 14, 10, 7, 7, 5, 5, 5, 7, 7, 10, 14], '土の表面が乾いたらたっぷり。冬は乾かし気味に。'),
 ]

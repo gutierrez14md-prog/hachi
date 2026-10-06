@@ -9,6 +9,7 @@ import { enableNotifications, testNotification } from '../lib/reminder'
 import type { Settings } from '../types'
 import { today } from '../lib/date'
 import { intervalOn } from '../lib/schedule'
+import { careLabel, METHODS } from '../method'
 import { MonthChips } from './CareEditor'
 
 export function SettingsView() {
@@ -110,7 +111,7 @@ export function SettingsView() {
               <span className="line-main">
                 <span>
                   <b>{g.name}</b>
-                  <small>{!g.care.water.enabled ? '水やり予定なし' : every ? `水やり 今月は${every}日ごと` : '水やり 今月はお休み'}</small>
+                  <small>{[g.method && METHODS[g.method].label, !g.care.water.enabled ? `${careLabel('water', g)}の予定なし` : every ? `${careLabel('water', g)} 今月は${every}日ごと` : `${careLabel('water', g)} 今月はお休み`].filter(Boolean).join(' ・ ')}</small>
                 </span>
               </span>
               <ChevronRight size={18} className="soft" />

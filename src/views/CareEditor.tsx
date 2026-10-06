@@ -48,7 +48,10 @@ export function CareEditor({
   onChange,
   extra,
   required,
+  labels,
 }: {
+  /** ケアの呼び名の差し替え (栽培方法によって「水やり」を「水替え」と呼ぶ、など) */
+  labels?: Partial<Record<SchedType, string>>
   /** オン / オフを選ばせず、必ず設定させるケア */
   required?: SchedType[]
   care: CareSettings
@@ -65,7 +68,8 @@ export function CareEditor({
     <>
       {SCHED.map((s) => {
         const c = care[s]
-        const { Icon, label } = CARE[s]
+        const { Icon } = CARE[s]
+        const label = labels?.[s] ?? CARE[s].label
         const must = required?.includes(s)
         return (
           <section key={s} className="card care" style={careVar(s)}>

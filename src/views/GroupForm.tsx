@@ -4,7 +4,8 @@ import { useApp } from '../ctx'
 import { db, newId } from '../db'
 import { Field, Sheet } from '../parts'
 import { defaultCare } from '../presets'
-import type { Group } from '../types'
+import { careLabel, METHOD_IDS, METHODS } from '../method'
+import type { Group, Method } from '../types'
 import { CareEditor, cleanCare } from './CareEditor'
 
 /** 分類と、そのケア設定のプリセットの編集 */
@@ -29,7 +30,9 @@ export function GroupForm({ id }: { id?: string }) {
   const applyToMembers = async () => {
     if (!confirm(`「${f.name}」の ${members.length} 株のケア設定を、この内容で上書きします。よろしいですか？`)) return
     const group = await put()
-    await db.plants.bulkPut(members.map((p) => ({ ...p, care: structuredClone(group.care), dormantMonths: [...group.dormantMonths] })))
+    await db.plants.bulkPut(
+      members.map((p) => ({ ...p, care: structuredClone(group.care), dormantMonths: [...group.dormantMonths], method: group.method ?? p.method })),
+    )
     toast(`${members.length}株に反映しました`)
     close()
   }
@@ -51,12 +54,22 @@ export function GroupForm({ id }: { id?: string }) {
       <Field label="分類名">
         <input value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="例: アガベ、サボテン" />
       </Field>
+      <Field label="栽培方法">
+        <select value={f.method ?? ''} onChange={(e) => set({ method: (e.target.value || undefined) as Method | undefined })}>
+          <option value="">未設定</option>
+          {METHOD_IDS.map((m) => (
+            <option key={m} value={m}>
+              {METHODS[m].label}
+            </option>
+          ))}
+        </select>
+      </Field>
       <Field label="育て方メモのひな形">
         <textarea rows={3} value={f.profile} onChange={(e) => set({ profile: e.target.value })} />
       </Field>
 
       <h3 className="sec">ケアの設定</h3>
-      <CareEditor care={f.care} dormantMonths={f.dormantMonths} onChange={set} />
+      <CareEditor care={f.care} dormantMonths={f.dormantMonths} onChange={set} labels={{ water: careLabel('water', f) }} />
 
       {members.length > 0 && (
         <button className="btn ghost full preset" disabled={!f.name.trim()} onClick={applyToMembers}>

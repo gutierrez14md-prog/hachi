@@ -23,6 +23,16 @@ class HachiDB extends Dexie {
     this.version(2)
       .stores({ groups: 'id' })
       .upgrade((tx) => tx.table('groups').bulkAdd(defaultGroups()))
+    // v3: 分類に栽培方法を持たせた。はじめから入っている分類のうち、まだ決めていないものに初期値を入れる
+    this.version(3).upgrade((tx) => {
+      const methods = new Map(defaultGroups().map((g) => [g.id, g.method]))
+      return tx
+        .table('groups')
+        .toCollection()
+        .modify((g: Group) => {
+          if (!g.method && methods.has(g.id)) g.method = methods.get(g.id)
+        })
+    })
     this.on('populate', (tx) => tx.table('groups').bulkAdd(defaultGroups()))
   }
 }

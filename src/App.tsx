@@ -6,6 +6,7 @@ import { Ctx, type AppCtx, type Overlay } from './ctx'
 import { db, DEFAULT_SETTINGS, newId } from './db'
 import { today } from './lib/date'
 import { checkNotify, syncReminder } from './lib/reminder'
+import { careLabel } from './method'
 import { PotIcon } from './parts'
 import type { CareLog } from './types'
 import { Archive, Snooze } from './views/Archive'
@@ -83,10 +84,13 @@ export default function App() {
     async (plantIds, type, date = today(), note = '') => {
       const rows = plantIds.map((plantId) => ({ id: newId(), plantId, type, date, note, at: Date.now() }))
       await db.logs.bulkAdd(rows)
-      const what = plantIds.length > 1 ? `${plantIds.length}株の${CARE[type].label}` : CARE[type].label
+      // 呼び名は栽培方法に合わせる (水替え など)。呼び名の違う株が混ざるときは、ふつうの呼び名にする
+      const names = new Set(plantIds.map((id) => careLabel(type, allPlants?.find((p) => p.id === id))))
+      const label = names.size === 1 ? [...names][0] : CARE[type].label
+      const what = plantIds.length > 1 ? `${plantIds.length}株の${label}` : label
       showToast(`${what}を記録しました`, () => db.logs.bulkDelete(rows.map((r) => r.id)))
     },
-    [showToast],
+    [showToast, allPlants],
   )
 
   useEffect(() => {

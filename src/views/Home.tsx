@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { dueLabel, fmtDay, today } from '../lib/date'
+import { careLabel, METHOD_IDS, METHODS } from '../method'
 import { nextDue } from '../lib/schedule'
 import { Photo, PotIcon, SciName } from '../parts'
 import type { Plant, SchedType } from '../types'
@@ -20,6 +21,7 @@ export function Home() {
   const [q, setQ] = useState('')
   const [loc, setLoc] = useState('')
   const [grp, setGrp] = useState('')
+  const [method, setMethod] = useState('')
   const [sort, setSort] = useState<Sort>(() => (localStorage.getItem('sort') as Sort) || 'water')
   const t = today()
 
@@ -44,10 +46,13 @@ export function Home() {
   // 絞り込みに出すのは、実際に株がある分類だけ
   const groupName = new Map(groups.map((g) => [g.id, g.name]))
   const usedGroups = groups.filter((g) => plants.some((p) => p.groupId === g.id))
+  // 栽培方法の絞り込みは、2 種類以上を使い分けているときだけ出す
+  const usedMethods = METHOD_IDS.filter((m) => plants.some((p) => p.method === m))
   const needle = q.trim().toLowerCase()
   const list = rows
     .filter((r) => !loc || r.p.location === loc)
     .filter((r) => !grp || r.p.groupId === grp)
+    .filter((r) => !method || r.p.method === method)
     .filter(
       (r) =>
         !needle ||
@@ -57,6 +62,7 @@ export function Home() {
           r.p.cultivar,
           r.p.location,
           groupName.get(r.p.groupId ?? ''),
+          r.p.method && METHODS[r.p.method].label,
           ...(r.p.members ?? []).flatMap((m) => [m.name, m.scientificName, m.cultivar]),
         ].some((v) => v?.toLowerCase().includes(needle)),
     )
@@ -124,7 +130,8 @@ export function Home() {
               </button>
               <div className="due-acts">
                 {types.map((s) => {
-                  const { Icon, label } = CARE[s]
+                  const { Icon } = CARE[s]
+                  const label = careLabel(s, p)
                   return (
                     <button key={s} className="pill" style={careVar(s)} onClick={() => record([p.id], s)}>
                       <Icon size={15} />
@@ -148,7 +155,7 @@ export function Home() {
 
       <div className="search">
         <Search size={18} />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="名前・学名・分類で検索" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="名前・学名・分類などで検索" />
         {q && (
           <button onClick={() => setQ('')} aria-label="クリア">
             <X size={16} />
@@ -201,6 +208,19 @@ export function Home() {
         </div>
       )}
 
+      {usedMethods.length > 1 && (
+        <div className="chips scroll">
+          <button className={`chip ${!method ? 'on' : ''}`} onClick={() => setMethod('')}>
+            全方法
+          </button>
+          {usedMethods.map((m) => (
+            <button key={m} className={`chip ${method === m ? 'on' : ''}`} onClick={() => setMethod(method === m ? '' : m)}>
+              {METHODS[m].label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <ul className="plants">
         {list.map(({ p, due }) => {
           const w = due.water
@@ -219,7 +239,7 @@ export function Home() {
                         {' ・ '}
                       </>
                     )}
-                    <span className={late ? 'late' : ''}>{w ? `水やり ${dueLabel(w)}` : '水やり予定なし'}</span>
+                    <span className={late ? 'late' : ''}>{w ? `${careLabel('water', p)} ${dueLabel(w)}` : `${careLabel('water', p)}の予定なし`}</span>
                   </small>
                 </span>
               </button>
@@ -227,7 +247,7 @@ export function Home() {
                 className={`drop ${late ? 'on' : ''}`}
                 style={careVar('water')}
                 onClick={() => record([p.id], 'water')}
-                aria-label={`${p.name}に水やりを記録`}
+                aria-label={`${p.name}に${careLabel('water', p)}を記録`}
               >
                 <CARE.water.Icon size={20} />
               </button>
