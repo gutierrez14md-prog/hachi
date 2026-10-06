@@ -1,8 +1,8 @@
-import { Archive, CalendarClock, Check, Droplets, MapPin, Search, ThermometerSnowflake, ThermometerSun, X } from 'lucide-react'
+import { Archive, CalendarClock, Check, Droplets, MapPin, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
-import { diffDays, dueLabel, fmtDay, fmtFull, fromKey, today } from '../lib/date'
+import { addDays, diffDays, dueLabel, fmtDay, fmtFull, fromKey, today } from '../lib/date'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import { nextDue } from '../lib/schedule'
 import { describe, useWeather } from '../lib/weather'
@@ -50,6 +50,9 @@ export function Home() {
   const dueNow = rows
     .map((r) => ({ ...r, types: SCHED.filter((s) => r.due[s] && r.due[s]! <= t) }))
     .filter((r) => r.types.length)
+  // 明日が予定日の株 (天気を出しているとき、植物のカードに添える)
+  const tomorrow = addDays(t, 1)
+  const dueTomorrow = rows.filter((r) => SCHED.some((s) => r.due[s] === tomorrow)).map((r) => r.p)
   const waterDue = dueNow.filter((r) => r.types.includes('water')).map((r) => r.p.id)
   // 上のカードの株数は、まとめた登録 (寄せ植え・着生) の中身も 1 株ずつ数える
   const heads = (list: Plant[]) => list.reduce((n, p) => n + (p.members?.length || 1), 0)
@@ -148,43 +151,35 @@ export function Home() {
   return (
     <>
       {weather && sky ? (
-        // 天気を出すとき: 4 列 × 2 段。左に日付と株数、右に天気 (今の気温・湿度 / 最高・最低) をそろえて並べる
-        <section className="hero-card grid">
-          <div className="span2">
-            <p className="eyebrow">{WEEKDAYS[fromKey(t).getDay()]}曜日</p>
-            <p className="hero-n">
-              {fromKey(t).getMonth() + 1}/{fromKey(t).getDate()}
+        // 天気を出すとき: 植物のカード (濃い色) と天気のカード (白) を横に並べる。話が別なので枠を分ける
+        <div className="hero-pair">
+          <section className="hero-card">
+            <div className="hero-stats">{stats}</div>
+            <p className="hero-sub">
+              明日のケア <b>{heads(dueTomorrow)}株</b>
             </p>
-          </div>
-          <div aria-label={`${sky.label} 気温${Math.round(weather.temp)}度`}>
-            <p className="hero-ic">
-              <sky.Icon size={17} />
+          </section>
+          <section className="wx-card" aria-label="今日の天気">
+            <p className="eyebrow">
+              <span>
+                {fromKey(t).getMonth() + 1}/{fromKey(t).getDate()} {WEEKDAYS[fromKey(t).getDay()]}
+              </span>
+              <span className="wx-hum" aria-label={`湿度${Math.round(weather.humidity)}%`}>
+                <Droplets size={12} />
+                {Math.round(weather.humidity)}%
+              </span>
             </p>
-            <p className="hero-n">{Math.round(weather.temp)}°</p>
-          </div>
-          <div aria-label={`湿度${Math.round(weather.humidity)}%`}>
-            <p className="hero-ic">
-              <Droplets size={17} />
+            <p className="hero-n wx-now" aria-label={`${sky.label} ${Math.round(weather.temp)}度`}>
+              <sky.Icon size={20} />
+              {Math.round(weather.temp)}°
             </p>
-            <p className="hero-n">
-              {Math.round(weather.humidity)}
-              <small>%</small>
+            <p className="hero-sub" aria-label={`最高${Math.round(weather.max)}度 最低${Math.round(weather.min)}度`}>
+              <b>
+                {Math.round(weather.max)}° / {Math.round(weather.min)}°
+              </b>
             </p>
-          </div>
-          {stats}
-          <div aria-label={`最高気温${Math.round(weather.max)}度`}>
-            <p className="hero-ic">
-              <ThermometerSun size={17} />
-            </p>
-            <p className="hero-n">{Math.round(weather.max)}°</p>
-          </div>
-          <div aria-label={`最低気温${Math.round(weather.min)}度`}>
-            <p className="hero-ic">
-              <ThermometerSnowflake size={17} />
-            </p>
-            <p className="hero-n">{Math.round(weather.min)}°</p>
-          </div>
-        </section>
+          </section>
+        </div>
       ) : (
         <section className="hero-card">
           <div className="hero-stats">{stats}</div>

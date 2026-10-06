@@ -468,39 +468,68 @@ input[type='number'] {
   display: flex;
   gap: 28px;
 }
-/* 天気を出すとき: 4 列 × 2 段。上の段は日付 (2 列ぶん)・今の気温・湿度、下の段は株数 2 つ・最高・最低。
-   どのマスも「小さな見出し or アイコン + 大きな数字」の同じ形にして、列の左端をそろえる */
-.hero-card.grid {
+/* 天気を出すとき: 植物のカード (濃い色・広め) と天気のカード (白) を横に並べる。
+   どちらも「小さな見出し / 大きな数字 / 小さな添え書き」の 3 行で、高さがそろう */
+.hero-pair {
   display: grid;
-  grid-template-columns: repeat(4, auto);
-  justify-content: space-between;
-  align-items: end;
+  grid-template-columns: 1.55fr 1fr;
   gap: 10px;
-  padding: 14px 18px;
+  margin-bottom: 14px;
   white-space: nowrap;
 }
-.hero-card .span2 {
-  grid-column: span 2;
+.hero-pair .hero-card, .wx-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  min-width: 0;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 18px;
 }
-/* 4 列が iPhone の幅に収まる大きさ (株数が 3 桁でも折り返さない) */
-.hero-card.grid .hero-n {
+.hero-pair .hero-stats {
+  gap: 14px;
+}
+/* 2 枚に分けたぶん幅が狭いので、数字は少し小さく (株数が 3 桁でも収まる大きさ) */
+.hero-pair .hero-n {
   font-size: calc(28px * var(--ds));
 }
-/* 見出しの代わりのアイコン。見出し 1 行と同じ高さにして、数字の位置をそろえる */
-.hero-ic {
+.hero-sub {
+  font-size: 12px;
+  line-height: 1.65;
+  opacity: 0.75;
+}
+.hero-sub b {
+  font-weight: 700;
+}
+.wx-card {
+  padding: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+/* 最高 / 最低は数字なので、見出しと同じ書体でくっきり出す */
+.wx-card .hero-sub {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  opacity: 1;
+}
+.wx-card .hero-sub b {
+  font-weight: 600;
+}
+.wx-card .eyebrow {
   display: flex;
   align-items: center;
-  height: 19.8px;
-  opacity: 0.7;
+  justify-content: space-between;
+  gap: 6px;
 }
-@media (max-width: 370px) {
-  .hero-card.grid {
-    padding: 14px;
-    column-gap: 8px;
-  }
-  .hero-card.grid .hero-n {
-    font-size: calc(24px * var(--ds));
-  }
+.wx-hum, .wx-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.wx-now {
+  display: flex;
+  gap: 5px;
 }
 .hero-card .eyebrow {
   color: inherit;
