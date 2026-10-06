@@ -255,28 +255,18 @@ export function Home() {
             <li key={p.id} className="plant">
               <button className="plant-main" onClick={() => open({ k: 'plant', id: p.id })}>
                 <Photo id={p.photoId} className="thumb" />
-                {/* 並び替えに使っている項目は、植物名と同じ書体で強調する (.key) */}
                 <span className="plant-text">
-                  <b className={sort === 'name' ? 'key' : ''}>{p.name}</b>
-                  <span className={sort === 'sci' ? 'key' : ''}>
-                    <SciName plant={p} />
-                  </span>
+                  <b>{p.name}</b>
+                  <SciName plant={p} />
                   <small>
-                    {sortKey && (
-                      <>
-                        <span className="key">{sortKey(p)}</span>
-                        {' ・ '}
-                      </>
-                    )}
+                    {sortKey && `${sortKey(p)} ・ `}
                     {p.location && (
                       <>
                         <MapPin size={11} /> {p.location}
                         {' ・ '}
                       </>
                     )}
-                    <span className={`${late ? 'late' : ''} ${sort === 'water' ? 'key' : ''}`}>
-                      {w ? `${careLabel('water', p)} ${dueLabel(w)}` : `${careLabel('water', p)}の予定なし`}
-                    </span>
+                    <span className={late ? 'late' : ''}>{w ? `${careLabel('water', p)} ${dueLabel(w)}` : `${careLabel('water', p)}の予定なし`}</span>
                   </small>
                 </span>
               </button>

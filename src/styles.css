@@ -121,19 +121,6 @@ small svg {
 .plant-text > b, .due-plant b, .pn {
   font-size: 16px;
 }
-/* 一覧で、並び替えに使っている項目。植物名と同じ書体にして、色と大きさで目立たせる */
-.key, .key .sci-line {
-  font-family: var(--font-name, var(--font-body)), var(--font-body), 'Hiragino Mincho ProN', serif;
-  font-weight: var(--name-weight, 700);
-  color: var(--ink);
-  font-size: 14.5px;
-}
-.key.late {
-  color: var(--danger);
-}
-.plant-text > b.key {
-  font-size: 18px;
-}
 /* 学名 */
 i, .sci {
   font-family: var(--font-sci), var(--font-body), sans-serif;
