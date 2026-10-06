@@ -466,34 +466,40 @@ input[type='number'] {
 }
 .hero-stats {
   display: flex;
-  gap: 22px;
+  gap: 28px;
 }
-.hero-side {
-  text-align: right;
+/* 天気を出すとき: 4 列 × 2 段。上の段は日付 (2 列ぶん)・今の気温・湿度、下の段は株数 2 つ・最高・最低。
+   どのマスも「小さな見出し or アイコン + 大きな数字」の同じ形にして、列の左端をそろえる */
+.hero-card.grid {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  justify-content: space-between;
+  align-items: end;
+  gap: 10px;
+  padding: 14px 18px;
+  white-space: nowrap;
 }
-/* 今の天気と気温 */
-.wx {
+.hero-card .span2 {
+  grid-column: span 2;
+}
+/* 4 列が iPhone の幅に収まる大きさ (株数が 3 桁でも折り返さない) */
+.hero-card.grid .hero-n {
+  font-size: calc(28px * var(--ds));
+}
+/* 見出しの代わりのアイコン。見出し 1 行と同じ高さにして、数字の位置をそろえる */
+.hero-ic {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  font-size: 12px;
-  line-height: 1.65;
-  white-space: nowrap;
-  color: color-mix(in srgb, var(--hero-ink) 70%, transparent);
+  height: 19.8px;
+  opacity: 0.7;
 }
-.wx b {
-  color: var(--hero-ink);
-  font-weight: 700;
-}
-.wx svg {
-  margin-right: -4px;
-  color: var(--hero-ink);
-}
-/* 幅の狭い端末では、天気の文字を省いてアイコンだけにする */
 @media (max-width: 370px) {
-  .wx-sky {
-    display: none;
+  .hero-card.grid {
+    padding: 14px;
+    column-gap: 8px;
+  }
+  .hero-card.grid .hero-n {
+    font-size: calc(24px * var(--ds));
   }
 }
 .hero-card .eyebrow {

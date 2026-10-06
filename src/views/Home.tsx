@@ -1,8 +1,8 @@
-import { Archive, CalendarClock, Check, MapPin, Search, X } from 'lucide-react'
+import { Archive, CalendarClock, Check, Droplets, MapPin, Search, ThermometerSnowflake, ThermometerSun, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
-import { diffDays, dueLabel, fmtDay, fmtFull, today } from '../lib/date'
+import { diffDays, dueLabel, fmtDay, fmtFull, fromKey, today } from '../lib/date'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import { nextDue } from '../lib/schedule'
 import { describe, useWeather } from '../lib/weather'
@@ -20,6 +20,8 @@ const SORTS: [Sort, string][] = [
   ['price-asc', '金額が安い順'],
   ['new', '追加が新しい順'],
 ]
+
+const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
 
 /** 育て始めた日: 入手日があればそれ、無ければ登録した日 */
 const since = (p: Plant) => p.purchaseDate || p.createdDay
@@ -123,50 +125,72 @@ export function Home() {
       </div>
     )
 
+  // 上のカードの株数 (天気を出すときも出さないときも同じもの)
+  const stats = (
+    <>
+      <div>
+        <p className="eyebrow">今日のケア</p>
+        <p className="hero-n">
+          {heads(dueNow.map((r) => r.p))}
+          <small>株</small>
+        </p>
+      </div>
+      <div>
+        <p className="eyebrow">育てている株</p>
+        <p className="hero-n">
+          {heads(plants)}
+          <small>株</small>
+        </p>
+      </div>
+    </>
+  )
+
   return (
     <>
-      <section className="hero-card">
-        <div className="hero-stats">
-          <div>
-            <p className="eyebrow">今日のケア</p>
+      {weather && sky ? (
+        // 天気を出すとき: 4 列 × 2 段。左に日付と株数、右に天気 (今の気温・湿度 / 最高・最低) をそろえて並べる
+        <section className="hero-card grid">
+          <div className="span2">
+            <p className="eyebrow">{WEEKDAYS[fromKey(t).getDay()]}曜日</p>
             <p className="hero-n">
-              {heads(dueNow.map((r) => r.p))}
-              <small>株</small>
+              {fromKey(t).getMonth() + 1}/{fromKey(t).getDate()}
             </p>
           </div>
-          <div>
-            <p className="eyebrow">育てている株</p>
+          <div aria-label={`${sky.label} 気温${Math.round(weather.temp)}度`}>
+            <p className="hero-ic">
+              <sky.Icon size={17} />
+            </p>
+            <p className="hero-n">{Math.round(weather.temp)}°</p>
+          </div>
+          <div aria-label={`湿度${Math.round(weather.humidity)}%`}>
+            <p className="hero-ic">
+              <Droplets size={17} />
+            </p>
             <p className="hero-n">
-              {heads(plants)}
-              <small>株</small>
+              {Math.round(weather.humidity)}
+              <small>%</small>
             </p>
           </div>
-        </div>
-        <div className="hero-side">
+          {stats}
+          <div aria-label={`最高気温${Math.round(weather.max)}度`}>
+            <p className="hero-ic">
+              <ThermometerSun size={17} />
+            </p>
+            <p className="hero-n">{Math.round(weather.max)}°</p>
+          </div>
+          <div aria-label={`最低気温${Math.round(weather.min)}度`}>
+            <p className="hero-ic">
+              <ThermometerSnowflake size={17} />
+            </p>
+            <p className="hero-n">{Math.round(weather.min)}°</p>
+          </div>
+        </section>
+      ) : (
+        <section className="hero-card">
+          <div className="hero-stats">{stats}</div>
           <p className="eyebrow">{fmtDay(t)}</p>
-          {weather && sky && (
-            // 左の「見出し + 大きな数字」と同じ高さに収まるよう、日付と合わせて小さな字 3 行にする
-            <>
-              <p className="wx">
-                <sky.Icon size={14} />
-                <span className="wx-sky">{sky.label}</span>
-                <b>{Math.round(weather.temp)}°</b>
-                <span>
-                  湿度 <b>{Math.round(weather.humidity)}%</b>
-                </span>
-              </p>
-              <p className="wx">
-                <span>
-                  最高 <b>{Math.round(weather.max)}°</b>
-                </span>
-                <span>
-                  最低 <b>{Math.round(weather.min)}°</b>
-                </span>
-              </p>
-            </>
-          )}
-        </div>
-      </section>
+        </section>
+      )}
 
       {dueNow.length > 0 && (
         <section className="card due">
