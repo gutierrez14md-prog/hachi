@@ -67,6 +67,26 @@ export function CultivarInput({ sci, value, onChange }: { sci: string; value: st
 }
 
 /**
+ * これまでに入力した値から選べる欄 (置き場所、購入場所)。欄に入ると一覧が出て、打てば絞り込める。
+ * 一覧に無い値は、そのまま打ち込めば次から候補に出る
+ */
+export function PickInput({ options, value, onChange, placeholder }: { options: string[]; value: string; onChange: (v: string) => void; placeholder?: string }) {
+  const key = options.join('\n')
+  const search = useMemo<Search>(() => {
+    const pool = [...new Set(options.map((o) => o.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ja'))
+    return async (q) => ({
+      hits: pool
+        .filter((o) => o.toLowerCase().includes(q.toLowerCase()) && o !== q)
+        .slice(0, 8)
+        .map((o) => ({ sci: o, rank: '', plain: true })),
+      source: '',
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- options は毎回新しい配列なので、中身 (key) で比べる
+  }, [key])
+  return <SuggestInput eager search={search} value={value} onChange={onChange} onPick={(h) => onChange(h.sci)} placeholder={placeholder} />
+}
+
+/**
  * 候補つきの入力欄。打った文字から候補を出し、選ぶと onPick に渡す。
  * 候補にない名前 (園芸品種・流通名など) もそのまま入力でき、通信できないときは候補が出ないだけ
  */

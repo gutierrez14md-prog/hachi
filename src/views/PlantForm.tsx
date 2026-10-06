@@ -9,7 +9,7 @@ import { defaultCare } from '../presets'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import type { Member, Method, Plant, SchedType } from '../types'
 import { CareEditor, cleanCare, hasInterval, WaterLabelField } from './CareEditor'
-import { CultivarInput, searchName, searchSci, SuggestInput } from './SciInput'
+import { CultivarInput, PickInput, searchName, searchSci, SuggestInput } from './SciInput'
 
 const MAX_NAMES = 4
 const MAX_MEMBERS = 12
@@ -35,7 +35,9 @@ export function PlantForm({ id }: { id?: string }) {
   const [last, setLast] = useState<Record<SchedType, string>>({ water: '', fertilizer: '', tonic: '' })
 
   const set = (patch: Partial<Plant>) => setF((v) => ({ ...v, ...patch }))
-  const locations = [...new Set(plants.map((p) => p.location).filter(Boolean))]
+  // 置き場所と購入場所の候補は、これまでに登録した株から集める (アーカイブした株のぶんも含む)
+  const locations = allPlants.map((p) => p.location)
+  const places = allPlants.map((p) => p.purchasePlace ?? '')
   const group = groups.find((g) => g.id === f.groupId)
 
   const applyPreset = (g = group) => {
@@ -265,17 +267,7 @@ export function PlantForm({ id }: { id?: string }) {
       </Field>
       <WaterLabelField value={f} onChange={(waterLabel) => set({ waterLabel })} />
       <Field label="置き場所">
-        <input
-          value={f.location}
-          onChange={(e) => set({ location: e.target.value })}
-          placeholder="例: リビング、ベランダ"
-          list="locations"
-        />
-        <datalist id="locations">
-          {locations.map((l) => (
-            <option key={l} value={l} />
-          ))}
-        </datalist>
+        <PickInput options={locations} value={f.location} onChange={(location) => set({ location })} placeholder="例: リビング、ベランダ" />
       </Field>
       <Field label="プロフィール・育て方メモ">
         <textarea
@@ -300,7 +292,12 @@ export function PlantForm({ id }: { id?: string }) {
         />
       </Field>
       <Field label="購入場所">
-        <input value={f.purchasePlace ?? ''} onChange={(e) => set({ purchasePlace: e.target.value })} placeholder="例: 園芸店、イベント、通販" />
+        <PickInput
+          options={places}
+          value={f.purchasePlace ?? ''}
+          onChange={(purchasePlace) => set({ purchasePlace })}
+          placeholder="例: 園芸店、イベント、通販"
+        />
       </Field>
 
       <h3 className="sec">ケアの設定</h3>

@@ -28,8 +28,8 @@ export interface AppCtx {
   replace: (o: Overlay) => void
   /** 上から n 枚閉じる */
   close: (n?: number) => void
-  /** ケアを記録する (取り消し付きのトーストを出す) */
-  record: (plantIds: string[], type: CareType, date?: string, note?: string) => Promise<void>
+  /** ケアを記録する (取り消し付きのトーストを出す)。種類は複数まとめて渡せる */
+  record: (plantIds: string[], type: CareType | CareType[], date?: string, note?: string) => Promise<void>
   toast: (msg: string, undo?: () => void) => void
 }
 
