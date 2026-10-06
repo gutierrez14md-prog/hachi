@@ -1,20 +1,27 @@
 import { Archive, CalendarClock, Check, MapPin, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { CARE, careVar, SCHED } from '../care'
+import { careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
-import { dueLabel, fmtDay, today } from '../lib/date'
-import { careLabel, METHOD_IDS, METHODS } from '../method'
+import { diffDays, dueLabel, fmtDay, fmtFull, today } from '../lib/date'
+import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import { nextDue } from '../lib/schedule'
 import { Photo, PotIcon, SciName } from '../parts'
 import type { Plant, SchedType } from '../types'
 
-type Sort = 'water' | 'name' | 'sci' | 'new'
+type Sort = 'water' | 'name' | 'sci' | 'new' | 'days-desc' | 'days-asc' | 'price-desc' | 'price-asc'
 const SORTS: [Sort, string][] = [
   ['water', '水やりが近い順'],
   ['name', '名前順'],
   ['sci', '学名順'],
+  ['days-desc', '育てている日数が長い順'],
+  ['days-asc', '育てている日数が短い順'],
+  ['price-desc', '金額が高い順'],
+  ['price-asc', '金額が安い順'],
   ['new', '追加が新しい順'],
 ]
+
+/** 育て始めた日: 入手日があればそれ、無ければ登録した日 */
+const since = (p: Plant) => p.purchaseDate || p.createdDay
 
 export function Home() {
   const { plants, allPlants, groups, logsOf, open, record } = useApp()
@@ -49,6 +56,7 @@ export function Home() {
   // 栽培方法の絞り込みは、2 種類以上を使い分けているときだけ出す
   const usedMethods = METHOD_IDS.filter((m) => plants.some((p) => p.method === m))
   const needle = q.trim().toLowerCase()
+  const byName = (a: { p: Plant }, b: { p: Plant }) => a.p.name.localeCompare(b.p.name, 'ja')
   const list = rows
     .filter((r) => !loc || r.p.location === loc)
     .filter((r) => !grp || r.p.groupId === grp)
@@ -70,8 +78,25 @@ export function Home() {
       if (sort === 'name') return a.p.name.localeCompare(b.p.name, 'ja')
       if (sort === 'sci') return (a.p.scientificName || '￿').localeCompare(b.p.scientificName || '￿')
       if (sort === 'new') return b.p.createdDay.localeCompare(a.p.createdDay) || b.i - a.i
+      if (sort === 'days-desc') return since(a.p).localeCompare(since(b.p)) || byName(a, b)
+      if (sort === 'days-asc') return since(b.p).localeCompare(since(a.p)) || byName(a, b)
+      if (sort === 'price-desc' || sort === 'price-asc') {
+        // 金額を入れていない株は、どちらの向きでも最後
+        const x = a.p.purchasePrice, y = b.p.purchasePrice
+        if (x == null || y == null) return (x == null ? 1 : 0) - (y == null ? 1 : 0) || byName(a, b)
+        return (sort === 'price-desc' ? y - x : x - y) || byName(a, b)
+      }
       return (a.due.water ?? '9999').localeCompare(b.due.water ?? '9999') || a.p.name.localeCompare(b.p.name, 'ja')
     })
+
+  // 日数・金額・追加日で並べているときは、その値を行に出す (ふだんは出していない項目なので)
+  const sortKey: ((p: Plant) => string) | null = sort.startsWith('days')
+    ? (p) => `${diffDays(t, since(p)).toLocaleString('ja-JP')}日`
+    : sort.startsWith('price')
+      ? (p) => (p.purchasePrice == null ? '金額なし' : `¥${p.purchasePrice.toLocaleString('ja-JP')}`)
+      : sort === 'new'
+        ? (p) => `${fmtFull(p.createdDay)} 追加`
+        : null
 
   const archivedCount = allPlants.length - plants.length
   const archiveLink = archivedCount > 0 && (
@@ -130,7 +155,7 @@ export function Home() {
               </button>
               <div className="due-acts">
                 {types.map((s) => {
-                  const { Icon } = CARE[s]
+                  const Icon = careIcon(s, p)
                   const label = careLabel(s, p)
                   return (
                     <button key={s} className="pill" style={careVar(s)} onClick={() => record([p.id], s)}>
@@ -225,21 +250,33 @@ export function Home() {
         {list.map(({ p, due }) => {
           const w = due.water
           const late = !!w && w <= t
+          const WaterIcon = careIcon('water', p)
           return (
             <li key={p.id} className="plant">
               <button className="plant-main" onClick={() => open({ k: 'plant', id: p.id })}>
                 <Photo id={p.photoId} className="thumb" />
+                {/* 並び替えに使っている項目は、植物名と同じ書体で強調する (.key) */}
                 <span className="plant-text">
-                  <b>{p.name}</b>
-                  <SciName plant={p} />
+                  <b className={sort === 'name' ? 'key' : ''}>{p.name}</b>
+                  <span className={sort === 'sci' ? 'key' : ''}>
+                    <SciName plant={p} />
+                  </span>
                   <small>
+                    {sortKey && (
+                      <>
+                        <span className="key">{sortKey(p)}</span>
+                        {' ・ '}
+                      </>
+                    )}
                     {p.location && (
                       <>
                         <MapPin size={11} /> {p.location}
                         {' ・ '}
                       </>
                     )}
-                    <span className={late ? 'late' : ''}>{w ? `${careLabel('water', p)} ${dueLabel(w)}` : `${careLabel('water', p)}の予定なし`}</span>
+                    <span className={`${late ? 'late' : ''} ${sort === 'water' ? 'key' : ''}`}>
+                      {w ? `${careLabel('water', p)} ${dueLabel(w)}` : `${careLabel('water', p)}の予定なし`}
+                    </span>
                   </small>
                 </span>
               </button>
@@ -249,7 +286,7 @@ export function Home() {
                 onClick={() => record([p.id], 'water')}
                 aria-label={`${p.name}に${careLabel('water', p)}を記録`}
               >
-                <CARE.water.Icon size={20} />
+                <WaterIcon size={20} />
               </button>
             </li>
           )

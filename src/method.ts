@@ -1,3 +1,4 @@
+import { GlassWater, RefreshCw, SprayCan, Waves, type LucideIcon } from 'lucide-react'
 import { CARE } from './care'
 import type { CareType, Method } from './types'
 
@@ -13,6 +14,18 @@ export const METHODS: Record<Method, { label: string; water: string }> = {
 }
 
 export const METHOD_IDS = Object.keys(METHODS) as Method[]
+
+/** 水やりのアイコン。呼び名ごとに変える (色はどれも水やりの水色)。ここに無い呼び名は、しずく */
+const WATER_ICONS: Record<string, LucideIcon> = {
+  ソーキング: Waves,
+  ミスティング: SprayCan,
+  水足し: GlassWater,
+  水替え: RefreshCw,
+}
+
+/** ケアのアイコン。水やりだけ、呼び名に合わせて変える */
+export const careIcon = (type: CareType, of?: { method?: Method; waterLabel?: string }): LucideIcon =>
+  (type === 'water' && WATER_ICONS[careLabel(type, of)]) || CARE[type].Icon
 
 /** 「水やりの呼び名」の欄に出す候補 */
 export const WATER_LABELS = ['水やり', 'ソーキング', 'ミスティング', '水足し', '水替え']

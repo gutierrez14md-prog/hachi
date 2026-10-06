@@ -5,7 +5,7 @@ import { useApp } from '../ctx'
 import { db } from '../db'
 import { addDays, fmtDay, toKey, today } from '../lib/date'
 import { projected } from '../lib/schedule'
-import { careLabel } from '../method'
+import { careIcon, careLabel } from '../method'
 import { Photo } from '../parts'
 import type { CareLog, CareType, Plant, SchedType } from '../types'
 
@@ -130,7 +130,7 @@ export function CalendarView() {
         <section className="card">
           <h3 className="card-t">{sel === t ? 'ケアが必要' : `予定 ${selPlan.length}件`}</h3>
           {selPlan.map(({ p, type }) => {
-            const { Icon } = CARE[type]
+            const Icon = careIcon(type, p)
             const label = careLabel(type, p)
             return (
               <div className="line" key={p.id + type}>
@@ -159,8 +159,8 @@ export function CalendarView() {
         <section className="card">
           <h3 className="card-t">記録済み {selDone.length}件</h3>
           {selDone.map((l) => {
-            const { Icon } = CARE[l.type]
             const p = plantOf.get(l.plantId)!
+            const Icon = careIcon(l.type, p)
             const label = careLabel(l.type, p)
             return (
               <div className="line" key={l.id}>

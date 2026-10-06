@@ -4,7 +4,7 @@ import { useApp } from '../ctx'
 import { db, newId } from '../db'
 import { Field, Sheet } from '../parts'
 import { defaultCare } from '../presets'
-import { careLabel, METHOD_IDS, METHODS } from '../method'
+import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import type { Group, Method } from '../types'
 import { CareEditor, cleanCare, WaterLabelField } from './CareEditor'
 
@@ -70,7 +70,7 @@ export function GroupForm({ id }: { id?: string }) {
       </Field>
 
       <h3 className="sec">ケアの設定</h3>
-      <CareEditor care={f.care} dormantMonths={f.dormantMonths} onChange={set} labels={{ water: careLabel('water', f) }} />
+      <CareEditor care={f.care} dormantMonths={f.dormantMonths} onChange={set} labels={{ water: careLabel('water', f) }} icons={{ water: careIcon('water', f) }} />
 
       {members.length > 0 && (
         <button className="btn ghost full preset" disabled={!f.name.trim()} onClick={applyToMembers}>

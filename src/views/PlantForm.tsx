@@ -6,7 +6,7 @@ import { db, deletePlant, newId } from '../db'
 import { today } from '../lib/date'
 import { Field, PhotoPicker, Sheet } from '../parts'
 import { defaultCare } from '../presets'
-import { careLabel, METHOD_IDS, METHODS } from '../method'
+import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import type { Member, Method, Plant, SchedType } from '../types'
 import { CareEditor, cleanCare, hasInterval, WaterLabelField } from './CareEditor'
 import { CultivarInput, searchName, searchSci, SuggestInput } from './SciInput'
@@ -310,6 +310,7 @@ export function PlantForm({ id }: { id?: string }) {
         onChange={set}
         required={['water']}
         labels={{ water: careLabel('water', f) }}
+        icons={{ water: careIcon('water', f) }}
         extra={
           existing
             ? undefined

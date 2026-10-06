@@ -5,7 +5,7 @@ import { useApp } from '../ctx'
 import { db } from '../db'
 import { dueLabel, fmtDay, fmtFull, today } from '../lib/date'
 import { intervalOn, isSnoozed, lastDone, nextDue } from '../lib/schedule'
-import { careLabel, METHODS } from '../method'
+import { careIcon, careLabel, METHODS } from '../method'
 import { Photo, SciName, Sheet } from '../parts'
 import { JournalCard, sortJournal } from './Timeline'
 
@@ -91,7 +91,7 @@ export function PlantDetail({ id }: { id: string }) {
         <section className="card">
           <h3 className="card-t">次のケア</h3>
           {sched.map((s) => {
-            const { Icon } = CARE[s]
+            const Icon = careIcon(s, p)
             const label = careLabel(s, p)
             const due = nextDue(p, s, logs)
             const last = lastDone(logs, s)
@@ -131,7 +131,7 @@ export function PlantDetail({ id }: { id: string }) {
           <h3 className="sec">ケアを記録</h3>
           <div className="type-grid">
             {ALL_TYPES.map((ty) => {
-              const { Icon } = CARE[ty]
+              const Icon = careIcon(ty, p)
               const label = careLabel(ty, p)
               return (
                 <button key={ty} style={careVar(ty)} onClick={() => open({ k: 'log', plantId: id, type: ty })}>
@@ -171,7 +171,7 @@ export function PlantDetail({ id }: { id: string }) {
       {logs.length ? (
         <section className="card">
           {(showAll ? logs : logs.slice(0, 10)).map((l) => {
-            const { Icon } = CARE[l.type]
+            const Icon = careIcon(l.type, p)
             const label = careLabel(l.type, p)
             return (
               <div className="line" key={l.id}>

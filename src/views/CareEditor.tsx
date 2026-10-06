@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { CARE, careVar, SCHED } from '../care'
 import { intervalOn } from '../lib/schedule'
@@ -70,7 +71,10 @@ export function CareEditor({
   extra,
   required,
   labels,
+  icons,
 }: {
+  /** ケアのアイコンの差し替え (呼び名と揃える) */
+  icons?: Partial<Record<SchedType, LucideIcon>>
   /** ケアの呼び名の差し替え (栽培方法によって「水やり」を「水替え」と呼ぶ、など) */
   labels?: Partial<Record<SchedType, string>>
   /** オン / オフを選ばせず、必ず設定させるケア */
@@ -89,7 +93,7 @@ export function CareEditor({
     <>
       {SCHED.map((s) => {
         const c = care[s]
-        const { Icon } = CARE[s]
+        const Icon = icons?.[s] ?? CARE[s].Icon
         const label = labels?.[s] ?? CARE[s].label
         const must = required?.includes(s)
         return (
