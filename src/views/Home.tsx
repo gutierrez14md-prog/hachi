@@ -169,15 +169,17 @@ export function Home() {
                 {Math.round(weather.humidity)}%
               </span>
             </p>
-            <p className="hero-n wx-now" aria-label={`${sky.label} ${Math.round(weather.temp)}度`}>
-              <sky.Icon size={20} />
-              {Math.round(weather.temp)}°
-            </p>
-            <p className="hero-sub" aria-label={`最高${Math.round(weather.max)}度 最低${Math.round(weather.min)}度`}>
-              <b>
-                {Math.round(weather.max)}° / {Math.round(weather.min)}°
-              </b>
-            </p>
+            {/* 今の気温はカードの幅に合わせて大きくし、右端に最高 (上) と最低 (下) を積む。右側を空けない */}
+            <div className="wx-main">
+              <p className="hero-n wx-now" aria-label={`${sky.label} ${Math.round(weather.temp)}度`}>
+                <sky.Icon />
+                {Math.round(weather.temp)}°
+              </p>
+              <p className="wx-range" aria-label={`最高${Math.round(weather.max)}度 最低${Math.round(weather.min)}度`}>
+                <span>{Math.round(weather.max)}°</span>
+                <span>{Math.round(weather.min)}°</span>
+              </p>
+            </div>
           </section>
         </div>
       ) : (

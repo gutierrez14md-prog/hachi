@@ -472,7 +472,8 @@ input[type='number'] {
    どちらも「小さな見出し / 大きな数字 / 小さな添え書き」の 3 行で、高さがそろう */
 .hero-pair {
   display: grid;
-  grid-template-columns: 1.55fr 1fr;
+  /* 左は中身ぴったりの幅、右は残りぜんぶ。端末の幅が広くても、カードの右側が空かない */
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
   margin-bottom: 14px;
   white-space: nowrap;
@@ -508,13 +509,33 @@ input[type='number'] {
   color: var(--ink);
   box-shadow: var(--shadow);
 }
-/* 最高 / 最低は数字なので、見出しと同じ書体でくっきり出す */
-.wx-card .hero-sub {
-  font-family: var(--font-display), var(--font-body), sans-serif;
-  opacity: 1;
+.wx-card {
+  container-type: inline-size;
 }
-.wx-card .hero-sub b {
-  font-weight: 600;
+.wx-main {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6px;
+}
+/* 今の気温: カードの幅に合わせて伸び縮みさせる (アイコン + 数字 + 右の最高/最低が、ちょうど収まる大きさ) */
+.hero-pair .wx-now {
+  font-size: clamp(22px, calc((100cqw - 40px) / 3), 40px);
+}
+.wx-now svg {
+  flex: none;
+  width: 0.7em;
+  height: 0.7em;
+}
+/* 最高 (上) / 最低 (下) */
+.wx-range {
+  display: grid;
+  text-align: right;
+  font: 600 13px/1.4 var(--font-display), var(--font-body), sans-serif;
+}
+.wx-range span + span {
+  color: var(--muted);
 }
 .wx-card .eyebrow {
   display: flex;
