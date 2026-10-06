@@ -145,11 +145,25 @@ export function Home() {
         <div className="hero-side">
           <p className="eyebrow">{fmtDay(t)}</p>
           {weather && sky && (
-            // カードの高さを変えないよう、1 行に収める: 天気のアイコン・気温・湿度
-            <p className="wx" aria-label={`${sky.label} 気温${Math.round(weather.temp)}度 湿度${Math.round(weather.humidity)}%`}>
-              <sky.Icon size={18} />
-              {Math.round(weather.temp)}°<small>{Math.round(weather.humidity)}%</small>
-            </p>
+            // 左の「見出し + 大きな数字」と同じ高さに収まるよう、日付と合わせて小さな字 3 行にする
+            <>
+              <p className="wx">
+                <sky.Icon size={14} />
+                <span className="wx-sky">{sky.label}</span>
+                <b>{Math.round(weather.temp)}°</b>
+                <span>
+                  湿度 <b>{Math.round(weather.humidity)}%</b>
+                </span>
+              </p>
+              <p className="wx">
+                <span>
+                  最高 <b>{Math.round(weather.max)}°</b>
+                </span>
+                <span>
+                  最低 <b>{Math.round(weather.min)}°</b>
+                </span>
+              </p>
+            </>
           )}
         </div>
       </section>

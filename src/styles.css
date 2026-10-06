@@ -466,7 +466,7 @@ input[type='number'] {
 }
 .hero-stats {
   display: flex;
-  gap: 28px;
+  gap: 22px;
 }
 .hero-side {
   text-align: right;
@@ -476,21 +476,25 @@ input[type='number'] {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 5px;
-  font-family: var(--font-display), var(--font-body), sans-serif;
-  font-size: calc(17px * var(--ds));
-  font-weight: 600;
-  line-height: 1.5;
-  letter-spacing: -0.02em;
-}
-.wx small {
-  display: inline;
-  margin-left: 4px;
-  color: inherit;
-  opacity: 0.7;
+  gap: 8px;
   font-size: 12px;
-  font-weight: 400;
-  letter-spacing: 0;
+  line-height: 1.65;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--hero-ink) 70%, transparent);
+}
+.wx b {
+  color: var(--hero-ink);
+  font-weight: 700;
+}
+.wx svg {
+  margin-right: -4px;
+  color: var(--hero-ink);
+}
+/* 幅の狭い端末では、天気の文字を省いてアイコンだけにする */
+@media (max-width: 370px) {
+  .wx-sky {
+    display: none;
+  }
 }
 .hero-card .eyebrow {
   color: inherit;
