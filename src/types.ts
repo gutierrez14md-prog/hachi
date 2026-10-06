@@ -47,6 +47,8 @@ export interface Plant {
   /** 分類 (Group.id) */
   groupId?: string
   method?: Method
+  /** 水やりの呼び名を自分で決めたとき (ソーキング など)。空なら栽培方法に合わせる */
+  waterLabel?: string
   /** 休眠期の月 (1-12) */
   dormantMonths: number[]
   care: CareSettings
@@ -69,6 +71,8 @@ export interface Group {
   name: string
   /** この分類でふつうの栽培方法 (チランジアなら着生)。植物を追加するときの初期値になる */
   method?: Method
+  /** この分類での水やりの呼び名 (チランジアならソーキング)。空なら栽培方法に合わせる */
+  waterLabel?: string
   dormantMonths: number[]
   care: CareSettings
   /** 育て方メモのひな形 */

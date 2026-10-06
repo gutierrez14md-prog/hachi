@@ -8,7 +8,7 @@ import { Field, PhotoPicker, Sheet } from '../parts'
 import { defaultCare } from '../presets'
 import { careLabel, METHOD_IDS, METHODS } from '../method'
 import type { Member, Method, Plant, SchedType } from '../types'
-import { CareEditor, cleanCare, hasInterval } from './CareEditor'
+import { CareEditor, cleanCare, hasInterval, WaterLabelField } from './CareEditor'
 import { CultivarInput, searchName, searchSci, SuggestInput } from './SciInput'
 
 const MAX_NAMES = 4
@@ -46,6 +46,7 @@ export function PlantForm({ id }: { id?: string }) {
         dormantMonths: [...g.dormantMonths],
         profile: v.profile || g.profile,
         method: g.method ?? v.method,
+        waterLabel: g.waterLabel ?? v.waterLabel,
       }))
   }
   const pickGroup = (groupId: string) => {
@@ -78,6 +79,7 @@ export function PlantForm({ id }: { id?: string }) {
       members: inside,
       location: f.location.trim(),
       purchasePlace: f.purchasePlace?.trim(),
+      waterLabel: f.waterLabel?.trim() || undefined,
       // 水やりは必須 (オフにはできない)
       care: cleanCare({ ...f.care, water: { ...f.care.water, enabled: true } }),
     }
@@ -261,6 +263,7 @@ export function PlantForm({ id }: { id?: string }) {
           ))}
         </select>
       </Field>
+      <WaterLabelField value={f} onChange={(waterLabel) => set({ waterLabel })} />
       <Field label="置き場所">
         <input
           value={f.location}

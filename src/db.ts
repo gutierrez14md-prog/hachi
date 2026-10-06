@@ -33,6 +33,27 @@ class HachiDB extends Dexie {
           if (!g.method && methods.has(g.id)) g.method = methods.get(g.id)
         })
     })
+    // v4: 水やりの呼び名。チランジアの分類と、その分類の株を「ソーキング」にする (自分で決めた呼び名は変えない)
+    this.version(4).upgrade(async (tx) => {
+      const set = (row: Group | Plant) => {
+        if (!row.waterLabel) row.waterLabel = 'ソーキング'
+      }
+      // 分類の間隔とメモは、以前の初期値 (ミスティング向け) のままなら、ソーキング向けの新しい初期値に替える
+      const fresh = defaultGroups().find((g) => g.id === 'g-tillandsia')!
+      await tx
+        .table('groups')
+        .where('id')
+        .equals('g-tillandsia')
+        .modify((g: Group) => {
+          set(g)
+          if (String(g.care.water.monthly) === '5,5,3,3,3,2,2,2,3,3,5,5') g.care.water.monthly = fresh.care.water.monthly
+          if (g.profile === '水やり = ミスティング。風通しよく、濡れたままにしない。') g.profile = fresh.profile
+        })
+      await tx
+        .table('plants')
+        .filter((p: Plant) => p.groupId === 'g-tillandsia')
+        .modify(set)
+    })
     this.on('populate', (tx) => tx.table('groups').bulkAdd(defaultGroups()))
   }
 }

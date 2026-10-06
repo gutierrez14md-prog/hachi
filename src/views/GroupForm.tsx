@@ -6,7 +6,7 @@ import { Field, Sheet } from '../parts'
 import { defaultCare } from '../presets'
 import { careLabel, METHOD_IDS, METHODS } from '../method'
 import type { Group, Method } from '../types'
-import { CareEditor, cleanCare } from './CareEditor'
+import { CareEditor, cleanCare, WaterLabelField } from './CareEditor'
 
 /** 分類と、そのケア設定のプリセットの編集 */
 export function GroupForm({ id }: { id?: string }) {
@@ -19,7 +19,7 @@ export function GroupForm({ id }: { id?: string }) {
   const members = plants.filter((p) => p.groupId === f.id)
 
   const put = () => {
-    const group = { ...f, name: f.name.trim(), care: cleanCare(f.care) }
+    const group = { ...f, name: f.name.trim(), waterLabel: f.waterLabel?.trim() || undefined, care: cleanCare(f.care) }
     return db.groups.put(group).then(() => group)
   }
   const save = async () => {
@@ -31,7 +31,7 @@ export function GroupForm({ id }: { id?: string }) {
     if (!confirm(`「${f.name}」の ${members.length} 株のケア設定を、この内容で上書きします。よろしいですか？`)) return
     const group = await put()
     await db.plants.bulkPut(
-      members.map((p) => ({ ...p, care: structuredClone(group.care), dormantMonths: [...group.dormantMonths], method: group.method ?? p.method })),
+      members.map((p) => ({ ...p, care: structuredClone(group.care), dormantMonths: [...group.dormantMonths], method: group.method ?? p.method, waterLabel: group.waterLabel ?? p.waterLabel })),
     )
     toast(`${members.length}株に反映しました`)
     close()
@@ -64,6 +64,7 @@ export function GroupForm({ id }: { id?: string }) {
           ))}
         </select>
       </Field>
+      <WaterLabelField value={f} onChange={(waterLabel) => set({ waterLabel })} />
       <Field label="育て方メモのひな形">
         <textarea rows={3} value={f.profile} onChange={(e) => set({ profile: e.target.value })} />
       </Field>

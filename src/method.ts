@@ -14,6 +14,12 @@ export const METHODS: Record<Method, { label: string; water: string }> = {
 
 export const METHOD_IDS = Object.keys(METHODS) as Method[]
 
-/** ケアの呼び名。水やりだけ、栽培方法に合わせて言い換える */
-export const careLabel = (type: CareType, of?: { method?: Method }) =>
-  type === 'water' && of?.method ? METHODS[of.method].water : CARE[type].label
+/** 「水やりの呼び名」の欄に出す候補 */
+export const WATER_LABELS = ['水やり', 'ソーキング', 'ミスティング', '水足し', '水替え']
+
+/**
+ * ケアの呼び名。水やりだけ言い換える: 自分で決めた呼び名 (ソーキング など) があればそれ、
+ * 無ければ栽培方法に合わせたもの
+ */
+export const careLabel = (type: CareType, of?: { method?: Method; waterLabel?: string }) =>
+  type !== 'water' ? CARE[type].label : of?.waterLabel || (of?.method ? METHODS[of.method].water : CARE.water.label)

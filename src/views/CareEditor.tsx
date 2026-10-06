@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 import { CARE, careVar, SCHED } from '../care'
 import { intervalOn } from '../lib/schedule'
-import type { CareSettings, SchedType, Schedule } from '../types'
+import { careLabel, WATER_LABELS } from '../method'
+import { Field } from '../parts'
+import type { CareSettings, Method, SchedType, Schedule } from '../types'
 
 const num = (v: string) => Math.max(0, parseInt(v) || 0)
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -20,6 +22,25 @@ export function MonthChips({ value, onChange }: { value: number[]; onChange: (v:
         </button>
       ))}
     </div>
+  )
+}
+
+/** 水やりの呼び名 (ソーキング など)。空欄なら栽培方法に合わせた呼び名になり、それを薄く見せておく */
+export function WaterLabelField({ value, onChange }: { value: { method?: Method; waterLabel?: string }; onChange: (v: string) => void }) {
+  return (
+    <Field label="水やりの呼び名">
+      <input
+        value={value.waterLabel ?? ''}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={careLabel('water', { method: value.method })}
+        list="water-labels"
+      />
+      <datalist id="water-labels">
+        {WATER_LABELS.map((l) => (
+          <option key={l} value={l} />
+        ))}
+      </datalist>
+    </Field>
   )
 }
 
