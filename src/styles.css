@@ -112,6 +112,15 @@ small {
 small svg {
   vertical-align: -1px;
 }
+/* 植物の名前。書体は設定で選ぶ (src/lib/appearance.ts の NAME_FONTS が --font-name と --name-weight を入れる) */
+.pn, .plant-text > b, .due-plant b, .detail-h h1, .entry-plant, .card.members b {
+  font-family: var(--font-name, var(--font-body)), var(--font-body), 'Hiragino Mincho ProN', serif;
+  font-weight: var(--name-weight, 700);
+  letter-spacing: 0.01em;
+}
+.plant-text > b, .due-plant b, .pn {
+  font-size: 16px;
+}
 /* 学名 */
 i, .sci {
   font-family: var(--font-sci), var(--font-body), sans-serif;
@@ -750,7 +759,6 @@ input[type='number'] {
 }
 .entry-plant {
   margin-left: 10px;
-  font-weight: 700;
 }
 .entry-img {
   display: block;

@@ -136,7 +136,7 @@ export function CalendarView() {
               <div className="line" key={p.id + type}>
                 <button className="line-main" onClick={() => open({ k: 'plant', id: p.id })}>
                   <Photo id={p.photoId} className="thumb sm" />
-                  <b>{p.name}</b>
+                  <b className="pn">{p.name}</b>
                 </button>
                 {sel === t ? (
                   <button className="pill" style={careVar(type)} onClick={() => record([p.id], type)}>
@@ -167,7 +167,7 @@ export function CalendarView() {
                 <button className="line-main" onClick={() => open({ k: 'plant', id: p.id })}>
                   <Photo id={p.photoId} className="thumb sm" />
                   <span>
-                    <b>{p.name}</b>
+                    <b className="pn">{p.name}</b>
                     {l.note && <small>{l.note}</small>}
                   </span>
                 </button>

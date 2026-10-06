@@ -1,7 +1,7 @@
 import { Bell, ChevronDown, ChevronRight, Download, Plus, Upload } from 'lucide-react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
-import { applyFont, applyTheme, FONTS, getFont, getTheme } from '../lib/appearance'
+import { applyFont, applyNameFont, applyTheme, FONTS, getFont, getNameFont, getTheme, NAME_FONTS } from '../lib/appearance'
 import { db } from '../db'
 import { GUIDE } from '../guide'
 import { exportBackup, importBackup } from '../lib/backup'
@@ -20,6 +20,7 @@ export function SettingsView() {
   const supported = 'Notification' in window
   const [theme, setTheme] = useState(getTheme)
   const [font, setFont] = useState(getFont)
+  const [nameFont, setNameFont] = useState(getNameFont)
 
   const toggleNotify = async (on: boolean) => {
     if (!on) return save({ notify: false })
@@ -58,6 +59,23 @@ export function SettingsView() {
             onClick={() => {
               applyFont(f.id)
               setFont(f.id)
+            }}
+          >
+            <b>{f.label}</b>
+            <small>{f.desc}</small>
+          </button>
+        ))}
+      </div>
+
+      <h3 className="sec">植物名のフォント</h3>
+      <div className="fonts">
+        {NAME_FONTS.map((f) => (
+          <button
+            key={f.id}
+            className={nameFont === f.id ? 'on' : ''}
+            onClick={() => {
+              applyNameFont(f.id)
+              setNameFont(f.id)
             }}
           >
             <b>{f.label}</b>

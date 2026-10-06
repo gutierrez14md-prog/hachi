@@ -32,6 +32,18 @@ export const FONTS = [
 
 export type FontId = (typeof FONTS)[number]['id']
 
+/** 植物の名前だけに使う書体。family が空なら本文と同じ。weight はその書体で使う太さ */
+export const NAME_FONTS = [
+  { id: 'shippori', label: 'しっぽり明朝', desc: '端正な明朝', family: 'Shippori Mincho B1', weight: 700, q: 'family=Shippori+Mincho+B1:wght@700' },
+  { id: 'antique', label: 'Zen Antique', desc: '古風で力のある明朝', family: 'Zen Antique', weight: 400, q: 'family=Zen+Antique' },
+  { id: 'kaisei', label: 'Kaisei Decol', desc: '装飾のあるレトロな明朝', family: 'Kaisei Decol', weight: 700, q: 'family=Kaisei+Decol:wght@700' },
+  { id: 'yuji', label: '佑字 肅', desc: '筆文字', family: 'Yuji Syuku', weight: 400, q: 'family=Yuji+Syuku' },
+  { id: 'dela', label: 'Dela Gothic', desc: '極太のゴシック', family: 'Dela Gothic One', weight: 400, q: 'family=Dela+Gothic+One' },
+  { id: 'body', label: '標準', desc: '本文と同じ', family: '', weight: 700, q: '' },
+] as const
+
+export type NameFontId = (typeof NAME_FONTS)[number]['id']
+
 const read = (k: string) => {
   try {
     return localStorage.getItem(k)
@@ -50,16 +62,35 @@ export function applyTheme(theme: Theme) {
 
 export const getFont = (): FontId => FONTS.find((f) => f.id === read('font'))?.id ?? 'stories'
 
+/** Google Fonts のスタイルシートを 1 枚読み込む (同じ id なら差し替え、q が空なら外す) */
+function loadFonts(linkId: string, q: string) {
+  let link = document.getElementById(linkId) as HTMLLinkElement | null
+  if (!q) return link?.remove()
+  if (!link) {
+    link = document.createElement('link')
+    link.id = linkId
+    link.rel = 'stylesheet'
+    document.head.append(link)
+  }
+  link.href = `https://fonts.googleapis.com/css2?${q}&display=swap`
+}
+
 export function applyFont(id: FontId) {
   const font = FONTS.find((f) => f.id === id)!
   document.documentElement.dataset.font = id
   localStorage.setItem('font', id)
-  let link = document.getElementById('font-css') as HTMLLinkElement | null
-  if (!link) {
-    link = document.createElement('link')
-    link.id = 'font-css'
-    link.rel = 'stylesheet'
-    document.head.append(link)
-  }
-  link.href = `https://fonts.googleapis.com/css2?${font.q}&display=swap`
+  loadFonts('font-css', font.q)
+}
+
+export const getNameFont = (): NameFontId => NAME_FONTS.find((f) => f.id === read('nameFont'))?.id ?? 'shippori'
+
+export function applyNameFont(id: NameFontId) {
+  const font = NAME_FONTS.find((f) => f.id === id)!
+  const root = document.documentElement.style
+  // styles.css の --font-name / --name-weight を上書きする (標準のときは外して、本文の書体に戻す)
+  if (font.family) root.setProperty('--font-name', `'${font.family}'`)
+  else root.removeProperty('--font-name')
+  root.setProperty('--name-weight', String(font.weight))
+  localStorage.setItem('nameFont', id)
+  loadFonts('name-font-css', font.q)
 }
