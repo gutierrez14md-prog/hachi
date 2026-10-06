@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useApp } from '../ctx'
 import { CULTIVARS } from '../presets'
 
@@ -135,6 +135,10 @@ export function SuggestInput({
     setQuery(null)
     setResult(null)
   }
+  // 欄からフォーカスが外れたら閉じる。候補を押したときも先にフォーカスが外れることがあるので、
+  // その押下 (click) が候補に届くまで少し待つ
+  const blurTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => () => clearTimeout(blurTimer.current), [])
 
   return (
     <span className="suggest">
@@ -145,8 +149,13 @@ export function SuggestInput({
           onChange(e.target.value)
           setQuery(e.target.value)
         }}
-        onFocus={() => eager && setQuery(value)}
-        onBlur={close}
+        onFocus={() => {
+          clearTimeout(blurTimer.current)
+          if (eager) setQuery(value)
+        }}
+        onBlur={() => {
+          blurTimer.current = setTimeout(close, 250)
+        }}
         placeholder={placeholder}
         autoCapitalize={sci ? 'off' : undefined}
         autoCorrect="off"
@@ -161,9 +170,12 @@ export function SuggestInput({
               role="option"
               aria-selected={false}
               key={h.sci}
-              // 入力欄のフォーカスが外れて一覧が消える前に選べるよう、押した時点で確定する
-              onPointerDown={(e) => {
+              // 確定は click で行う。押した瞬間 (pointerdown) に一覧を消すと、指を離したときの click が
+              // 一覧の下にあった部品 (ハイブリッドのスイッチなど) に届いて、それを押したことになってしまう
+              onMouseDown={(e) => e.preventDefault()} // 入力欄のフォーカスは保つ
+              onClick={(e) => {
                 e.preventDefault()
+                clearTimeout(blurTimer.current)
                 onPick(h)
                 close()
               }}
