@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useApp } from '../ctx'
 import { db, journalPhotos } from '../db'
 import { diffDays, fromKey, today } from '../lib/date'
-import { CARD_H, CARD_W, drawCard, type Brand } from '../lib/sharecard'
+import { CARD_H, CARD_W, drawCard, TONES, type Brand, type ToneId } from '../lib/sharecard'
 import { Photo, Sheet } from '../parts'
 
 type FieldId = 'name' | 'sci' | 'cultivar' | 'group' | 'date' | 'days'
@@ -23,15 +23,15 @@ const BRANDS: [Brand, string][] = [
 ]
 
 // 前回の選び方を覚えておく (端末ごと)
-type Prefs = { fields: FieldId[]; brand: Brand }
+type Prefs = { fields: FieldId[]; brand: Brand; tone: ToneId }
 const loadPrefs = (): Prefs => {
   try {
     const p = JSON.parse(localStorage.getItem('shareCard') ?? 'null')
-    if (p && Array.isArray(p.fields) && BRANDS.some(([b]) => b === p.brand)) return p
+    if (p && Array.isArray(p.fields) && BRANDS.some(([b]) => b === p.brand)) return { ...p, tone: TONES.some((t) => t.id === p.tone) ? p.tone : 'green' }
   } catch {
     // 壊れていたら初期値
   }
-  return { fields: ['name', 'sci', 'cultivar', 'date'], brand: 'word' }
+  return { fields: ['name', 'sci', 'cultivar', 'date'], brand: 'word', tone: 'green' }
 }
 
 const dots = (key: string) => {
@@ -93,6 +93,7 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
         cultivar: on('cultivar') ? values.cultivar : undefined,
         meta: (['group', 'date', 'days'] as const).filter(on).map((id) => values[id]!),
         brand: prefs.brand,
+        tone: prefs.tone,
       })
       bitmap?.close()
       canvas.current.toBlob((blob) => !dead && blob && setFile(new File([blob], `hachi-${today()}.jpg`, { type: 'image/jpeg' })), 'image/jpeg', 0.9)
@@ -175,7 +176,17 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
         ))}
       </div>
 
-      <h3 className="sec">アプリの印</h3>
+      <h3 className="sec">カードの色</h3>
+      <div className="swatches">
+        {TONES.map((t) => (
+          <button key={t.id} className={prefs.tone === t.id ? 'on' : ''} onClick={() => update({ ...prefs, tone: t.id })}>
+            <span style={{ background: t.band }} />
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <h3 className="sec">アプリの刻印</h3>
       <div className="seg">
         {BRANDS.map(([id, label]) => (
           <button key={id} className={prefs.brand === id ? 'on' : ''} onClick={() => update({ ...prefs, brand: id })}>

@@ -9,13 +9,22 @@ export type CardInfo = {
   /** 小さく並べる項目 (分類、日付、育てた日数など) */
   meta: string[]
   brand: Brand
+  tone: ToneId
 }
+
+/** 帯の色の組み合わせ (band = 地、ink = 文字と刻印) */
+export const TONES = [
+  { id: 'green', label: 'グリーン', band: '#17241d', ink: '#ecf0ed' },
+  { id: 'light', label: 'ライト', band: '#ffffff', ink: '#17241d' },
+  { id: 'dark', label: 'ダーク', band: '#121212', ink: '#ececec' },
+  { id: 'paper', label: '生成り', band: '#ece5d8', ink: '#2b2620' },
+] as const
+export type ToneId = (typeof TONES)[number]['id']
 
 export const CARD_W = 1080
 export const CARD_H = 1350
 const PAD = 56
-const INK = '#17241d'
-const PAPER = '#ecf0ed'
+const PAPER = '#ecf0ed' // 写真が読み込めないとき・透明な写真のうしろ
 
 /** アプリで今使っている書体 (設定のフォント・植物名のフォントに合わせる) */
 function fonts() {
@@ -76,7 +85,9 @@ export async function drawCard(canvas: HTMLCanvasElement, photo: ImageBitmap | n
       sciRuns.length && document.fonts.load(f.sci(34, true), info.sci ?? ''),
       info.cultivar && document.fonts.load(f.sci(34, false), info.cultivar),
       meta && document.fonts.load(f.display(28), meta),
-      brandText && document.fonts.load(f.display(48, 800), brandText),
+      info.brand === 'word' && document.fonts.load(f.display(36, 800), brandText),
+      // 「鉢」の字は、植物の名前と同じ書体で出す
+      info.brand === 'kanji' && document.fonts.load(f.name(44), brandText),
     ].filter(Boolean),
   ).catch(() => {})
 
@@ -102,20 +113,24 @@ export async function drawCard(canvas: HTMLCanvasElement, photo: ImageBitmap | n
   }
   if (!bandH) return
 
-  ctx.fillStyle = INK
+  const tone = TONES.find((t) => t.id === info.tone) ?? TONES[0]
+  ctx.fillStyle = tone.band
   ctx.fillRect(0, photoH, CARD_W, bandH)
-  ctx.fillStyle = PAPER
-  ctx.strokeStyle = PAPER
+  ctx.fillStyle = tone.ink
+  ctx.strokeStyle = tone.ink
   ctx.textBaseline = 'alphabetic'
 
-  // アプリの印: 帯の右端、上下中央
+  // アプリの刻印: 帯の右下に、小さくさりげなく。情報のいちばん下の行と、下端をそろえる
+  let y = photoH + (bandH - textH) / 2
+  const bottom = textH ? y + textH - 12 : photoH + bandH / 2 + 18
   let brandW = 0
-  const midY = photoH + bandH / 2
+  ctx.globalAlpha = 0.85
   if (info.brand === 'mark') {
-    const size = 76
-    brandW = size * (14 / 24) + 8
+    const size = 50
+    brandW = size * (14 / 24)
     ctx.save()
-    ctx.translate(CARD_W - PAD - size * (19 / 24), midY - size / 2)
+    // マークの絵は 24x24 のうち x 5〜19、y 3〜21 にある。その右下の角を、帯の右下に合わせる
+    ctx.translate(CARD_W - PAD - size * (19 / 24), bottom - size * (21 / 24))
     ctx.scale(size / 24, size / 24)
     ctx.lineWidth = 2
     ctx.lineCap = 'round'
@@ -123,30 +138,31 @@ export async function drawCard(canvas: HTMLCanvasElement, photo: ImageBitmap | n
     for (const d of POT) ctx.stroke(new Path2D(d))
     ctx.restore()
   } else if (brandText) {
-    const size = info.brand === 'kanji' ? 60 : 46
-    ctx.font = f.display(size, 800)
+    ctx.font = info.brand === 'kanji' ? f.name(40) : f.display(32, 800)
     brandW = ctx.measureText(brandText).width
     ctx.textAlign = 'right'
-    ctx.fillText(brandText, CARD_W - PAD, midY + size * 0.36)
+    ctx.fillText(brandText, CARD_W - PAD, bottom)
     ctx.textAlign = 'left'
   }
+  ctx.globalAlpha = 1
 
-  // 情報: 左寄せで上から。印のぶんは幅を空ける
-  const maxW = CARD_W - PAD * 2 - (brandW ? brandW + 40 : 0)
-  let y = photoH + (bandH - textH) / 2
+  // 情報: 左寄せで上から。刻印と同じ高さになる最後の行だけ、刻印のぶん幅を空ける
+  const fullW = CARD_W - PAD * 2
+  const lastRow = meta ? 2 : sciRuns.length ? 1 : 0
+  const widthOf = (row: number) => (row === lastRow && brandW ? fullW - brandW - 36 : fullW)
   if (info.name) {
-    fitLine(ctx, [{ text: info.name, font: f.name }], PAD, y + 62, maxW, 64, 40)
+    fitLine(ctx, [{ text: info.name, font: f.name }], PAD, y + 62, widthOf(0), 64, 40)
     y += rows[0]
   }
   if (sciRuns.length) {
     ctx.globalAlpha = 0.78
-    fitLine(ctx, sciRuns, PAD, y + 38, maxW, 34, 24)
+    fitLine(ctx, sciRuns, PAD, y + 38, widthOf(1), 34, 24)
     ctx.globalAlpha = 1
     y += rows[1]
   }
   if (meta) {
     ctx.globalAlpha = 0.78
-    fitLine(ctx, [{ text: meta, font: (s) => f.display(s) }], PAD, y + 36, maxW, 26, 20)
+    fitLine(ctx, [{ text: meta, font: (s) => f.display(s) }], PAD, y + 36, widthOf(2), 26, 20)
     ctx.globalAlpha = 1
   }
 }
