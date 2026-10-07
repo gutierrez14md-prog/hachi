@@ -5,6 +5,7 @@ import { db, journalPhotos, newId } from '../db'
 import { today } from '../lib/date'
 import { Field, PhotosPicker, Sheet } from '../parts'
 import type { Journal } from '../types'
+import { PlantPick } from './PlantPick'
 
 export function JournalForm(props: { plantId?: string; id?: string }) {
   const { plants: active, allPlants, journal, close, toast } = useApp()
@@ -48,20 +49,8 @@ export function JournalForm(props: { plantId?: string; id?: string }) {
         </button>
       }
     >
-      {!plants.length && <p className="none">先に植物を追加してください</p>}
       <PhotosPicker ids={photos} onChange={(photoIds) => set({ photoIds, photoId: photoIds[0] })} />
-      <Field label="植物">
-        <select value={f.plantId} onChange={(e) => set({ plantId: e.target.value })}>
-          <option value="" disabled>
-            選択してください
-          </option>
-          {plants.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <PlantPick plants={plants} value={f.plantId ? [f.plantId] : []} onChange={([plantId]) => set({ plantId })} />
       <Field label={f.past ? '撮影日' : '日付'}>
         <input type="date" value={f.date} max={today()} onChange={(e) => set({ date: e.target.value })} />
       </Field>

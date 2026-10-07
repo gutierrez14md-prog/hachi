@@ -46,28 +46,54 @@ export function JournalCard({ entry, plantName }: { entry: Journal; plantName?: 
 }
 
 export function Timeline() {
-  const { plants, allPlants, journal, open } = useApp()
+  const { plants, allPlants, groups, journal, open } = useApp()
   const [plantId, setPlantId] = useState('')
+  // 株が多いと 1 つの一覧から選びにくいので、先に分類で絞れるようにする
+  const [grp, setGrp] = useState('')
+  const usedGroups = groups.filter((g) => plants.some((p) => p.groupId === g.id))
+  const inGroup = new Set(allPlants.filter((p) => !grp || p.groupId === grp).map((p) => p.id))
   // アーカイブした株の記録もタイムラインには残す
   const names = new Map(allPlants.map((p) => [p.id, p.name]))
-  const entries = sortJournal(journal).filter((j) => names.has(j.plantId) && (!plantId || j.plantId === plantId))
+  const entries = sortJournal(journal).filter((j) => names.has(j.plantId) && inGroup.has(j.plantId) && (!plantId || j.plantId === plantId))
 
   let month = ''
   return (
     <>
       <header className="top row">
         <h1>タイムライン</h1>
-        {plants.length > 0 && (
-          <select value={plantId} onChange={(e) => setPlantId(e.target.value)}>
-            <option value="">すべての植物</option>
-            {plants.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        )}
       </header>
+      {plants.length > 0 && (
+        <div className="filters">
+          {usedGroups.length > 0 && (
+            <select
+              value={grp}
+              aria-label="分類で絞り込む"
+              onChange={(e) => {
+                setGrp(e.target.value)
+                setPlantId('')
+              }}
+            >
+              <option value="">すべての分類</option>
+              {usedGroups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          )}
+          <select value={plantId} aria-label="植物で絞り込む" onChange={(e) => setPlantId(e.target.value)}>
+            <option value="">すべての植物</option>
+            {[...plants]
+              .filter((p) => inGroup.has(p.id))
+              .sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+              .map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+          </select>
+        </div>
+      )}
 
       {!entries.length && (
         <div className="empty small">

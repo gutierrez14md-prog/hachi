@@ -5,7 +5,8 @@ import { db, newId } from '../db'
 import { today } from '../lib/date'
 import { photoDate } from '../lib/exif'
 import { savePhoto } from '../lib/photo'
-import { Field, Sheet } from '../parts'
+import { Sheet } from '../parts'
+import { PlantPick } from './PlantPick'
 
 type Item = { key: string; file: File; url: string; date: string }
 
@@ -52,18 +53,7 @@ export function PastPhotos(props: { plantId?: string }) {
         </button>
       }
     >
-      <Field label="植物">
-        <select value={plantId} onChange={(e) => setPlantId(e.target.value)}>
-          <option value="" disabled>
-            選択してください
-          </option>
-          {plants.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <PlantPick plants={plants} value={plantId ? [plantId] : []} onChange={([id]) => setPlantId(id)} />
 
       <label className="btn ghost full">
         <ImagePlus size={16} /> 写真を選ぶ (複数可)

@@ -904,6 +904,85 @@ input[type='number'] {
   cursor: pointer;
 }
 
+/* 植物を選ぶ欄 (絞り込み + 一覧) */
+.search.compact {
+  height: 42px;
+  margin: 0 0 10px;
+}
+.type-grid + .field {
+  margin-top: 24px;
+}
+/* 検索欄の中の入力は、フォームの入力欄の枠 (.field input) を付けない */
+.field .search input {
+  display: block;
+  width: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.field > .chips {
+  margin-bottom: 10px;
+}
+.field > .chips.scroll {
+  margin-inline: -20px;
+  padding-inline: 20px;
+}
+.pick-count {
+  margin-left: 8px;
+  color: var(--ink);
+}
+.btn.pick-all {
+  margin-bottom: 10px;
+}
+.pick-list {
+  max-height: 264px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.pick-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px 8px 8px;
+}
+.pick-row + .pick-row {
+  border-top: 1px solid var(--line);
+}
+.pick-row.on {
+  background: var(--surface2);
+}
+.pick-text {
+  flex: 1;
+  min-width: 0;
+}
+.pick-text b {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pick-change {
+  flex: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+/* タイムラインの絞り込み (分類 → 植物) */
+.filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.filters select {
+  flex: 1;
+  min-width: 0;
+}
+
 /* ---------- overlays: 画面の端から少し離した角丸のカード。スマホは下寄せ、PC は中央 ---------- */
 .backdrop {
   position: fixed;
