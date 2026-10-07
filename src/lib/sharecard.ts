@@ -80,20 +80,37 @@ function fitLine(ctx: CanvasRenderingContext2D, runs: Run[], x: number, baseline
   }
 }
 
-/** 写真を、枠いっぱいに切り取って収める。写真が無ければ薄い地だけ */
-function cover(ctx: CanvasRenderingContext2D, photo: ImageBitmap | null, x: number, y: number, w: number, h: number) {
+/** 写真の見せ方の調整: 中央からのずれ (カードの座標での px) と、拡大率 (1 = 枠いっぱい) */
+export type Focus = { dx: number; dy: number; z: number }
+export const NO_FOCUS: Focus = { dx: 0, dy: 0, z: 1 }
+/** カードの中で写真が入る枠と、その写真のもとの大きさ */
+export type Slot = { x: number; y: number; w: number; h: number; pw: number; ph: number }
+
+/** 枠の中にすきまができない範囲に、ずれと拡大率を収める */
+export function clampFocus(f: Focus, s: Slot): Focus {
+  const z = Math.max(1, Math.min(3, f.z))
+  const scale = Math.max(s.w / s.pw, s.h / s.ph) * z
+  const ox = Math.max(0, (s.pw * scale - s.w) / 2), oy = Math.max(0, (s.ph * scale - s.h) / 2)
+  return { z, dx: Math.max(-ox, Math.min(ox, f.dx)), dy: Math.max(-oy, Math.min(oy, f.dy)) }
+}
+
+/** 写真を、枠いっぱいに切り取って収める。写真が無ければ薄い地だけ。使った枠を返す */
+function cover(ctx: CanvasRenderingContext2D, photo: ImageBitmap | null, x: number, y: number, w: number, h: number, focus: Focus = NO_FOCUS): Slot | null {
   ctx.fillStyle = PAPER
   ctx.fillRect(x, y, w, h)
-  if (!photo) return
-  const scale = Math.max(w / photo.width, h / photo.height)
+  if (!photo) return null
+  const slot = { x, y, w, h, pw: photo.width, ph: photo.height }
+  const f = clampFocus(focus, slot)
+  const scale = Math.max(w / photo.width, h / photo.height) * f.z
   const pw = photo.width * scale, ph = photo.height * scale
   ctx.save()
   ctx.beginPath()
   ctx.rect(x, y, w, h)
   ctx.clip()
   ctx.imageSmoothingQuality = 'high'
-  ctx.drawImage(photo, x + (w - pw) / 2, y + (h - ph) / 2, pw, ph)
+  ctx.drawImage(photo, x + (w - pw) / 2 + f.dx, y + (h - ph) / 2 + f.dy, pw, ph)
   ctx.restore()
+  return slot
 }
 
 const brandText = (b: Brand) => (b === 'word' ? 'Hachi' : b === 'kanji' ? '鉢' : '')
@@ -130,7 +147,7 @@ const sciRuns = (info: CardInfo, f: Fonts): Run[] => [
 ]
 
 /** label と compare: 写真の下の帯。compare は、帯のいちばん上に左右の日付の行が入る */
-function drawBand(ctx: CanvasRenderingContext2D, f: Fonts, photos: (ImageBitmap | null)[], info: CardInfo) {
+function drawBand(ctx: CanvasRenderingContext2D, f: Fonts, photos: (ImageBitmap | null)[], info: CardInfo, focus: (Focus | undefined)[]): (Slot | null)[] {
   const tone = TONES.find((t) => t.id === info.tone) ?? TONES[0]
   const sci = sciRuns(info, f)
   const meta = info.meta.map((m) => m.value).join('  ・  ')
@@ -141,16 +158,16 @@ function drawBand(ctx: CanvasRenderingContext2D, f: Fonts, photos: (ImageBitmap 
   const textH = rows.reduce((a, b) => a + b, 0)
   const bandH = textH || info.brand !== 'none' ? Math.max(textH + 84, 150) : 0
   const photoH = CARD_H - bandH
+  let slots: (Slot | null)[]
 
   if (two) {
     // 左右に 2 枚。間は帯と同じ色の細いすき間
     const gap = 6, w = (CARD_W - gap) / 2
     ctx.fillStyle = tone.band
     ctx.fillRect(0, 0, CARD_W, photoH)
-    cover(ctx, photos[0], 0, 0, w, photoH)
-    cover(ctx, photos[1], w + gap, 0, w, photoH)
-  } else cover(ctx, photos[0], 0, 0, CARD_W, photoH)
-  if (!bandH) return
+    slots = [cover(ctx, photos[0], 0, 0, w, photoH, focus[0]), cover(ctx, photos[1], w + gap, 0, w, photoH, focus[1])]
+  } else slots = [cover(ctx, photos[0], 0, 0, CARD_W, photoH, focus[0])]
+  if (!bandH) return slots
 
   ctx.fillStyle = tone.band
   ctx.fillRect(0, photoH, CARD_W, bandH)
@@ -197,10 +214,11 @@ function drawBand(ctx: CanvasRenderingContext2D, f: Fonts, photos: (ImageBitmap 
     fitLine(ctx, [{ text: meta, font: (s) => f.display(s) }], PAD, y + 36, widthOf(3), 26, 20)
     ctx.globalAlpha = 1
   }
+  return slots
 }
 
 /** specimen: 台紙の上に写真を枠で置き、その下に標本ラベルのように「項目名  値」を罫線つきで並べる */
-function drawSpecimen(ctx: CanvasRenderingContext2D, f: Fonts, photo: ImageBitmap | null, info: CardInfo) {
+function drawSpecimen(ctx: CanvasRenderingContext2D, f: Fonts, photo: ImageBitmap | null, info: CardInfo, focus?: Focus): (Slot | null)[] {
   const tone = TONES.find((t) => t.id === info.tone) ?? TONES[0]
   const sci = sciRuns(info, f)
   const M = 64
@@ -214,7 +232,7 @@ function drawSpecimen(ctx: CanvasRenderingContext2D, f: Fonts, photo: ImageBitma
 
   ctx.fillStyle = tone.band
   ctx.fillRect(0, 0, CARD_W, CARD_H)
-  cover(ctx, photo, M, M, CARD_W - M * 2, frameH)
+  const slot = cover(ctx, photo, M, M, CARD_W - M * 2, frameH, focus)
   ctx.strokeStyle = tone.ink
   ctx.globalAlpha = 0.22
   ctx.lineWidth = 2
@@ -251,9 +269,11 @@ function drawSpecimen(ctx: CanvasRenderingContext2D, f: Fonts, photo: ImageBitma
     }
   }
   stamp(ctx, f, info.brand, CARD_W - M, CARD_H - M - 4)
+  return [slot]
 }
 
-export async function drawCard(canvas: HTMLCanvasElement, photos: (ImageBitmap | null)[], info: CardInfo) {
+/** カードを描く。focus = 写真ごとの位置と大きさの調整。写真が入った枠を返す (指で動かすときに使う) */
+export async function drawCard(canvas: HTMLCanvasElement, photos: (ImageBitmap | null)[], info: CardInfo, focus: (Focus | undefined)[] = []) {
   const f = fonts()
   const metaText = info.meta.map((m) => m.label + m.value).join('') + (info.dates?.join('') ?? '') + (info.elapsed ?? '')
   // Web フォントは、使う文字ぶんを読み込んでから描く (読み込み前に描くと、別の書体で焼き付いてしまう)
@@ -273,6 +293,5 @@ export async function drawCard(canvas: HTMLCanvasElement, photos: (ImageBitmap |
   const ctx = canvas.getContext('2d')!
   ctx.globalAlpha = 1
   ctx.textAlign = 'left'
-  if (info.design === 'specimen') drawSpecimen(ctx, f, photos[0], info)
-  else drawBand(ctx, f, photos, info)
+  return info.design === 'specimen' ? drawSpecimen(ctx, f, photos[0], info, focus[0]) : drawBand(ctx, f, photos, info, focus)
 }

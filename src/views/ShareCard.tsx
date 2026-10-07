@@ -1,9 +1,9 @@
-import { Copy, Download, Share2 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Copy, Download, Move, Share2 } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { useApp } from '../ctx'
 import { db, journalPhotos } from '../db'
 import { diffDays, fromKey, today } from '../lib/date'
-import { CARD_H, CARD_W, drawCard, TONES, type Brand, type Design, type ToneId } from '../lib/sharecard'
+import { CARD_H, CARD_W, clampFocus, drawCard, NO_FOCUS, TONES, type Brand, type Design, type Focus, type Slot, type ToneId } from '../lib/sharecard'
 import { Photo, Sheet } from '../parts'
 
 type FieldId = 'name' | 'sci' | 'cultivar' | 'group' | 'date' | 'days'
@@ -47,8 +47,24 @@ const dots = (key: string) => {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
 }
 
+type Shot = { id: string; date?: string }
+
+/** 写真を選ぶ一覧。どれがいつの写真かわかるように、下に日付を重ねる */
+function ShotStrip({ shots, value, onPick }: { shots: Shot[]; value?: string; onPick: (id: string) => void }) {
+  return (
+    <div className="share-shots">
+      {shots.map((s) => (
+        <button key={s.id} className={s.id === value ? 'on' : ''} onClick={() => onPick(s.id)} aria-label={s.date ? `${dots(s.date)} の写真` : '日付のない写真'}>
+          <Photo id={s.id} />
+          <span>{s.date ? dots(s.date).slice(2) : '日付なし'}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
 /**
- * SNS に投稿する用の画像を作る。載せる情報とアプリの印を選び、端末の共有シート (Instagram など) に渡す。
+ * SNS に投稿する用の画像を作る。載せる情報とアプリの刻印を選び、端末の共有シート (Instagram など) に渡す。
  * 購入金額・購入場所のような情報は、選択肢にも出さない
  */
 export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: string }) {
@@ -60,7 +76,7 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
 
   // 使える写真: 植物の写真と、その株の生長記録の写真 (新しい順)。記録の写真は、その記録の日付を持つ
   const shots = useMemo(() => {
-    const list: { id: string; date?: string }[] = []
+    const list: Shot[] = []
     if (p?.photoId) list.push({ id: p.photoId })
     const entries = journal.filter((j) => j.plantId === plantId).sort((a, b) => b.date.localeCompare(a.date) || b.at - a.at)
     for (const j of entries)
@@ -76,10 +92,14 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
   const shot = shots.find((s) => s.id === shotId)
   // ビフォーアフターの「前」の写真。初めは、いちばん古い写真 (一覧の末尾)
   const [beforeId, setBeforeId] = useState<string>()
-  const before = shots.find((s) => s.id === beforeId) ?? [...shots].reverse().find((s) => s.id !== shotId)
+  const before = shots.find((s) => s.id === beforeId && s.id !== shotId) ?? [...shots].reverse().find((s) => s.id !== shotId)
   // 写真が 1 枚しか無い株では、ビフォーアフターは作れない
   const design: Design = prefs.design === 'compare' && !before ? 'label' : prefs.design
+  const two = design === 'compare'
   const afterDate = shot?.date ?? today()
+  // カードに入る写真。ビフォーアフターは [前, 後] の順
+  const used = two ? [before?.id, shotId] : [shotId]
+  const usedKey = used.join('|')
 
   const group = groups.find((g) => g.id === p?.groupId)?.name
   const values: Record<FieldId, string | undefined> = {
@@ -97,22 +117,51 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
     localStorage.setItem('shareCard', JSON.stringify(next))
   }
 
-  // 選び方が変わるたびに描き直し、共有用のファイルも作っておく
-  // (共有シートは、ボタンを押したその場で呼ばないと開かないので、押してから作るのでは遅い)
-  const key = JSON.stringify([shotId, before?.id, design, prefs, values])
+  // 写真の位置と大きさの調整 (写真ごと)。adjusting の間だけ、プレビューを指で動かせる
+  const [focus, setFocus] = useState<Record<string, Focus>>({})
+  const [adjusting, setAdjusting] = useState(false)
+  const [active, setActive] = useState(0) // 拡大のスライダーが効く写真 (最後に触ったほう)
+  const slots = useRef<(Slot | null)[]>([])
+  const drag = useRef<{ i: number; x: number; y: number; from: Focus } | null>(null)
+
+  // 写真を読み込む (選び直したときだけ。位置を動かすたびには読み直さない)。
+  // どの組み合わせの写真かを一緒に持ち、描く側は「いま選んでいる組み合わせ」のものだけを使う。
+  // 古い写真は、新しい写真に入れ替えたあとで破棄する (描いている途中の写真を破棄しないため)
+  const [loaded, setLoaded] = useState<{ key: string; list: (ImageBitmap | null)[] } | null>(null)
+  const loadedRef = useRef(loaded)
+  loadedRef.current = loaded
   useEffect(() => {
     let dead = false
-    setFile(null)
-    ;(async () => {
-      const load = async (id?: string) => {
+    Promise.all(
+      usedKey.split('|').map(async (id) => {
         const rec = id ? await db.photos.get(id) : undefined
         return rec ? createImageBitmap(rec.blob) : null
-      }
-      const two = design === 'compare'
-      // ビフォーアフターは [前, 後] の順
-      const bitmaps = two ? [await load(before?.id), await load(shotId)] : [await load(shotId)]
-      if (dead || !canvas.current) return
-      await drawCard(canvas.current, bitmaps, {
+      }),
+    ).then((list) => {
+      if (dead) return list.forEach((b) => b?.close())
+      const old = loadedRef.current
+      setLoaded({ key: usedKey, list })
+      setTimeout(() => old?.list.forEach((b) => b?.close()), 1000)
+    })
+    return () => {
+      dead = true
+    }
+  }, [usedKey])
+  useEffect(() => () => loadedRef.current?.list.forEach((b) => b?.close()), [])
+  const bitmaps = loaded?.key === usedKey ? loaded.list : null
+
+  // 選び方や位置が変わるたびに描き直す。共有用のファイルは、動かし終わってから作る
+  // (共有シートは、ボタンを押したその場で呼ばないと開かないので、押してから作るのでは遅い)
+  const key = JSON.stringify([usedKey, design, prefs, values, used.map((id) => (id ? focus[id] : null))])
+  useEffect(() => {
+    if (!bitmaps || !canvas.current) return
+    let dead = false
+    setFile(null)
+    let timer: ReturnType<typeof setTimeout>
+    drawCard(
+      canvas.current,
+      bitmaps,
+      {
         design,
         name: on('name') ? values.name : undefined,
         sci: on('sci') ? values.sci : undefined,
@@ -125,17 +174,55 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
         tone: prefs.tone,
         dates: two && on('date') ? [before?.date && dots(before.date), dots(afterDate)] : undefined,
         elapsed: two && on('date') && before?.date ? `${diffDays(afterDate, before.date)}日` : undefined,
-      })
-      bitmaps.forEach((b) => b?.close())
-      canvas.current.toBlob((blob) => !dead && blob && setFile(new File([blob], `hachi-${today()}.jpg`, { type: 'image/jpeg' })), 'image/jpeg', 0.9)
-    })()
+      },
+      used.map((id) => (id ? focus[id] : undefined)),
+    ).then(
+      (s) => {
+        if (dead) return
+        slots.current = s
+        timer = setTimeout(
+          () => canvas.current?.toBlob((blob) => !dead && blob && setFile(new File([blob], `hachi-${today()}.jpg`, { type: 'image/jpeg' })), 'image/jpeg', 0.9),
+          200,
+        )
+      },
+      // 写真を選び直した直後は、前の写真がもう破棄されていて描けないことがある。すぐ次の描画が来るので、何もしない
+      (e) => console.warn('[share card]', e),
+    )
     return () => {
       dead = true
+      clearTimeout(timer)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- key が、描く内容のすべて
-  }, [key])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- key と bitmaps が、描く内容のすべて
+  }, [key, bitmaps])
 
   if (!p) return null
+
+  // プレビュー上の指の位置を、カードの座標にする
+  const toCard = (e: PointerEvent) => {
+    const r = canvas.current!.getBoundingClientRect()
+    return { x: ((e.clientX - r.left) / r.width) * CARD_W, y: ((e.clientY - r.top) / r.height) * CARD_H }
+  }
+  const setFocusOf = (i: number, f: Focus) => {
+    const id = used[i], slot = slots.current[i]
+    if (id && slot) setFocus((cur) => ({ ...cur, [id]: clampFocus(f, slot) }))
+  }
+  const down = (e: PointerEvent) => {
+    if (!adjusting) return
+    const at = toCard(e)
+    // 触ったところにある写真を動かす (ビフォーアフターは左右どちらか)
+    const i = Math.max(0, slots.current.findIndex((s) => s && at.x >= s.x && at.x <= s.x + s.w && at.y >= s.y && at.y <= s.y + s.h))
+    canvas.current!.setPointerCapture(e.pointerId)
+    drag.current = { i, ...at, from: focus[used[i] ?? ''] ?? NO_FOCUS }
+    setActive(i)
+  }
+  const move = (e: PointerEvent) => {
+    const d = drag.current
+    if (!d) return
+    const at = toCard(e)
+    setFocusOf(d.i, { ...d.from, dx: d.from.dx + at.x - d.x, dy: d.from.dy + at.y - d.y })
+  }
+  const activeIndex = Math.min(active, used.length - 1)
+  const activeFocus = focus[used[activeIndex] ?? ''] ?? NO_FOCUS
 
   const caption = [p.name, [p.scientificName, p.cultivar && `'${p.cultivar}'`].filter(Boolean).join(' '), '', [group, p.scientificName.split(' ')[0]].filter(Boolean).map((t) => `#${t}`).join(' ')]
     .join('\n')
@@ -188,34 +275,62 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
           </button>
         ))}
       </div>
-      <canvas ref={canvas} width={CARD_W} height={CARD_H} className="share-canvas" />
+      <canvas
+        ref={canvas}
+        width={CARD_W}
+        height={CARD_H}
+        className={`share-canvas ${adjusting ? 'adjusting' : ''}`}
+        onPointerDown={down}
+        onPointerMove={move}
+        onPointerUp={() => (drag.current = null)}
+        onPointerCancel={() => (drag.current = null)}
+      />
 
-      {shots.length > 1 && (
-        <>
-          {design === 'compare' && <p className="share-cap">後（右）の写真</p>}
-          <div className="share-shots">
-            {shots.map((s) => (
-              <button key={s.id} className={s.id === shotId ? 'on' : ''} onClick={() => setShotId(s.id)} aria-label="この写真を使う">
-                <Photo id={s.id} />
+      {/* 写真の位置: ふだんはプレビューの上でもスクロールできるように、押したときだけ動かせる状態にする */}
+      {shots.length > 0 && (
+        <div className="share-adjust">
+          <button className={`btn sm ${adjusting ? 'primary' : 'ghost'}`} onClick={() => setAdjusting((a) => !a)}>
+            <Move size={15} /> {adjusting ? '位置の調整を終える' : '写真の位置を調整'}
+          </button>
+          {adjusting && (
+            <>
+              <label>
+                拡大{two && (activeIndex === 0 ? '（前）' : '（後）')}
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.01}
+                  value={activeFocus.z}
+                  onChange={(e) => setFocusOf(activeIndex, { ...activeFocus, z: Number(e.target.value) })}
+                />
+              </label>
+              <button
+                className="btn ghost sm"
+                onClick={() =>
+                  setFocus((cur) => {
+                    const next = { ...cur }
+                    for (const id of used) if (id) delete next[id]
+                    return next
+                  })
+                }
+              >
+                戻す
               </button>
-            ))}
-          </div>
-        </>
+            </>
+          )}
+        </div>
       )}
-      {design === 'compare' && (
+
+      {/* 写真えらび。ビフォーアフターは、前 → 後の順 */}
+      {two && (
         <>
           <p className="share-cap">前（左）の写真</p>
-          <div className="share-shots">
-            {shots
-              .filter((s) => s.id !== shotId)
-              .map((s) => (
-                <button key={s.id} className={s.id === before?.id ? 'on' : ''} onClick={() => setBeforeId(s.id)} aria-label="前の写真に使う">
-                  <Photo id={s.id} />
-                </button>
-              ))}
-          </div>
+          <ShotStrip shots={shots.filter((s) => s.id !== shotId)} value={before?.id} onPick={setBeforeId} />
+          <p className="share-cap">後（右）の写真</p>
         </>
       )}
+      {shots.length > 1 && <ShotStrip shots={shots} value={shotId} onPick={setShotId} />}
 
       <h3 className="sec">載せる情報</h3>
       <div className="chips">

@@ -14,6 +14,15 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '1.8.1',
+    date: '2026-10-07',
+    items: [
+      '投稿用の画像で写真の位置と大きさを調整できるように変更',
+      '投稿用の画像の写真一覧に日付を表示',
+      'ビフォーアフターの写真選択を前 → 後の順に修正',
+    ],
+  },
+  {
     version: '1.8.0',
     date: '2026-10-07',
     items: [
