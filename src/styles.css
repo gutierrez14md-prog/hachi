@@ -530,10 +530,9 @@ input[type='number'] {
 .wx-sub span {
   gap: 2px;
 }
-/* 最高 / 最低は左、湿度は右端に。カードが広がったぶんは、この間に入る */
+/* 最高 / 最低のすぐ後ろに湿度を続ける (右端に離すと、間がぽっかり空くため) */
 .wx-sub {
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 .wx-card {
   padding-inline: 18px;

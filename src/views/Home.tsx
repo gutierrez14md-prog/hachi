@@ -173,13 +173,16 @@ export function Home() {
             </p>
           </section>
           <section className="wx-card" aria-label="今日の天気">
-            <p className="eyebrow">
-              {fromKey(t).getMonth() + 1}/{fromKey(t).getDate()} {WEEKDAYS[fromKey(t).getDay()]}
-            </p>
-            <p className="hero-n wx-now" aria-label={`${sky.label} ${Math.round(weather.temp)}度`}>
-              <sky.Icon size={22} />
-              {Math.round(weather.temp)}°
-            </p>
+            {/* 見出しと数字をひとまとめにする (植物のカードと同じ組み方にして、数字の高さをそろえる) */}
+            <div>
+              <p className="eyebrow">
+                {fromKey(t).getMonth() + 1}/{fromKey(t).getDate()} {WEEKDAYS[fromKey(t).getDay()]}
+              </p>
+              <p className="hero-n wx-now" aria-label={`${sky.label} ${Math.round(weather.temp)}度`}>
+                <sky.Icon size={22} />
+                {Math.round(weather.temp)}°
+              </p>
+            </div>
             <p className="hero-sub wx-sub">
               <b aria-label={`最高${Math.round(weather.max)}度 最低${Math.round(weather.min)}度`}>
                 {Math.round(weather.max)}° / {Math.round(weather.min)}°
