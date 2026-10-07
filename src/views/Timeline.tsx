@@ -38,12 +38,12 @@ export function JournalCard({ entry, plantName }: { entry: Journal; plantName?: 
           </button>
         </span>
       </header>
-      {photos.length === 1 && <Photo id={photos[0]} className="entry-img" />}
+      {photos.length === 1 && <Photo id={photos[0]} className="entry-img" onClick={() => open({ k: 'photo', ids: photos, index: 0 })} />}
       {/* 複数枚: 横に並べてスワイプで送る。次の写真が少しのぞくので、続きがあるとわかる */}
       {photos.length > 1 && (
         <div className="entry-strip">
-          {photos.map((id) => (
-            <Photo key={id} id={id} className="entry-img" />
+          {photos.map((id, i) => (
+            <Photo key={id} id={id} className="entry-img" onClick={() => open({ k: 'photo', ids: photos, index: i })} />
           ))}
         </div>
       )}

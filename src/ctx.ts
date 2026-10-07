@@ -14,6 +14,7 @@ export type Overlay =
   | { k: 'archive' }
   | { k: 'feedback' }
   | { k: 'releases' }
+  | { k: 'photo'; ids: string[]; index: number }
   | { k: 'share'; plantId: string; photoId?: string }
 
 export interface AppCtx {

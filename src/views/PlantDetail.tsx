@@ -51,7 +51,7 @@ export function PlantDetail({ id }: { id: string }) {
         </>
       }
     >
-      <Photo id={p.photoId} className="hero" />
+      <Photo id={p.photoId} className="hero" onClick={() => p.photoId && open({ k: 'photo', ids: [p.photoId], index: 0 })} />
       {archived && <p className="banner">{fmtFull(p.archivedDay!)} にアーカイブ</p>}
       <div className="detail-h">
         <h1>{p.name}</h1>

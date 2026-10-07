@@ -19,8 +19,8 @@ export function PotIcon({ size = 24 }: { size?: number }) {
   )
 }
 
-/** IndexedDB に保存した写真を表示する。写真がなければ鉢植えのプレースホルダー */
-export function Photo({ id, className = '' }: { id?: string; className?: string }) {
+/** IndexedDB に保存した写真を表示する。写真がなければ鉢植えのプレースホルダー。onClick は写真があるときだけ効く (拡大表示用) */
+export function Photo({ id, className = '', onClick }: { id?: string; className?: string; onClick?: () => void }) {
   const [url, setUrl] = useState<string>()
   useEffect(() => {
     setUrl(undefined)
@@ -37,7 +37,7 @@ export function Photo({ id, className = '' }: { id?: string; className?: string 
       if (made) URL.revokeObjectURL(made)
     }
   }, [id])
-  if (url) return <img className={className} src={url} alt="" />
+  if (url) return <img className={className} src={url} alt="" onClick={onClick} draggable={false} />
   return (
     <div className={`${className} ph`}>
       <PotIcon />

@@ -17,6 +17,8 @@ import { MonthChips } from './CareEditor'
 export function SettingsView() {
   const { settings, plants, allPlants, groups, logs, journal, toast, open } = useApp()
   const [guideOpen, setGuideOpen] = useState(false)
+  const [fontOpen, setFontOpen] = useState(false)
+  const [groupsOpen, setGroupsOpen] = useState(false)
   const spent = allPlants.reduce((sum, p) => sum + (p.purchasePrice ?? 0), 0)
   const showSpent = settings.showSpent ?? true
   const save = (patch: Partial<Settings>) => db.settings.put({ ...settings, ...patch })
@@ -72,7 +74,17 @@ export function SettingsView() {
         ))}
       </div>
 
-      <h3 className="sec">メインフォント</h3>
+      {/* フォントと分類は場所を取るので、押すまで閉じておく。閉じている間は、いまの選択を右に出す */}
+      <button className="fold" aria-expanded={fontOpen} onClick={() => setFontOpen((o) => !o)}>
+        フォント
+        <span className="fold-side">
+          {FONTS.find((f) => f.id === font)?.label} / {NAME_FONTS.find((f) => f.id === nameFont)?.label}
+          <ChevronDown size={18} className={fontOpen ? 'flip' : ''} />
+        </span>
+      </button>
+      {fontOpen && (
+        <>
+      <h3 className="sec first">メインフォント</h3>
       <div className="fonts">
         {FONTS.map((f) => (
           <button
@@ -106,6 +118,9 @@ export function SettingsView() {
         ))}
       </div>
 
+        </>
+      )}
+
       <h3 className="sec">天気</h3>
       <section className="card">
         <label className="line">
@@ -115,7 +130,7 @@ export function SettingsView() {
           <span className="line-main">
             <span>
               <b>ホームに今日の天気を出す</b>
-              <small>現在地の気温・湿度・降水確率</small>
+              <small>現在地の天気・気温・湿度</small>
             </span>
           </span>
           <input type="checkbox" className="switch" checked={weatherOn} disabled={locating} onChange={(e) => toggleWeather(e.target.checked)} />
@@ -168,8 +183,15 @@ export function SettingsView() {
         <p className="hint">このブラウザでは通知を使えません。iPhone / iPad は共有メニューから「ホーム画面に追加」すると使えるようになります。</p>
       )}
 
-      <h3 className="sec">分類</h3>
-      <section className="card">
+      <button className="fold" aria-expanded={groupsOpen} onClick={() => setGroupsOpen((o) => !o)}>
+        分類
+        <span className="fold-side">
+          {groups.length}件
+          <ChevronDown size={18} className={groupsOpen ? 'flip' : ''} />
+        </span>
+      </button>
+      {groupsOpen && (
+      <section className="card under-fold">
         {groups.map((g) => {
           const every = intervalOn(g, g.care.water, today())
           return (
@@ -188,6 +210,7 @@ export function SettingsView() {
           <Plus size={16} /> 分類を追加
         </button>
       </section>
+      )}
 
       <h3 className="sec">休眠期の月（新しい植物の初期値）</h3>
       <MonthChips value={settings.dormantMonths} onChange={(dormantMonths) => save({ dormantMonths })} />
@@ -250,25 +273,29 @@ export function SettingsView() {
         </span>
       </button>
 
-      <h3 className="sec">まとめ</h3>
+      {/* 株数はホームと同じ数え方 (まとめた登録は中身を 1 株ずつ)。登録の数と違うときだけ、登録の数も添える */}
+      <h3 className="sec">これまでの記録</h3>
       <section className="card">
-        <label className="line">
-          <span className="line-main">
-            <b>購入金額の合計を表示</b>
+        <div className="line stat">
+          <b>植物</b>
+          <span>
+            {heads(plants)}株{heads(plants) !== plants.length && `（登録 ${plants.length}件）`}
           </span>
-          <input type="checkbox" className="switch" checked={showSpent} onChange={(e) => save({ showSpent: e.target.checked })} />
+        </div>
+        <div className="line stat">
+          <b>ケア記録</b>
+          <span>{logs.length}件</span>
+        </div>
+        <div className="line stat">
+          <b>生長記録</b>
+          <span>{journal.length}件</span>
+        </div>
+        <label className="line stat">
+          <b>購入金額の合計</b>
+          <span>{showSpent ? `¥${spent.toLocaleString('ja-JP')}` : '非表示'}</span>
+          <input type="checkbox" className="switch" checked={showSpent} onChange={(e) => save({ showSpent: e.target.checked })} aria-label="購入金額の合計を表示" />
         </label>
       </section>
-      {/* 株数はホームと同じ数え方 (まとめた登録は中身を 1 株ずつ)。登録の数と違うときだけ、登録の数も添える */}
-      <p className="hint center">
-        植物 {heads(plants)}株{heads(plants) !== plants.length && `（登録 ${plants.length}件）`} ・ ケア記録 {logs.length}件 ・ 生長記録 {journal.length}件
-        {showSpent && spent > 0 && (
-          <>
-            <br />
-            購入金額の合計 ¥{spent.toLocaleString('ja-JP')}
-          </>
-        )}
-      </p>
     </>
   )
 }

@@ -16,6 +16,7 @@ import { GroupForm } from './views/GroupForm'
 import { Home } from './views/Home'
 import { PastPhotos } from './views/PastPhotos'
 import { JournalForm } from './views/JournalForm'
+import { Lightbox } from './views/Lightbox'
 import { LogForm } from './views/LogForm'
 import { PlantDetail } from './views/PlantDetail'
 import { PlantForm } from './views/PlantForm'
@@ -186,6 +187,8 @@ export default function App() {
             return <Feedback key={i} />
           case 'releases':
             return <ReleaseNotes key={i} />
+          case 'photo':
+            return <Lightbox key={i} ids={o.ids} index={o.index} />
           case 'share':
             return <ShareCard key={i} plantId={o.plantId} photoId={o.photoId} />
         }

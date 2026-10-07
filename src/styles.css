@@ -1037,6 +1037,96 @@ input[type='number'] {
   display: flex;
 }
 
+/* 設定: 折りたたみの中身と、これまでの記録 */
+.sec.first {
+  margin-top: 14px;
+}
+.card.under-fold {
+  margin-top: 8px;
+}
+.line.stat {
+  justify-content: space-between;
+  font-size: 14px;
+}
+.line.stat > span {
+  margin-left: auto;
+  color: var(--muted);
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: 13px;
+}
+.line.stat .switch {
+  margin-left: 4px;
+}
+/* 写真の拡大表示。指の動きは Lightbox が自分で追うので、ブラウザには何もさせない */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: #000;
+  touch-action: none;
+  animation: fade 0.18s;
+}
+.lb-stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  touch-action: none;
+}
+.lb-move {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+.lb-img {
+  max-width: 100%;
+  max-height: 100dvh;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.lb-btn {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 16%);
+  color: #fff;
+}
+.lb-btn:disabled {
+  opacity: 0.25;
+}
+.lb-x {
+  top: calc(env(safe-area-inset-top) + 12px);
+  right: 12px;
+}
+.lb-prev, .lb-next {
+  top: 50%;
+  translate: 0 -50%;
+}
+.lb-prev {
+  left: 10px;
+}
+.lb-next {
+  right: 10px;
+}
+.lb-count {
+  position: absolute;
+  inset: auto 0 calc(env(safe-area-inset-bottom) + 18px);
+  text-align: center;
+  color: #fff;
+  font-family: var(--font-display), sans-serif;
+  font-size: 13px;
+}
+.entry-img, .hero {
+  cursor: zoom-in;
+}
+
 /* ---------- overlays: 画面の端から少し離した角丸のカード。スマホは下寄せ、PC は中央 ---------- */
 .backdrop {
   position: fixed;
