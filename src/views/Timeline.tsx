@@ -1,6 +1,7 @@
 import { Images, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
+import { journalPhotos } from '../db'
 import { fmtDay, fmtFull, today } from '../lib/date'
 import { Photo } from '../parts'
 import type { Journal } from '../types'
@@ -13,6 +14,7 @@ const entryDate = (date: string) => (!date ? '日付不明' : date.slice(0, 4) =
 
 export function JournalCard({ entry, plantName }: { entry: Journal; plantName?: string }) {
   const { open } = useApp()
+  const photos = journalPhotos(entry)
   return (
     <article className={`entry ${entry.past ? 'past' : ''}`}>
       <header>
@@ -29,7 +31,15 @@ export function JournalCard({ entry, plantName }: { entry: Journal; plantName?: 
           <Pencil size={15} />
         </button>
       </header>
-      {entry.photoId && <Photo id={entry.photoId} className="entry-img" />}
+      {photos.length === 1 && <Photo id={photos[0]} className="entry-img" />}
+      {/* 複数枚: 横に並べてスワイプで送る。次の写真が少しのぞくので、続きがあるとわかる */}
+      {photos.length > 1 && (
+        <div className="entry-strip">
+          {photos.map((id) => (
+            <Photo key={id} id={id} className="entry-img" />
+          ))}
+        </div>
+      )}
       {entry.text && <p>{entry.text}</p>}
     </article>
   )

@@ -95,7 +95,10 @@ export interface Journal {
   /** YYYY-MM-DD。past の記録は日付不明 ('') もある */
   date: string
   text: string
+  /** 1 枚目の写真 (写真が 1 枚だけだったころの持ち方。一覧などはこれを見る) */
   photoId?: string
+  /** 写真ぜんぶ (複数枚のとき)。無ければ photoId の 1 枚だけ。読むときは db.ts の journalPhotos を使う */
+  photoIds?: string[]
   /** このアプリを使い始める前の写真 (ほかのアプリからの移行など) */
   past?: boolean
   at: number

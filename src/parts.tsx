@@ -100,6 +100,67 @@ export function PhotoPicker({ id, onChange }: { id?: string; onChange: (id: stri
   )
 }
 
+const MAX_SHOTS = 10
+
+/** 写真を複数枚選ぶ欄 (生長記録用)。1 枚ずつ外したり、背景を変えたりできる */
+export function PhotosPicker({ ids, onChange }: { ids: string[]; onChange: (ids: string[]) => void }) {
+  const [studio, setStudio] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const add = async (files: File[]) => {
+    setBusy(true)
+    const added: string[] = []
+    for (const file of files.slice(0, MAX_SHOTS - ids.length)) added.push(await savePhoto(file))
+    onChange([...ids, ...added])
+    setBusy(false)
+  }
+
+  return (
+    <>
+      <div className="shots">
+        {ids.map((id) => (
+          <div className="shot" key={id}>
+            <Photo id={id} className="shot-img" />
+            <button type="button" className="shot-btn x" onClick={() => onChange(ids.filter((x) => x !== id))} aria-label="この写真を外す">
+              <X size={14} />
+            </button>
+            <button type="button" className="shot-btn wand" onClick={() => setStudio(id)} aria-label="背景を変える">
+              <Wand2 size={14} />
+            </button>
+          </div>
+        ))}
+        {ids.length < MAX_SHOTS && (
+          <label className="shot add">
+            <Camera size={20} />
+            {busy ? '読み込み中…' : ids.length ? '追加' : '写真を追加'}
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              disabled={busy}
+              onChange={(e) => {
+                add([...(e.target.files ?? [])])
+                e.target.value = ''
+              }}
+            />
+          </label>
+        )}
+      </div>
+      {studio && (
+        <BackdropStudio
+          photoId={studio}
+          onClose={() => setStudio(null)}
+          onDone={(next) => {
+            onChange(ids.map((x) => (x === studio ? next : x)))
+            setStudio(null)
+          }}
+        />
+      )}
+    </>
+  )
+}
+
 /**
  * 重ねて開く画面の枠。画面の端から少し離した角丸のカードで、action (保存など) は
  * スクロールせず常に下に見える。背景のタップと × で閉じる。
