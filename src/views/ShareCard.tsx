@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useApp } from '../ctx'
 import { db, journalPhotos } from '../db'
 import { diffDays, fromKey, today } from '../lib/date'
-import { CARD_H, CARD_W, drawCard, TONES, type Brand, type ToneId } from '../lib/sharecard'
+import { CARD_H, CARD_W, drawCard, TONES, type Brand, type Design, type ToneId } from '../lib/sharecard'
 import { Photo, Sheet } from '../parts'
 
 type FieldId = 'name' | 'sci' | 'cultivar' | 'group' | 'date' | 'days'
@@ -15,6 +15,13 @@ const FIELDS: [FieldId, string][] = [
   ['date', '日付'],
   ['days', '育てた日数'],
 ]
+const DESIGNS: [Design, string][] = [
+  ['label', 'ラベル'],
+  ['specimen', '標本カード'],
+  ['compare', 'ビフォーアフター'],
+]
+// 標本カードで、値の左に出す項目名
+const META_LABELS = { group: '分類', date: '日付', days: '栽培' } as const
 const BRANDS: [Brand, string][] = [
   ['word', 'Hachi'],
   ['mark', '鉢マーク'],
@@ -23,15 +30,16 @@ const BRANDS: [Brand, string][] = [
 ]
 
 // 前回の選び方を覚えておく (端末ごと)
-type Prefs = { fields: FieldId[]; brand: Brand; tone: ToneId }
+type Prefs = { fields: FieldId[]; brand: Brand; tone: ToneId; design: Design }
 const loadPrefs = (): Prefs => {
   try {
     const p = JSON.parse(localStorage.getItem('shareCard') ?? 'null')
-    if (p && Array.isArray(p.fields) && BRANDS.some(([b]) => b === p.brand)) return { ...p, tone: TONES.some((t) => t.id === p.tone) ? p.tone : 'green' }
+    if (p && Array.isArray(p.fields) && BRANDS.some(([b]) => b === p.brand))
+      return { ...p, tone: TONES.some((t) => t.id === p.tone) ? p.tone : 'green', design: DESIGNS.some(([d]) => d === p.design) ? p.design : 'label' }
   } catch {
     // 壊れていたら初期値
   }
-  return { fields: ['name', 'sci', 'cultivar', 'date'], brand: 'word', tone: 'green' }
+  return { fields: ['name', 'sci', 'cultivar', 'date'], brand: 'word', tone: 'green', design: 'label' }
 }
 
 const dots = (key: string) => {
@@ -55,11 +63,23 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
     const list: { id: string; date?: string }[] = []
     if (p?.photoId) list.push({ id: p.photoId })
     const entries = journal.filter((j) => j.plantId === plantId).sort((a, b) => b.date.localeCompare(a.date) || b.at - a.at)
-    for (const j of entries) for (const id of journalPhotos(j)) if (!list.some((s) => s.id === id)) list.push({ id, date: j.date || undefined })
+    for (const j of entries)
+      for (const id of journalPhotos(j)) {
+        const known = list.find((s) => s.id === id)
+        // 植物の写真が生長記録の写真と同じものなら、その記録の日付を使う
+        if (known) known.date ??= j.date || undefined
+        else list.push({ id, date: j.date || undefined })
+      }
     return list
   }, [p?.photoId, journal, plantId])
   const [shotId, setShotId] = useState(photoId ?? shots[0]?.id)
   const shot = shots.find((s) => s.id === shotId)
+  // ビフォーアフターの「前」の写真。初めは、いちばん古い写真 (一覧の末尾)
+  const [beforeId, setBeforeId] = useState<string>()
+  const before = shots.find((s) => s.id === beforeId) ?? [...shots].reverse().find((s) => s.id !== shotId)
+  // 写真が 1 枚しか無い株では、ビフォーアフターは作れない
+  const design: Design = prefs.design === 'compare' && !before ? 'label' : prefs.design
+  const afterDate = shot?.date ?? today()
 
   const group = groups.find((g) => g.id === p?.groupId)?.name
   const values: Record<FieldId, string | undefined> = {
@@ -67,7 +87,7 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
     sci: p?.scientificName || undefined,
     cultivar: p?.cultivar,
     group,
-    date: dots(shot?.date ?? today()),
+    date: dots(afterDate),
     days: p ? `${diffDays(today(), p.purchaseDate || p.createdDay) + 1}日目` : undefined,
   }
   const on = (id: FieldId) => prefs.fields.includes(id) && !!values[id]
@@ -79,23 +99,34 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
 
   // 選び方が変わるたびに描き直し、共有用のファイルも作っておく
   // (共有シートは、ボタンを押したその場で呼ばないと開かないので、押してから作るのでは遅い)
-  const key = JSON.stringify([shotId, prefs, values])
+  const key = JSON.stringify([shotId, before?.id, design, prefs, values])
   useEffect(() => {
     let dead = false
     setFile(null)
     ;(async () => {
-      const rec = shotId ? await db.photos.get(shotId) : undefined
-      const bitmap = rec ? await createImageBitmap(rec.blob) : null
+      const load = async (id?: string) => {
+        const rec = id ? await db.photos.get(id) : undefined
+        return rec ? createImageBitmap(rec.blob) : null
+      }
+      const two = design === 'compare'
+      // ビフォーアフターは [前, 後] の順
+      const bitmaps = two ? [await load(before?.id), await load(shotId)] : [await load(shotId)]
       if (dead || !canvas.current) return
-      await drawCard(canvas.current, bitmap, {
+      await drawCard(canvas.current, bitmaps, {
+        design,
         name: on('name') ? values.name : undefined,
         sci: on('sci') ? values.sci : undefined,
         cultivar: on('cultivar') ? values.cultivar : undefined,
-        meta: (['group', 'date', 'days'] as const).filter(on).map((id) => values[id]!),
+        // ビフォーアフターでは、日付は左右の写真の下に出すので、ここには入れない
+        meta: (['group', 'date', 'days'] as const)
+          .filter((id) => on(id) && !(two && id === 'date'))
+          .map((id) => ({ label: META_LABELS[id], value: values[id]! })),
         brand: prefs.brand,
         tone: prefs.tone,
+        dates: two && on('date') ? [before?.date && dots(before.date), dots(afterDate)] : undefined,
+        elapsed: two && on('date') && before?.date ? `${diffDays(afterDate, before.date)}日` : undefined,
       })
-      bitmap?.close()
+      bitmaps.forEach((b) => b?.close())
       canvas.current.toBlob((blob) => !dead && blob && setFile(new File([blob], `hachi-${today()}.jpg`, { type: 'image/jpeg' })), 'image/jpeg', 0.9)
     })()
     return () => {
@@ -150,16 +181,40 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
         </>
       }
     >
+      <div className="seg share-design">
+        {DESIGNS.map(([id, label]) => (
+          <button key={id} className={design === id ? 'on' : ''} disabled={id === 'compare' && shots.length < 2} onClick={() => update({ ...prefs, design: id })}>
+            {label}
+          </button>
+        ))}
+      </div>
       <canvas ref={canvas} width={CARD_W} height={CARD_H} className="share-canvas" />
 
       {shots.length > 1 && (
-        <div className="share-shots">
-          {shots.map((s) => (
-            <button key={s.id} className={s.id === shotId ? 'on' : ''} onClick={() => setShotId(s.id)} aria-label="この写真を使う">
-              <Photo id={s.id} />
-            </button>
-          ))}
-        </div>
+        <>
+          {design === 'compare' && <p className="share-cap">後（右）の写真</p>}
+          <div className="share-shots">
+            {shots.map((s) => (
+              <button key={s.id} className={s.id === shotId ? 'on' : ''} onClick={() => setShotId(s.id)} aria-label="この写真を使う">
+                <Photo id={s.id} />
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      {design === 'compare' && (
+        <>
+          <p className="share-cap">前（左）の写真</p>
+          <div className="share-shots">
+            {shots
+              .filter((s) => s.id !== shotId)
+              .map((s) => (
+                <button key={s.id} className={s.id === before?.id ? 'on' : ''} onClick={() => setBeforeId(s.id)} aria-label="前の写真に使う">
+                  <Photo id={s.id} />
+                </button>
+              ))}
+          </div>
+        </>
       )}
 
       <h3 className="sec">載せる情報</h3>

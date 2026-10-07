@@ -1016,6 +1016,18 @@ input[type='number'] {
   height: 100%;
   object-fit: cover;
 }
+.seg.share-design {
+  margin-bottom: 12px;
+}
+.seg.share-design button {
+  font-size: 12px;
+}
+.share-cap {
+  margin: 12px 2px -4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
 .btn.share-save {
   margin-top: 16px;
 }
