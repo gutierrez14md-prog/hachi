@@ -61,6 +61,8 @@
 }
 html {
   background: var(--bg);
+  /* 指 2 本での拡大と、ダブルタップでの拡大を止める (縦横のスクロールはそのまま) */
+  touch-action: pan-x pan-y;
 }
 body {
   margin: 0;

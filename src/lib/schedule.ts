@@ -3,6 +3,9 @@ import { addDays, fromKey, monthOf, toKey, today } from './date'
 
 type Season = Pick<Plant, 'dormantMonths'>
 
+/** 株数。複数の植物をまとめた登録 (寄せ植え・着生) は、中身を 1 株ずつ数える */
+export const heads = (list: Pick<Plant, 'members'>[]) => list.reduce((n, p) => n + (p.members?.length || 1), 0)
+
 /** その日の時点での間隔 (日)。0 = その月はお休み */
 export function intervalOn(p: Season, s: Schedule, key: string): number {
   const m = monthOf(key)

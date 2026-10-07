@@ -4,7 +4,7 @@ import { careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { addDays, diffDays, dueLabel, fmtDay, fmtFull, fromKey, today } from '../lib/date'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
-import { nextDue } from '../lib/schedule'
+import { heads, nextDue } from '../lib/schedule'
 import { describe, useWeather } from '../lib/weather'
 import { Photo, PotIcon, SciName } from '../parts'
 import type { Plant, SchedType } from '../types'
@@ -54,8 +54,6 @@ export function Home() {
   const tomorrow = addDays(t, 1)
   const dueTomorrow = rows.filter((r) => SCHED.some((s) => r.due[s] === tomorrow)).map((r) => r.p)
   const waterDue = dueNow.filter((r) => r.types.includes('water')).map((r) => r.p.id)
-  // 上のカードの株数は、まとめた登録 (寄せ植え・着生) の中身も 1 株ずつ数える
-  const heads = (list: Plant[]) => list.reduce((n, p) => n + (p.members?.length || 1), 0)
 
   const locations = [...new Set(plants.map((p) => p.location).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ja'))
   // 絞り込みに出すのは、実際に株がある分類だけ

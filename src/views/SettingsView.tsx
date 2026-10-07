@@ -9,7 +9,7 @@ import { exportBackup, importBackup } from '../lib/backup'
 import { enableNotifications, testNotification } from '../lib/reminder'
 import type { Settings } from '../types'
 import { today } from '../lib/date'
-import { intervalOn } from '../lib/schedule'
+import { heads, intervalOn } from '../lib/schedule'
 import { clearPlace, getPlace, locate } from '../lib/weather'
 import { careLabel, METHODS } from '../method'
 import { MonthChips } from './CareEditor'
@@ -18,6 +18,7 @@ export function SettingsView() {
   const { settings, plants, allPlants, groups, logs, journal, toast, open } = useApp()
   const [guideOpen, setGuideOpen] = useState(false)
   const spent = allPlants.reduce((sum, p) => sum + (p.purchasePrice ?? 0), 0)
+  const showSpent = settings.showSpent ?? true
   const save = (patch: Partial<Settings>) => db.settings.put({ ...settings, ...patch })
   const supported = 'Notification' in window
   const [theme, setTheme] = useState(getTheme)
@@ -71,7 +72,7 @@ export function SettingsView() {
         ))}
       </div>
 
-      <h3 className="sec">フォント</h3>
+      <h3 className="sec">メインフォント</h3>
       <div className="fonts">
         {FONTS.map((f) => (
           <button
@@ -249,9 +250,19 @@ export function SettingsView() {
         </span>
       </button>
 
+      <h3 className="sec">まとめ</h3>
+      <section className="card">
+        <label className="line">
+          <span className="line-main">
+            <b>購入金額の合計を表示</b>
+          </span>
+          <input type="checkbox" className="switch" checked={showSpent} onChange={(e) => save({ showSpent: e.target.checked })} />
+        </label>
+      </section>
+      {/* 株数はホームと同じ数え方 (まとめた登録は中身を 1 株ずつ)。登録の数と違うときだけ、登録の数も添える */}
       <p className="hint center">
-        植物 {plants.length}株 ・ ケア記録 {logs.length}件 ・ 生長記録 {journal.length}件
-        {spent > 0 && (
+        植物 {heads(plants)}株{heads(plants) !== plants.length && `（登録 ${plants.length}件）`} ・ ケア記録 {logs.length}件 ・ 生長記録 {journal.length}件
+        {showSpent && spent > 0 && (
           <>
             <br />
             購入金額の合計 ¥{spent.toLocaleString('ja-JP')}

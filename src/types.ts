@@ -116,4 +116,6 @@ export interface Settings {
   remindTime: string
   /** 新しい植物の休眠期の初期値 */
   dormantMonths: number[]
+  /** 設定の下に、購入金額の合計を出すか (入っていなければ出す) */
+  showSpent?: boolean
 }

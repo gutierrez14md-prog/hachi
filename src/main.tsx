@@ -20,5 +20,9 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js')
 }
 
+// iPhone の Safari は viewport の指定を無視してピンチで拡大するので、その操作自体を止める
+for (const type of ['gesturestart', 'gesturechange'])
+  document.addEventListener(type, (e) => e.preventDefault(), { passive: false })
+
 // ブラウザの都合でデータが消されにくくなるよう、永続ストレージを要求しておく
 navigator.storage?.persist?.()

@@ -12,6 +12,16 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '1.7.1',
+    date: '2026-10-07',
+    items: [
+      'ピンチやダブルタップで画面が拡大されないように変更',
+      '設定の「フォント」を「メインフォント」に名称変更',
+      '設定の下の株数を、ホームと同じ数え方に修正（まとめた登録は中身を 1 株ずつ数える）',
+      '設定に、購入金額の合計を隠すスイッチを追加',
+    ],
+  },
+  {
     version: '1.7.0',
     date: '2026-10-07',
     items: ['設定にリリースノートを追加'],
