@@ -155,7 +155,7 @@ export function Home() {
         // どちらも主役の数字は 1 つだけ (今日のケア、今の気温) にして、ほかは小さく添える
         <div className="hero-pair">
           <section className="hero-card">
-            {/* 主役の今日のケアを左に大きく、育てている株は右端に小さめに。カードの右側を空けない */}
+            {/* 今日のケアを左端、育てている株を右端に。カードの右側を空けない */}
             <div className="hero-two">
               <p className="eyebrow">今日のケア</p>
               <p className="eyebrow">育てている株</p>
@@ -163,7 +163,7 @@ export function Home() {
                 {heads(dueNow.map((r) => r.p))}
                 <small>株</small>
               </p>
-              <p className="hero-n second">
+              <p className="hero-n">
                 {heads(plants)}
                 <small>株</small>
               </p>
