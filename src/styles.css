@@ -472,8 +472,9 @@ input[type='number'] {
    どちらも「小さな見出し / 主役の大きな数字 / 小さな添え書き」の 3 行 */
 .hero-pair {
   display: grid;
-  /* 天気のカードは中身ぴったりの幅で右に詰め、残りを植物のカードが使う */
-  grid-template-columns: minmax(0, 1fr) auto;
+  /* どちらも中身の幅を基本にして、余った幅は 2 枚で半分ずつ分ける。
+     片方だけが間延びしたり、片方だけが窮屈になったりしない */
+  grid-template-columns: auto auto;
   gap: 10px;
   margin-bottom: 14px;
   white-space: nowrap;
@@ -528,6 +529,14 @@ input[type='number'] {
 }
 .wx-sub span {
   gap: 2px;
+}
+/* 最高 / 最低は左、湿度は右端に。カードが広がったぶんは、この間に入る */
+.wx-sub {
+  justify-content: space-between;
+  gap: 12px;
+}
+.wx-card {
+  padding-inline: 18px;
 }
 .hero-card .eyebrow {
   color: inherit;
