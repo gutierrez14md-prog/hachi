@@ -13,6 +13,7 @@ export type Overlay =
   | { k: 'snooze'; plantId: string }
   | { k: 'archive' }
   | { k: 'feedback' }
+  | { k: 'releases' }
   | { k: 'share'; plantId: string; photoId?: string }
 
 export interface AppCtx {

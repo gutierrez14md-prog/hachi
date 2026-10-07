@@ -1416,6 +1416,48 @@ input::-webkit-date-and-time-value {
 .gap-top {
   margin-top: 16px;
 }
+.fold-side {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+/* リリースノート */
+.releases {
+  display: grid;
+  gap: 26px;
+}
+.releases header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.releases h3 {
+  font-size: calc(18px * var(--ds));
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.releases time {
+  color: var(--muted);
+  font-size: 12px;
+}
+.releases ul {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+.releases li {
+  display: flex;
+  gap: 8px;
+}
+.releases li::before {
+  content: '·';
+  color: var(--muted);
+}
 .fold .flip {
   rotate: 180deg;
 }

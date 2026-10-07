@@ -19,6 +19,7 @@ import { JournalForm } from './views/JournalForm'
 import { LogForm } from './views/LogForm'
 import { PlantDetail } from './views/PlantDetail'
 import { PlantForm } from './views/PlantForm'
+import { ReleaseNotes } from './views/ReleaseNotes'
 import { SettingsView } from './views/SettingsView'
 import { ShareCard } from './views/ShareCard'
 import { Timeline } from './views/Timeline'
@@ -183,6 +184,8 @@ export default function App() {
             return <Archive key={i} />
           case 'feedback':
             return <Feedback key={i} />
+          case 'releases':
+            return <ReleaseNotes key={i} />
           case 'share':
             return <ShareCard key={i} plantId={o.plantId} photoId={o.photoId} />
         }

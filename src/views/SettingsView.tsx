@@ -4,6 +4,7 @@ import { useApp } from '../ctx'
 import { applyFont, applyNameFont, applyTheme, FONTS, getFont, getNameFont, getTheme, NAME_FONTS } from '../lib/appearance'
 import { db } from '../db'
 import { GUIDE } from '../guide'
+import { VERSION } from '../releases'
 import { exportBackup, importBackup } from '../lib/backup'
 import { enableNotifications, testNotification } from '../lib/reminder'
 import type { Settings } from '../types'
@@ -239,6 +240,14 @@ export function SettingsView() {
           ))}
         </div>
       )}
+
+      <button className="fold tight" onClick={() => open({ k: 'releases' })}>
+        リリースノート
+        <span className="fold-side">
+          {VERSION}
+          <ChevronRight size={18} />
+        </span>
+      </button>
 
       <p className="hint center">
         植物 {plants.length}株 ・ ケア記録 {logs.length}件 ・ 生長記録 {journal.length}件
