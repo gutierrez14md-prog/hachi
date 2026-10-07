@@ -20,6 +20,7 @@ import { LogForm } from './views/LogForm'
 import { PlantDetail } from './views/PlantDetail'
 import { PlantForm } from './views/PlantForm'
 import { SettingsView } from './views/SettingsView'
+import { ShareCard } from './views/ShareCard'
 import { Timeline } from './views/Timeline'
 
 type Tab = 'home' | 'cal' | 'tl' | 'set'
@@ -182,6 +183,8 @@ export default function App() {
             return <Archive key={i} />
           case 'feedback':
             return <Feedback key={i} />
+          case 'share':
+            return <ShareCard key={i} plantId={o.plantId} photoId={o.photoId} />
         }
       })}
 

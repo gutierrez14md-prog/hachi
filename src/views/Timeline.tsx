@@ -1,4 +1,4 @@
-import { Images, Pencil } from 'lucide-react'
+import { Images, Pencil, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
 import { journalPhotos } from '../db'
@@ -27,9 +27,16 @@ export function JournalCard({ entry, plantName }: { entry: Journal; plantName?: 
             </button>
           )}
         </span>
-        <button className="icon-btn muted" onClick={() => open({ k: 'journal', id: entry.id })} aria-label="編集">
-          <Pencil size={15} />
-        </button>
+        <span className="entry-acts">
+          {photos.length > 0 && (
+            <button className="icon-btn muted" onClick={() => open({ k: 'share', plantId: entry.plantId, photoId: photos[0] })} aria-label="投稿用の画像を作る">
+              <Share2 size={15} />
+            </button>
+          )}
+          <button className="icon-btn muted" onClick={() => open({ k: 'journal', id: entry.id })} aria-label="編集">
+            <Pencil size={15} />
+          </button>
+        </span>
       </header>
       {photos.length === 1 && <Photo id={photos[0]} className="entry-img" />}
       {/* 複数枚: 横に並べてスワイプで送る。次の写真が少しのぞくので、続きがあるとわかる */}

@@ -1,4 +1,4 @@
-import { ArchiveRestore, CalendarClock, Camera, History, MapPin, Pencil, Trash2 } from 'lucide-react'
+import { ArchiveRestore, CalendarClock, Camera, History, MapPin, Pencil, Share2, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
@@ -42,6 +42,9 @@ export function PlantDetail({ id }: { id: string }) {
               <ArchiveRestore size={16} /> 元に戻す
             </button>
           )}
+          <button className="btn ghost" onClick={() => open({ k: 'share', plantId: id })}>
+            <Share2 size={16} /> 投稿用の画像
+          </button>
           <button className="btn ghost" onClick={() => open({ k: 'plantForm', id })}>
             <Pencil size={16} /> 編集
           </button>
