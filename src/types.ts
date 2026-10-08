@@ -14,6 +14,11 @@ export interface Schedule {
    * 「9 月は 7 日、10 月は 10 日、11 月は 14 日…」のように少しずつ変えるためのもの
    */
   monthly?: number[] | null
+  /**
+   * このケアを始める日 (YYYY-MM-DD)。入っていれば、この日より前には予定を出さない
+   * (肥料は春から、植え替えた直後の水やりは 1 週間後から、など)。空なら登録した日から
+   */
+  start?: string
 }
 
 export type CareSettings = Record<SchedType, Schedule>

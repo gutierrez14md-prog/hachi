@@ -43,7 +43,9 @@ export function nextDue(p: Plant, type: SchedType, logs: CareLog[]): string | nu
   const s = p.care[type]
   if (!s.enabled) return null
   const last = lastDone(logs, type)
-  const due = last ? nextAfter(p, s, last) : skipPause(p, s, p.createdDay)
+  let due = last ? nextAfter(p, s, last) : skipPause(p, s, s.start || p.createdDay)
+  // 開始日より前には出さない (開始日を決める前に付けた記録が残っていても)
+  if (due && last && s.start && s.start > due) due = skipPause(p, s, s.start)
   const until = p.snooze?.[type]
   return due && until && until > due ? until : due
 }

@@ -1489,6 +1489,11 @@ input::-webkit-date-and-time-value {
 }
 
 /* ---------- アーカイブ・延期・使い方 ---------- */
+.grow {
+  flex: 1;
+  min-width: 0;
+  padding-block: 11px;
+}
 .sheet-f {
   display: flex;
   gap: 8px;

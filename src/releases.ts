@@ -14,6 +14,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '1.10.0',
+    date: '2026-10-08',
+    items: ['ケアごとの開始日を追加（水やり・肥料・活力剤をいつから始めるか選べる）', '日付を選んでその日までケアを延期する機能を追加'],
+  },
+  {
     version: '1.9.0',
     date: '2026-10-07',
     items: [

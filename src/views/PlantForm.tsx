@@ -308,16 +308,26 @@ export function PlantForm({ id }: { id?: string }) {
         required={['water']}
         labels={{ water: careLabel('water', f) }}
         icons={{ water: careIcon('water', f) }}
-        extra={
-          existing
-            ? undefined
-            : (s) => (
-                <label className="inline">
-                  最後に実施した日
-                  <input type="date" max={today()} value={last[s]} onChange={(e) => setLast({ ...last, [s]: e.target.value })} />
-                </label>
-              )
-        }
+        extra={(s) => (
+          <>
+            {/* いつから始めるか。空欄なら登録した日から。記録を付けたあとも「この日より前には出さない」として効く */}
+            <label className="inline">
+              開始日
+              <input
+                type="date"
+                value={f.care[s].start ?? ''}
+                onChange={(e) => set({ care: { ...f.care, [s]: { ...f.care[s], start: e.target.value || undefined } } })}
+              />
+              {!f.care[s].start && <span className="soft">登録した日から</span>}
+            </label>
+            {!existing && (
+              <label className="inline">
+                最後に実施した日
+                <input type="date" max={today()} value={last[s]} onChange={(e) => setLast({ ...last, [s]: e.target.value })} />
+              </label>
+            )}
+          </>
+        )}
       />
 
       {existing && !existing.archivedDay && (
