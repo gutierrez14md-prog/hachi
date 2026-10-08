@@ -1,5 +1,5 @@
 import { Camera, Wand2, X } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useApp } from './ctx'
 import { db } from './db'
 import { savePhoto } from './lib/photo'
@@ -180,6 +180,69 @@ export function Sheet({ title, action, children }: { title: string; action?: Rea
         {action && <div className="sheet-f">{action}</div>}
       </div>
     </div>
+  )
+}
+
+/**
+ * 日付・時刻の欄。iPhone のカレンダーにある「リセット」は、押しても React の onChange が呼ばれないことがあり、
+ * 画面では消えたのに中身は前の日付のまま、というずれが起きる。それを防ぐために:
+ *   ・ブラウザの change / input / blur を直接聞いて、欄の中身と違っていたら必ず伝える
+ *   ・親が受け取らなかった値 (空にできない欄を空にした、など) は、欄の表示を元に戻す
+ *   ・clearable なら、端末に頼らずに消せる × を付ける
+ */
+export function DateInput({
+  value,
+  onChange,
+  type = 'date',
+  clearable,
+  className = '',
+  ...rest
+}: {
+  value: string
+  onChange: (v: string) => void
+  type?: 'date' | 'time'
+  /** 空にしてよい欄。値が入っているとき、消すための × を出す */
+  clearable?: boolean
+  className?: string
+  min?: string
+  max?: string
+  'aria-label'?: string
+}) {
+  const ref = useRef<HTMLInputElement>(null)
+  const latest = useRef({ value, onChange })
+  latest.current = { value, onChange }
+  useEffect(() => {
+    const el = ref.current!
+    const sync = () => {
+      if (el.value !== latest.current.value) latest.current.onChange(el.value)
+      // 少し待っても親の値と違うままなら、親が受け取らなかったということなので、表示を親の値に戻す
+      setTimeout(() => {
+        if (el.isConnected && el.value !== latest.current.value) el.value = latest.current.value
+      }, 80)
+    }
+    const events = ['change', 'input', 'blur']
+    events.forEach((ev) => el.addEventListener(ev, sync))
+    return () => events.forEach((ev) => el.removeEventListener(ev, sync))
+  }, [])
+  const input = <input ref={ref} type={type} className={clearable ? undefined : className} value={value} onChange={(e) => onChange(e.target.value)} {...rest} />
+  if (!clearable) return input
+  return (
+    <span className={`date-wrap ${className}`}>
+      {input}
+      {value && (
+        <button
+          type="button"
+          className="icon-btn muted"
+          onClick={(e) => {
+            e.preventDefault() // 欄を囲む label が押されたことにならないように
+            onChange('')
+          }}
+          aria-label={`${rest['aria-label'] ?? '日付'}を消す`}
+        >
+          <X size={16} />
+        </button>
+      )}
+    </span>
   )
 }
 

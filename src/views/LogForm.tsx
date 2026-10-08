@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ALL_TYPES, CARE, careVar } from '../care'
 import { useApp } from '../ctx'
 import { today } from '../lib/date'
-import { Field, Sheet } from '../parts'
+import { DateInput, Field, Sheet } from '../parts'
 import type { CareType } from '../types'
 import { PlantPick } from './PlantPick'
 
@@ -51,7 +51,7 @@ export function LogForm(props: { plantId?: string; type?: CareType; date?: strin
       <PlantPick multi plants={plants} value={sel} onChange={setSel} />
 
       <Field label="日付">
-        <input type="date" value={date} max={today()} onChange={(e) => setDate(e.target.value)} />
+        <DateInput value={date} max={today()} onChange={setDate} aria-label="日付" />
       </Field>
       <Field label="メモ (任意)">
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="例: 液肥1000倍" />

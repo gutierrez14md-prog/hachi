@@ -4,7 +4,7 @@ import { useApp } from '../ctx'
 import { db } from '../db'
 import { addDays, fmtDay, fmtFull, today } from '../lib/date'
 import { nextDue } from '../lib/schedule'
-import { Photo, SciName, Sheet } from '../parts'
+import { DateInput, Photo, SciName, Sheet } from '../parts'
 
 /** アーカイブした株の一覧。記録と写真はそのまま見られ、詳細から元に戻せる */
 export function Archive() {
@@ -76,7 +76,7 @@ export function Snooze({ plantId }: { plantId: string }) {
       {/* 好きな日まで延期する (日付の欄を押すとカレンダーが開く) */}
       <h3 className="sec">日付を選ぶ</h3>
       <div className="row gap">
-        <input type="date" className="grow" min={addDays(t, 1)} value={date} onChange={(e) => setDate(e.target.value)} aria-label="延期する日" />
+        <DateInput clearable className="grow" min={addDays(t, 1)} value={date} onChange={setDate} aria-label="延期する日" />
         <button className="btn primary" disabled={!due.length || !date || date <= t} onClick={() => pick(date, fmtDay(date))}>
           この日まで延期
         </button>

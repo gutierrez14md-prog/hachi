@@ -12,6 +12,7 @@ import { today } from '../lib/date'
 import { heads, intervalOn } from '../lib/schedule'
 import { clearPlace, getPlace, locate } from '../lib/weather'
 import { careLabel, METHODS } from '../method'
+import { DateInput } from '../parts'
 import { MonthChips } from './CareEditor'
 
 export function SettingsView() {
@@ -172,7 +173,8 @@ export function SettingsView() {
             <span className="line-main">
               <b>通知する時刻</b>
             </span>
-            <input type="time" value={settings.remindTime} onChange={(e) => e.target.value && save({ remindTime: e.target.value })} />
+            {/* 時刻は空にできない。空にされたら、欄は前の時刻に戻る */}
+            <DateInput type="time" value={settings.remindTime} onChange={(v) => v && save({ remindTime: v })} aria-label="通知する時刻" />
             <button className="btn ghost sm" onClick={testNotification}>
               テスト
             </button>

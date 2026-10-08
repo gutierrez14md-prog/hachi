@@ -5,7 +5,7 @@ import { db, newId } from '../db'
 import { today } from '../lib/date'
 import { photoDate } from '../lib/exif'
 import { savePhoto } from '../lib/photo'
-import { Sheet } from '../parts'
+import { DateInput, Sheet } from '../parts'
 import { PlantPick } from './PlantPick'
 
 type Item = { key: string; file: File; url: string; date: string }
@@ -74,13 +74,8 @@ export function PastPhotos(props: { plantId?: string }) {
         {items.map((item) => (
           <div className="past-item" key={item.key}>
             <img src={item.url} alt="" />
-            <input
-              type="date"
-              max={today()}
-              value={item.date}
-              aria-label="撮影日"
-              onChange={(e) => setItems((cur) => cur.map((i) => (i === item ? { ...i, date: e.target.value } : i)))}
-            />
+            {/* 消す × は付けない (隣に「写真を外す」の × があって紛らわしいため)。空にするのは、カレンダーのリセットで */}
+            <DateInput max={today()} value={item.date} aria-label="撮影日" onChange={(date) => setItems((cur) => cur.map((i) => (i.key === item.key ? { ...i, date } : i)))} />
             <button className="icon-btn muted" onClick={() => drop(item)} aria-label="この写真を外す">
               <X size={16} />
             </button>

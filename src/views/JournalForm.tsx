@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useApp } from '../ctx'
 import { db, journalPhotos, newId } from '../db'
 import { today } from '../lib/date'
-import { Field, PhotosPicker, Sheet } from '../parts'
+import { DateInput, Field, PhotosPicker, Sheet } from '../parts'
 import type { Journal } from '../types'
 import { PlantPick } from './PlantPick'
 
@@ -52,7 +52,8 @@ export function JournalForm(props: { plantId?: string; id?: string }) {
       <PhotosPicker ids={photos} onChange={(photoIds) => set({ photoIds, photoId: photoIds[0] })} />
       <PlantPick plants={plants} value={f.plantId ? [f.plantId] : []} onChange={([plantId]) => set({ plantId })} />
       <Field label={f.past ? '撮影日' : '日付'}>
-        <input type="date" value={f.date} max={today()} onChange={(e) => set({ date: e.target.value })} />
+        {/* 過去の写真は、撮影日がわからなければ空にできる */}
+        <DateInput clearable={!!f.past} value={f.date} max={today()} onChange={(date) => set({ date })} aria-label={f.past ? '撮影日' : '日付'} />
       </Field>
       <label className="line toggle">
         <span className="line-main">

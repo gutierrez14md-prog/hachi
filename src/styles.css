@@ -1492,7 +1492,24 @@ input::-webkit-date-and-time-value {
 .grow {
   flex: 1;
   min-width: 0;
+}
+input.grow, .grow input {
   padding-block: 11px;
+}
+/* 消す × 付きの日付の欄 */
+.date-wrap {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.date-wrap input {
+  flex: 1;
+  min-width: 0;
+}
+.date-wrap .icon-btn {
+  width: 34px;
+  height: 34px;
 }
 .sheet-f {
   display: flex;

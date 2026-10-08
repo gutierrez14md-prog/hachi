@@ -4,7 +4,7 @@ import { SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db, deletePlant, newId } from '../db'
 import { today } from '../lib/date'
-import { Field, PhotoPicker, Sheet } from '../parts'
+import { DateInput, Field, PhotoPicker, Sheet } from '../parts'
 import { defaultCare } from '../presets'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import type { Member, Method, Plant, SchedType } from '../types'
@@ -280,7 +280,7 @@ export function PlantForm({ id }: { id?: string }) {
 
       <h3 className="sec">入手</h3>
       <Field label="入手日">
-        <input type="date" max={today()} value={f.purchaseDate ?? ''} onChange={(e) => set({ purchaseDate: e.target.value })} />
+        <DateInput clearable max={today()} value={f.purchaseDate ?? ''} onChange={(purchaseDate) => set({ purchaseDate })} aria-label="入手日" />
       </Field>
       <Field label="購入金額 (円)">
         <input
@@ -313,17 +313,18 @@ export function PlantForm({ id }: { id?: string }) {
             {/* いつから始めるか。空欄なら登録した日から。記録を付けたあとも「この日より前には出さない」として効く */}
             <label className="inline">
               開始日
-              <input
-                type="date"
+              <DateInput
+                clearable
                 value={f.care[s].start ?? ''}
-                onChange={(e) => set({ care: { ...f.care, [s]: { ...f.care[s], start: e.target.value || undefined } } })}
+                onChange={(start) => set({ care: { ...f.care, [s]: { ...f.care[s], start: start || undefined } } })}
+                aria-label="開始日"
               />
               {!f.care[s].start && <span className="soft">登録した日から</span>}
             </label>
             {!existing && (
               <label className="inline">
                 最後に実施した日
-                <input type="date" max={today()} value={last[s]} onChange={(e) => setLast({ ...last, [s]: e.target.value })} />
+                <DateInput clearable max={today()} value={last[s]} onChange={(v) => setLast({ ...last, [s]: v })} aria-label="最後に実施した日" />
               </label>
             )}
           </>
