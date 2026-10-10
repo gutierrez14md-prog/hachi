@@ -650,6 +650,11 @@ input[type='number'] {
   bottom: 5px;
   left: 5px;
 }
+.shot-btn.move {
+  top: auto;
+  bottom: 5px;
+  right: 5px;
+}
 .past-item img {
   transition: transform 0.15s;
 }
@@ -2102,6 +2107,34 @@ input.grow, .grow input {
 }
 .guide li::before {
   content: '·';
+}
+
+/* ---------- 写真の位置と大きさ ---------- */
+.adjust-frame {
+  position: relative;
+  /* 縦長の写真でも、画面に収まる高さにとどめる */
+  max-width: calc(60dvh * var(--ar, 1));
+  margin-inline: auto;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface2);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.adjust-frame img {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+  -webkit-touch-callout: none;
+}
+/* 一覧のタイル (正方形) に入る範囲の目安: 左右の外側を少し暗くする */
+.adjust-guide {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgb(0 0 0 / 28%) 12.5%, transparent 12.5%, transparent 87.5%, rgb(0 0 0 / 28%) 87.5%);
 }
 
 /* ---------- 背景を変える ---------- */

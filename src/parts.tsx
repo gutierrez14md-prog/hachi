@@ -1,12 +1,13 @@
-import { Camera, RotateCw, Wand2, X } from 'lucide-react'
+import { Camera, Move, RotateCw, Wand2, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useApp } from './ctx'
 import { db } from './db'
 import { isGrouped } from './lib/cross'
 import { dueLabel, urgency } from './lib/date'
 import { rotatePhoto, savePhoto } from './lib/photo'
-import type { Plant } from './types'
+import type { PhotoCrop, Plant } from './types'
 import { BackdropStudio } from './views/BackdropStudio'
+import { PhotoAdjust } from './views/PhotoAdjust'
 
 /** アプリのシンボル (鉢植え)。lucide のアイコンと同じ線の太さ・使い方に合わせている */
 export function PotIcon({ size = 24 }: { size?: number }) {
@@ -90,8 +91,14 @@ export function SciName({ plant: p }: { plant: Pick<Plant, 'scientificName' | 'c
   )
 }
 
-export function PhotoPicker({ id, onChange }: { id?: string; onChange: (id: string) => void }) {
+/**
+ * 植物の写真を選ぶ欄。選んだあとに、位置と大きさの調整・回転・背景の差し替えができる。
+ * crop = 位置と大きさを調整済みのときの、元の写真とその調整 (調整し直すときは、元の写真からやり直す)。
+ * 写真を選び直す・回す・背景を変えると、写真そのものが変わるので crop は無くなる
+ */
+export function PhotoPicker({ id, crop, onChange }: { id?: string; crop?: PhotoCrop; onChange: (id: string, crop?: PhotoCrop) => void }) {
   const [studio, setStudio] = useState(false)
+  const [adjust, setAdjust] = useState(false)
   return (
     <>
       <label className="picker">
@@ -112,6 +119,9 @@ export function PhotoPicker({ id, onChange }: { id?: string; onChange: (id: stri
       </label>
       {id && (
         <div className="picker-acts">
+          <button type="button" className="btn ghost sm" onClick={() => setAdjust(true)}>
+            <Move size={15} /> 位置と大きさ
+          </button>
           <button type="button" className="btn ghost sm" onClick={async () => onChange(await rotatePhoto(id))}>
             <RotateCw size={15} /> 回転
           </button>
@@ -130,22 +140,53 @@ export function PhotoPicker({ id, onChange }: { id?: string; onChange: (id: stri
           }}
         />
       )}
+      {adjust && id && (
+        <PhotoAdjust
+          photoId={crop?.origId ?? id}
+          start={crop}
+          onClose={() => setAdjust(false)}
+          onDone={(next, c) => {
+            onChange(next, { origId: crop?.origId ?? id, ...c })
+            setAdjust(false)
+          }}
+        />
+      )}
     </>
   )
 }
 
 const MAX_SHOTS = 10
 
-/** 写真を複数枚選ぶ欄 (生長記録用)。1 枚ずつ外したり、背景を変えたりできる */
-export function PhotosPicker({ ids, onChange }: { ids: string[]; onChange: (ids: string[]) => void }) {
+/**
+ * 写真を複数枚選ぶ欄 (生長記録用)。1 枚ずつ外したり、位置と大きさを調整したり、回したり、背景を変えたりできる。
+ * crops = 位置と大きさを調整した写真の、元の写真とその調整 (キーは調整後の写真の id)
+ */
+export function PhotosPicker({
+  ids,
+  crops = {},
+  onChange,
+}: {
+  ids: string[]
+  crops?: Record<string, PhotoCrop>
+  onChange: (ids: string[], crops: Record<string, PhotoCrop>) => void
+}) {
   const [studio, setStudio] = useState<string | null>(null)
+  const [adjust, setAdjust] = useState<string | null>(null)
+  // 写真 from を to に差し替える。crop を渡さなければ、その写真の調整は無くなる (回転や背景の差し替えで、写真そのものが変わったとき)
+  const swap = (from: string, to: string, crop?: PhotoCrop) => {
+    const rest = Object.fromEntries(Object.entries(crops).filter(([id]) => id !== from))
+    onChange(
+      ids.map((x) => (x === from ? to : x)),
+      crop ? { ...rest, [to]: crop } : rest,
+    )
+  }
   const [busy, setBusy] = useState(false)
 
   const add = async (files: File[]) => {
     setBusy(true)
     const added: string[] = []
     for (const file of files.slice(0, MAX_SHOTS - ids.length)) added.push(await savePhoto(file))
-    onChange([...ids, ...added])
+    onChange([...ids, ...added], crops)
     setBusy(false)
   }
 
@@ -155,7 +196,7 @@ export function PhotosPicker({ ids, onChange }: { ids: string[]; onChange: (ids:
         {ids.map((id) => (
           <div className="shot" key={id}>
             <Photo id={id} className="shot-img" />
-            <button type="button" className="shot-btn x" onClick={() => onChange(ids.filter((x) => x !== id))} aria-label="この写真を外す">
+            <button type="button" className="shot-btn x" onClick={() => onChange(ids.filter((x) => x !== id), crops)} aria-label="この写真を外す">
               <X size={14} />
             </button>
             <button type="button" className="shot-btn wand" onClick={() => setStudio(id)} aria-label="背景を変える">
@@ -165,12 +206,12 @@ export function PhotosPicker({ ids, onChange }: { ids: string[]; onChange: (ids:
               type="button"
               className="shot-btn turn"
               aria-label="右に回転"
-              onClick={async () => {
-                const next = await rotatePhoto(id)
-                onChange(ids.map((x) => (x === id ? next : x)))
-              }}
+              onClick={async () => swap(id, await rotatePhoto(id))}
             >
               <RotateCw size={14} />
+            </button>
+            <button type="button" className="shot-btn move" onClick={() => setAdjust(id)} aria-label="位置と大きさを調整">
+              <Move size={14} />
             </button>
           </div>
         ))}
@@ -197,8 +238,20 @@ export function PhotosPicker({ ids, onChange }: { ids: string[]; onChange: (ids:
           photoId={studio}
           onClose={() => setStudio(null)}
           onDone={(next) => {
-            onChange(ids.map((x) => (x === studio ? next : x)))
+            swap(studio, next)
             setStudio(null)
+          }}
+        />
+      )}
+      {adjust && (
+        <PhotoAdjust
+          own
+          photoId={crops[adjust]?.origId ?? adjust}
+          start={crops[adjust]}
+          onClose={() => setAdjust(null)}
+          onDone={(next, c) => {
+            swap(adjust, next, { origId: crops[adjust]?.origId ?? adjust, ...c })
+            setAdjust(null)
           }}
         />
       )}

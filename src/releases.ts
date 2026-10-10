@@ -14,6 +14,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '1.14.0',
+    date: '2026-10-10',
+    items: ['写真の位置と大きさを調整する機能を追加（植物の写真と生長記録の写真）'],
+  },
+  {
     version: '1.13.0',
     date: '2026-10-10',
     items: ['ハイブリッドの交配親を 2 つに分けて登録する機能を追加（親それぞれに学名 4 つまで、雌雄の指定も可能）'],

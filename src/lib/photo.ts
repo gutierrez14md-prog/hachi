@@ -39,6 +39,36 @@ export async function rotatePhoto(id: string): Promise<string> {
   return next
 }
 
+/** 植物の写真を切り出すときの縦横比 (詳細のいちばん上の写真と同じ 4:3) */
+export const CROP_ASPECT = 4 / 3
+
+/**
+ * 写真の一部を切り出して、新しい写真として保存する (位置と大きさの調整)。
+ * x, y = 切り出す範囲の中心 (0〜1)、zoom = 拡大率 (1 で、写真が枠をちょうど覆う)、aspect = 枠の縦横比
+ */
+export async function cropPhoto(id: string, c: { x: number; y: number; zoom: number }, aspect = CROP_ASPECT): Promise<string> {
+  const rec = await db.photos.get(id)
+  if (!rec) throw new Error('no photo')
+  const bmp = await createImageBitmap(rec.blob)
+  // 切り出す範囲 (写真の px)
+  const wide = bmp.width / bmp.height > aspect
+  const sh = wide ? bmp.height / c.zoom : bmp.width / c.zoom / aspect
+  const sw = sh * aspect
+  const sx = Math.min(bmp.width - sw, Math.max(0, c.x * bmp.width - sw / 2))
+  const sy = Math.min(bmp.height - sh, Math.max(0, c.y * bmp.height - sh / 2))
+  const canvas = document.createElement('canvas')
+  const scale = Math.min(1, MAX_EDGE / Math.max(sw, sh))
+  canvas.width = Math.round(sw * scale)
+  canvas.height = Math.round(sh * scale)
+  canvas.getContext('2d')!.drawImage(bmp, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
+  bmp.close()
+  const out = await encode(canvas, 0.9)
+  if (!out) throw new Error('encode failed')
+  const next = newId()
+  await db.photos.put({ id: next, blob: out })
+  return next
+}
+
 /** 写真を長辺 1280px の JPEG に縮小して保存し、photoId を返す。turns は右へ 90° 回す回数 */
 export async function savePhoto(file: File, turns = 0): Promise<string> {
   let blob: Blob = file

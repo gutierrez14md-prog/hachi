@@ -155,7 +155,7 @@ export function PlantForm({ id }: { id?: string }) {
         </button>
       }
     >
-      <PhotoPicker id={f.photoId} onChange={(photoId) => set({ photoId })} />
+      <PhotoPicker id={f.photoId} crop={f.photoCrop} onChange={(photoId, photoCrop) => set({ photoId, photoCrop })} />
 
       <Field label="名前" required>
         <SuggestInput

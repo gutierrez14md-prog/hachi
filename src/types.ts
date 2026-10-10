@@ -44,6 +44,15 @@ export interface Cross {
   sexed?: boolean
 }
 
+/** 写真の切り出し方。x, y = 枠の中心に来る写真上の位置 (0〜1)、zoom = 拡大率 (1 で写真が枠をちょうど覆う) */
+export interface PhotoCrop {
+  /** 調整前の写真 */
+  origId: string
+  x: number
+  y: number
+  zoom: number
+}
+
 export interface Plant {
   id: string
   name: string
@@ -63,6 +72,8 @@ export interface Plant {
   location: string
   profile: string
   photoId?: string
+  /** 写真の位置と大きさを調整したとき: 調整前の写真と、その調整。調整し直すときに使う (photoId は切り出したあとの写真) */
+  photoCrop?: PhotoCrop
   /** 分類 (Group.id) */
   groupId?: string
   method?: Method
@@ -118,6 +129,8 @@ export interface Journal {
   photoId?: string
   /** 写真ぜんぶ (複数枚のとき)。無ければ photoId の 1 枚だけ。読むときは db.ts の journalPhotos を使う */
   photoIds?: string[]
+  /** 位置と大きさを調整した写真の、調整前の写真とその調整 (キーは調整後の写真の id)。調整し直すときに使う */
+  photoCrops?: Record<string, PhotoCrop>
   /** このアプリを使い始める前の写真 (ほかのアプリからの移行など) */
   past?: boolean
   at: number

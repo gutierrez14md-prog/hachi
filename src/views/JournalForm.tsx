@@ -1,7 +1,7 @@
 import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
-import { db, journalPhotos, newId } from '../db'
+import { db, journalOrigs, journalPhotos, newId } from '../db'
 import { today } from '../lib/date'
 import { DateInput, Field, PhotosPicker, Sheet } from '../parts'
 import type { Journal } from '../types'
@@ -29,13 +29,15 @@ export function JournalForm(props: { plantId?: string; id?: string }) {
   const ok = f.plantId && (f.date || f.past) && (photos.length || f.text.trim())
 
   const save = async () => {
-    await db.journal.put({ ...f, text: f.text.trim(), photoIds: photos, photoId: photos[0] })
+    // 外した写真の調整は捨てる
+    const kept = Object.entries(f.photoCrops ?? {}).filter(([id]) => photos.includes(id))
+    await db.journal.put({ ...f, text: f.text.trim(), photoIds: photos, photoId: photos[0], photoCrops: kept.length ? Object.fromEntries(kept) : undefined })
     toast(existing ? '保存しました' : '生長記録を追加しました')
     close()
   }
   const remove = async () => {
     if (!confirm('この生長記録を削除しますか？')) return
-    await db.photos.bulkDelete(photos)
+    await db.photos.bulkDelete([...photos, ...journalOrigs(f)])
     await db.journal.delete(f.id)
     close()
   }
@@ -49,7 +51,7 @@ export function JournalForm(props: { plantId?: string; id?: string }) {
         </button>
       }
     >
-      <PhotosPicker ids={photos} onChange={(photoIds) => set({ photoIds, photoId: photoIds[0] })} />
+      <PhotosPicker ids={photos} crops={f.photoCrops} onChange={(photoIds, photoCrops) => set({ photoIds, photoId: photoIds[0], photoCrops })} />
       <PlantPick plants={plants} value={f.plantId ? [f.plantId] : []} onChange={([plantId]) => set({ plantId })} />
       <Field label={f.past ? '撮影日' : '日付'}>
         {/* 過去の写真は、撮影日がわからなければ空にできる */}
