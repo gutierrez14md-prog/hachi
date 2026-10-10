@@ -1,4 +1,4 @@
-import { Archive, Bell, ChevronDown, ChevronRight, CloudSun, Download, Plus, Upload } from 'lucide-react'
+import { Archive, Bell, ChevronDown, ChevronRight, CloudSun, Download, FlaskConical, Plus, Upload } from 'lucide-react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
 import { applyFont, applyNameFont, applyTheme, FONTS, getFont, getNameFont, getTheme, NAME_FONTS } from '../lib/appearance'
@@ -121,6 +121,22 @@ export function SettingsView() {
 
         </>
       )}
+
+      <h3 className="sec">肥料と活力剤</h3>
+      <section className="card">
+        <label className="line">
+          <span className="care-ic">
+            <FlaskConical size={18} />
+          </span>
+          <span className="line-main">
+            <span>
+              <b>水に混ぜてあげる</b>
+              <small>水やりを兼ねる。間隔を「水やり何回に1回」で選べます</small>
+            </span>
+          </span>
+          <input type="checkbox" className="switch" checked={!!settings.careWithWater} onChange={(e) => save({ careWithWater: e.target.checked })} />
+        </label>
+      </section>
 
       <h3 className="sec">ホームの表示</h3>
       <section className="card">

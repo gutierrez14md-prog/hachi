@@ -354,6 +354,8 @@ export function PlantForm({ id }: { id?: string }) {
         required={['water']}
         labels={{ water: careLabel('water', f) }}
         icons={{ water: careIcon('water', f) }}
+        stagger={f.stagger}
+        onStagger={(on) => set({ stagger: on || undefined })}
         extra={(s) => (
           <>
             {/* いつから始めるか。空欄なら登録した日から。記録を付けたあとも「この日より前には出さない」として効く */}

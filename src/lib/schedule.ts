@@ -38,10 +38,56 @@ export function lastDone(logs: CareLog[], type: string): string | null {
   return last
 }
 
+/** 水やりの回数で数えるケアか (水に混ぜてあげる肥料・活力剤) */
+export const byWater = (p: Pick<Plant, 'care'>, type: SchedType) => type !== 'water' && p.care[type].enabled && !!p.care[type].everyWater
+
+/** 水やり何回に 1 回か、の上限 */
+export const MAX_EVERY = 6
+const COUNTED: SchedType[] = ['fertilizer', 'tonic']
+/** まだ一度もあげていないケアの「前回からの水やりの回数」。次の水やりですぐあげる */
+const NEVER = 999
+
+/**
+ * これからの水やりを順にたどり、その回に一緒にあげるケア (水やりの回数で数えるもの) を visit に渡す。
+ * visit が false を返したら止める。clamp = 過ぎている水やりを今日やるものとして数える (カレンダーの見込み用)
+ *   ・前回あげてからの水やりの回数が「何回に 1 回」に届いた回であげる
+ *   ・休眠期お休みの月、開始日の前、延期中の回は飛ばし、そのあと最初の水やりであげる
+ *   ・stagger の株で 2 つが重なったら、あいだの空いているほうだけあげる (もう片方は次の水やりへ)
+ */
+function waterings(p: Plant, logs: CareLog[], visit: (date: string, given: SchedType[]) => boolean, clamp = false) {
+  const types = COUNTED.filter((s) => byWater(p, s))
+  const first = types.length ? nextDue(p, 'water', logs) : null
+  if (!first) return
+  const since = {} as Record<SchedType, number>
+  for (const s of types) {
+    const last = lastDone(logs, s)
+    since[s] = last ? new Set(logs.filter((l) => l.type === 'water' && l.date > last).map((l) => l.date)).size : NEVER
+  }
+  const open = (s: SchedType, d: string) => {
+    const c = p.care[s]
+    if ((c.start && d < c.start) || (p.snooze?.[s] && d < p.snooze[s]!)) return false
+    return !(c.offMode === 'pause' && p.dormantMonths.includes(monthOf(d)))
+  }
+  const t = today()
+  let d: string | null = first < t ? t : first
+  for (let i = 0; d && i < 120; i++) {
+    let given = types.filter((s) => since[s] + 1 >= p.care[s].everyWater! && open(s, d!))
+    if (p.stagger && given.length > 1) given = [given.reduce((a, b) => (since[b] > since[a] ? b : a))]
+    for (const s of types) since[s] = given.includes(s) ? 0 : since[s] + 1
+    if (!visit(i === 0 && !clamp ? first : d, given)) return
+    d = nextAfter(p, p.care.water, d)
+  }
+}
+
 /** 次の予定日。過去日なら期限超過。予定なしなら null */
 export function nextDue(p: Plant, type: SchedType, logs: CareLog[]): string | null {
   const s = p.care[type]
   if (!s.enabled) return null
+  if (byWater(p, type)) {
+    let found: string | null = null
+    waterings(p, logs, (d, given) => !given.includes(type) || ((found = d), false))
+    return found
+  }
   const last = lastDone(logs, type)
   let due = last ? nextAfter(p, s, last) : skipPause(p, s, s.start || p.createdDay)
   // 開始日より前には出さない (開始日を決める前に付けた記録が残っていても)
@@ -59,6 +105,10 @@ export const isSnoozed = (p: Plant, type: SchedType, due: string | null) => !!du
  */
 export function projected(p: Plant, type: SchedType, logs: CareLog[], from: string, to: string): string[] {
   const out: string[] = []
+  if (byWater(p, type)) {
+    waterings(p, logs, (d, given) => (given.includes(type) && d >= from && d <= to && out.push(d), d <= to), true)
+    return out
+  }
   const t = today()
   let d = nextDue(p, type, logs)
   if (d && d < t) d = t

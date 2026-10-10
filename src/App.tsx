@@ -6,6 +6,7 @@ import { Ctx, type AppCtx, type Overlay } from './ctx'
 import { db, DEFAULT_SETTINGS, newId } from './db'
 import { today } from './lib/date'
 import { checkNotify, syncReminder } from './lib/reminder'
+import { byWater } from './lib/schedule'
 import { careLabel } from './method'
 import { PotIcon } from './parts'
 import type { CareLog } from './types'
@@ -87,7 +88,16 @@ export default function App() {
   const record = useCallback<AppCtx['record']>(
     async (plantIds, type, date = today(), note = '') => {
       const types = Array.isArray(type) ? type : [type]
-      const rows = types.flatMap((ty) => plantIds.map((plantId) => ({ id: newId(), plantId, type: ty, date, note, at: Date.now() })))
+      const rows: CareLog[] = types.flatMap((ty) => plantIds.map((plantId) => ({ id: newId(), plantId, type: ty, date, note, at: Date.now() })))
+      // 水やりに合わせてあげるケア (水に混ぜる肥料・活力剤) は水やりを兼ねるので、その日の水やりがまだなら一緒に記録する
+      const watered = types.includes('water')
+        ? []
+        : plantIds.filter((id) => {
+            const p = allPlants?.find((x) => x.id === id)
+            const mixed = p && types.some((ty) => (ty === 'fertilizer' || ty === 'tonic') && byWater(p, ty))
+            return mixed && !logsOf(id).some((l) => l.type === 'water' && l.date === date)
+          })
+      rows.push(...watered.map((plantId) => ({ id: newId(), plantId, type: 'water' as const, date, note: '', at: Date.now() })))
       await db.logs.bulkAdd(rows)
       // 呼び名は栽培方法に合わせる (水替え など)。呼び名の違う株が混ざるときは、ふつうの呼び名にする
       const label = types
@@ -97,9 +107,10 @@ export default function App() {
         })
         .join('・')
       const what = plantIds.length > 1 ? `${plantIds.length}株の${label}` : label
-      showToast(`${what}を記録しました`, () => db.logs.bulkDelete(rows.map((r) => r.id)))
+      const also = watered.length ? `（${careLabel('water', allPlants?.find((p) => p.id === watered[0]))}も記録）` : ''
+      showToast(`${what}を記録しました${also}`, () => db.logs.bulkDelete(rows.map((r) => r.id)))
     },
-    [showToast, allPlants],
+    [showToast, allPlants, logsOf],
   )
 
   useEffect(() => {

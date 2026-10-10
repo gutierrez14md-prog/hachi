@@ -4,7 +4,7 @@ import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { addDays, diffDays, fmtDay, fmtFull, fromKey, today, urgency, type Urgency } from '../lib/date'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
-import { heads, nextDue } from '../lib/schedule'
+import { byWater, heads, nextDue } from '../lib/schedule'
 import { describe, useWeather } from '../lib/weather'
 import { DueTag, Photo, PotIcon, SciName, SciText } from '../parts'
 import { archivedOf } from './Archive'
@@ -466,34 +466,49 @@ export function Home() {
             <span>{dueNow.length}件</span>
             {dueOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </button>
-          {dueOpen && dueNow.map(({ p, types, due }) => (
-            <div className="due-row" key={p.id}>
-              <button className="due-plant" onClick={() => open({ k: 'plant', id: p.id })}>
-                <Photo id={p.photoId} className="thumb sm" />
-                <span>
-                  <b>{p.name}</b>
-                  <small>
-                    <DueTag due={types.map((s) => due[s]!).sort()[0]} />
-                  </small>
-                </span>
-              </button>
-              <div className="due-acts">
-                {types.map((s) => {
-                  const Icon = careIcon(s, p)
-                  const label = careLabel(s, p)
-                  return (
-                    <button key={s} className="pill" style={careVar(s)} onClick={() => record([p.id], s)}>
-                      <Icon size={15} />
-                      {label}
-                    </button>
-                  )
-                })}
-                <button className="icon-btn muted" onClick={() => open({ k: 'snooze', plantId: p.id })} aria-label={`${p.name}のケアを延期`}>
-                  <CalendarClock size={18} />
+          {dueOpen && dueNow.map(({ p, types, due }) => {
+            // 水やりと一緒にあげるケア (水に混ぜる肥料・活力剤) は、水やりとまとめて 1 つのボタンにする
+            const mixed = types.includes('water') ? types.filter((s) => byWater(p, s)) : []
+            const WaterIcon = careIcon('water', p)
+            return (
+              <div className="due-row" key={p.id}>
+                <button className="due-plant" onClick={() => open({ k: 'plant', id: p.id })}>
+                  <Photo id={p.photoId} className="thumb sm" />
+                  <span>
+                    <b>{p.name}</b>
+                    <small>
+                      <DueTag due={types.map((s) => due[s]!).sort()[0]} />
+                    </small>
+                  </span>
                 </button>
+                <div className="due-acts">
+                  {mixed.length > 0 && (
+                    <button className="pill" style={careVar(mixed[0])} onClick={() => record([p.id], ['water', ...mixed])}>
+                      <WaterIcon size={15} />
+                      {mixed.map((s) => {
+                        const Icon = careIcon(s, p)
+                        return <Icon key={s} size={15} />
+                      })}
+                      {['water' as const, ...mixed].map((s) => careLabel(s, p)).join('＋')}
+                    </button>
+                  )}
+                  {types.filter((s) => !mixed.includes(s)).map((s) => {
+                    const Icon = careIcon(s, p)
+                    const label = careLabel(s, p)
+                    return (
+                      <button key={s} className="pill" style={careVar(s)} onClick={() => record([p.id], s)}>
+                        <Icon size={15} />
+                        {mixed.length > 0 ? `${label}のみ` : label}
+                      </button>
+                    )
+                  })}
+                  <button className="icon-btn muted" onClick={() => open({ k: 'snooze', plantId: p.id })} aria-label={`${p.name}のケアを延期`}>
+                    <CalendarClock size={18} />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
           {dueOpen && waterDue.length > 1 && (
             <button className="btn ghost full" onClick={() => record(waterDue, 'water')}>
               <Check size={16} /> {waterDue.length}株まとめて水やり済みにする

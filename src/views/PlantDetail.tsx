@@ -4,7 +4,7 @@ import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db } from '../db'
 import { fmtDay, fmtFull, today } from '../lib/date'
-import { intervalOn, isSnoozed, lastDone, nextDue } from '../lib/schedule'
+import { byWater, intervalOn, isSnoozed, lastDone, nextDue } from '../lib/schedule'
 import { careIcon, careLabel, METHODS } from '../method'
 import { DueTag, Photo, SciName, Sheet } from '../parts'
 import { archiveText } from './Archive'
@@ -120,7 +120,12 @@ export function PlantDetail({ id }: { id: string }) {
                       {label} <span className="soft">{due ? <DueTag due={due} /> : '予定なし'}</span>
                     </b>
                     <small>
-                      {every ? `今月は${every}日ごと` : '今月はお休み'} ・ {last ? `前回 ${fmtDay(last)}` : '記録なし'}
+                      {byWater(p, s)
+                        ? `${careLabel('water', p)}${p.care[s].everyWater === 1 ? 'のたび' : `${p.care[s].everyWater}回に1回`}`
+                        : every
+                          ? `今月は${every}日ごと`
+                          : '今月はお休み'}
+                      {' ・ '}{last ? `前回 ${fmtDay(last)}` : '記録なし'}
                       {isSnoozed(p, s, due) && ' ・ 延期中'}
                     </small>
                   </span>

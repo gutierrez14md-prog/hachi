@@ -19,6 +19,11 @@ export interface Schedule {
    * (肥料は春から、植え替えた直後の水やりは 1 週間後から、など)。空なら登録した日から
    */
   start?: string
+  /**
+   * 水やり何回に 1 回か (1〜6)。水に混ぜてあげる肥料・活力剤のためのもの。
+   * 入っていれば日数は使わず、水やりの回数で数える (予定日は必ず水やりの日に重なる)。水やり自身には使わない
+   */
+  everyWater?: number
 }
 
 export type CareSettings = Record<SchedType, Schedule>
@@ -105,6 +110,8 @@ export interface Plant {
   archive?: ArchiveInfo
   /** 延期: この日までは予定に出さない。次にケアを記録すれば、予定がこの日を越えるので自然に無効になる */
   snooze?: Partial<Record<SchedType, string>>
+  /** 水やりに合わせる肥料と活力剤が同じ回に重なったら、同じ日にあげず、交互にずらす */
+  stagger?: boolean
 }
 
 /** 分類 (アガベ、サボテン…) と、そのケア設定のプリセット */
@@ -164,4 +171,6 @@ export interface Settings {
   showSpent?: boolean
   /** ホームのカードに、アーカイブした株数を出すか (入っていなければ出す) */
   showArchived?: boolean
+  /** 肥料・活力剤を水に混ぜてあげる (水やりを兼ねる)。ケアの設定で、間隔を「水やり何回に 1 回」で選べるようになる */
+  careWithWater?: boolean
 }

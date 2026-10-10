@@ -2328,6 +2328,38 @@ button.banner {
   gap: 10px;
   padding: 8px 0;
 }
+/* 水やり何回に 1 回か: 選ぶボタン (3 列) と、しずくの図 */
+.every-chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.every-chips .chip {
+  padding: 7px 0;
+  text-align: center;
+}
+.every-fig {
+  display: flex;
+  gap: 3px;
+}
+.every-fig span {
+  flex: 1;
+  max-width: 26px;
+  min-height: 46px;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 4px;
+  padding: 6px 0;
+  border-radius: 8px;
+  color: #3f8fbf;
+}
+.every-fig span.on {
+  background: color-mix(in srgb, var(--c) 16%, transparent);
+}
+.every-fig span.on svg + svg {
+  color: var(--c);
+}
 .care-b {
   border-top: 1px solid var(--line);
   padding: 10px 0 8px;
