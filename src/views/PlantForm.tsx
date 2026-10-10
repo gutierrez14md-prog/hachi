@@ -41,16 +41,26 @@ export function PlantForm({ id }: { id?: string }) {
   const places = allPlants.map((p) => p.purchasePlace ?? '')
   const group = groups.find((g) => g.id === f.groupId)
 
+  // 育て方メモを自分で書いていないか: 空か、どれかの分類のひな形そのまま (分類を選び直したら、前の分類のひな形が残らないように)
+  const untouched = (profile: string) => !profile.trim() || groups.some((g) => g.profile === profile)
   const applyPreset = (g = group) => {
     if (g)
       setF((v) => ({
         ...v,
         care: structuredClone(g.care),
         dormantMonths: [...g.dormantMonths],
-        profile: v.profile || g.profile,
+        // 自分で書いたメモは黙って上書きしない。入れ替えたいときは、メモの下の「育て方メモを反映」で
+        profile: untouched(v.profile) ? g.profile : v.profile,
         method: g.method ?? v.method,
         waterLabel: g.waterLabel ?? v.waterLabel,
       }))
+  }
+  // 分類のひな形で、育て方メモを入れ替える (押したときだけ。取り消せる)
+  const applyProfile = () => {
+    if (!group) return
+    const before = f.profile
+    set({ profile: group.profile })
+    if (before.trim()) toast('育て方メモを入れ替えました', () => set({ profile: before }))
   }
   const pickGroup = (groupId: string) => {
     set({ groupId: groupId || undefined })
@@ -323,6 +333,11 @@ export function PlantForm({ id }: { id?: string }) {
           placeholder="日当たり、用土、気をつけることなど"
         />
       </Field>
+      {group?.profile && group.profile !== f.profile && (
+        <button className="btn ghost sm preset" onClick={applyProfile}>
+          「{group.name}」の育て方メモを反映
+        </button>
+      )}
 
       <h3 className="sec">入手</h3>
       <Field label="入手日">

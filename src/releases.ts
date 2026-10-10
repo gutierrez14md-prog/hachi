@@ -19,6 +19,14 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.6.1',
+    date: '2026-10-11',
+    items: [
+      '分類を選び直しても、育て方メモが前の分類のひな形のまま残る不具合を修正',
+      '植物の追加・編集に「育て方メモを反映」ボタンを追加（自分で書いたメモを、分類のひな形に入れ替えたいときに押す）',
+    ],
+  },
+  {
     version: '4.6.0',
     date: '2026-10-11',
     items: [
