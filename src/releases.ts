@@ -14,6 +14,15 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '1.16.0',
+    date: '2026-10-10',
+    items: [
+      'アーカイブに理由（枯れた・譲渡・売却・その他）、譲渡先・売却先、メモの入力を追加',
+      'アーカイブした日をあとから変更する機能を追加（アーカイブした株の詳細で、日付の帯を押す）',
+      'ホームのカードの育てている株の下に「アーカイブ ◯株」の表示を追加（設定の「ホームの表示」で隠せる）',
+    ],
+  },
+  {
     version: '1.15.0',
     date: '2026-10-10',
     items: [

@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, ChevronRight, CloudSun, Download, Plus, Upload } from 'lucide-react'
+import { Archive, Bell, ChevronDown, ChevronRight, CloudSun, Download, Plus, Upload } from 'lucide-react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
 import { applyFont, applyNameFont, applyTheme, FONTS, getFont, getNameFont, getTheme, NAME_FONTS } from '../lib/appearance'
@@ -121,6 +121,22 @@ export function SettingsView() {
 
         </>
       )}
+
+      <h3 className="sec">ホームの表示</h3>
+      <section className="card">
+        <label className="line">
+          <span className="care-ic">
+            <Archive size={18} />
+          </span>
+          <span className="line-main">
+            <span>
+              <b>アーカイブの株数を出す</b>
+              <small>上のカードの、育てている株の下</small>
+            </span>
+          </span>
+          <input type="checkbox" className="switch" checked={settings.showArchived ?? true} onChange={(e) => save({ showArchived: e.target.checked })} />
+        </label>
+      </section>
 
       <h3 className="sec">天気</h3>
       <section className="card">

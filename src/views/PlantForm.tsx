@@ -17,7 +17,7 @@ const MAX_MEMBERS = 12
 const NEW_MEMBER: Member = { name: '', scientificName: '' }
 
 export function PlantForm({ id }: { id?: string }) {
-  const { plants, allPlants, groups, settings, close, toast } = useApp()
+  const { plants, allPlants, groups, settings, close, replace, toast } = useApp()
   const existing = allPlants.find((p) => p.id === id)
   const [f, setF] = useState<Plant>(
     () =>
@@ -133,12 +133,8 @@ export function PlantForm({ id }: { id?: string }) {
     close()
   }
 
-  // 枯れた・手放した株を、記録と写真を残したまま一覧と予定から外す
-  const archive = async () => {
-    await db.plants.update(f.id, { archivedDay: today() })
-    toast(`${f.name}をアーカイブに移しました`, () => db.plants.update(f.id, { archivedDay: undefined }))
-    close(2)
-  }
+  // 枯れた・手放した株を、記録と写真を残したまま一覧と予定から外す。理由と日付を入れる画面に替える
+  const archive = () => replace({ k: 'archiveInfo', plantId: f.id })
 
   const remove = async () => {
     if (!confirm(`「${f.name}」と、そのケア記録・生長記録をすべて削除します。よろしいですか？`)) return

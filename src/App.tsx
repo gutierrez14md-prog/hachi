@@ -9,7 +9,7 @@ import { checkNotify, syncReminder } from './lib/reminder'
 import { careLabel } from './method'
 import { PotIcon } from './parts'
 import type { CareLog } from './types'
-import { Archive, Snooze } from './views/Archive'
+import { Archive, ArchiveForm, Snooze } from './views/Archive'
 import { CalendarView } from './views/CalendarView'
 import { Feedback } from './views/Feedback'
 import { GroupForm } from './views/GroupForm'
@@ -183,6 +183,8 @@ export default function App() {
             return <Snooze key={i} plantId={o.plantId} />
           case 'archive':
             return <Archive key={i} />
+          case 'archiveInfo':
+            return <ArchiveForm key={i} plantId={o.plantId} />
           case 'feedback':
             return <Feedback key={i} />
           case 'releases':

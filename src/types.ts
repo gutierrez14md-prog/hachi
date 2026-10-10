@@ -53,6 +53,16 @@ export interface PhotoCrop {
   zoom: number
 }
 
+/** アーカイブした理由: 枯れた / 譲渡 / 売却 / その他 */
+export type ArchiveReason = 'dead' | 'given' | 'sold' | 'other'
+
+export interface ArchiveInfo {
+  reason?: ArchiveReason
+  /** 譲渡先・売却先 (理由が譲渡か売却のとき) */
+  to?: string
+  note?: string
+}
+
 export interface Plant {
   id: string
   name: string
@@ -91,6 +101,8 @@ export interface Plant {
   purchaseDate?: string
   /** アーカイブした日。入っている株は一覧・予定・通知から外す (記録と写真は残る) */
   archivedDay?: string
+  /** アーカイブした理由など。あとから入れたり直したりできる (日付は archivedDay) */
+  archive?: ArchiveInfo
   /** 延期: この日までは予定に出さない。次にケアを記録すれば、予定がこの日を越えるので自然に無効になる */
   snooze?: Partial<Record<SchedType, string>>
 }
@@ -150,4 +162,6 @@ export interface Settings {
   dormantMonths: number[]
   /** 設定の下に、購入金額の合計を出すか (入っていなければ出す) */
   showSpent?: boolean
+  /** ホームのカードに、アーカイブした株数を出すか (入っていなければ出す) */
+  showArchived?: boolean
 }

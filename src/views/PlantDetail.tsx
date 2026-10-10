@@ -7,6 +7,7 @@ import { fmtDay, fmtFull, today } from '../lib/date'
 import { intervalOn, isSnoozed, lastDone, nextDue } from '../lib/schedule'
 import { careIcon, careLabel, METHODS } from '../method'
 import { DueTag, Photo, SciName, Sheet } from '../parts'
+import { archiveText } from './Archive'
 import { PlantCalendar } from './PlantCalendar'
 import { JournalCard, sortJournal } from './Timeline'
 
@@ -17,7 +18,7 @@ export function PlantDetail({ id }: { id: string }) {
   if (!p) return null
   const archived = !!p.archivedDay
   const restore = async () => {
-    await db.plants.update(id, { archivedDay: undefined })
+    await db.plants.update(id, { archivedDay: undefined, archive: undefined })
     toast(`${p.name}を元に戻しました`)
   }
 
@@ -53,7 +54,15 @@ export function PlantDetail({ id }: { id: string }) {
       }
     >
       <Photo id={p.photoId} className="hero" onClick={() => p.photoId && open({ k: 'photo', ids: [p.photoId], index: 0 })} />
-      {archived && <p className="banner">{fmtFull(p.archivedDay!)} にアーカイブ</p>}
+      {archived && (
+        <button className="banner" onClick={() => open({ k: 'archiveInfo', plantId: id })} aria-label="アーカイブの情報を編集">
+          <span>
+            {fmtFull(p.archivedDay!)} にアーカイブ{archiveText(p.archive) && ` ・ ${archiveText(p.archive)}`}
+            {p.archive?.note && <small>{p.archive.note}</small>}
+          </span>
+          <Pencil size={14} />
+        </button>
+      )}
       <div className="detail-h">
         <h1>{p.name}</h1>
         {!p.members?.length && <SciName plant={p} />}

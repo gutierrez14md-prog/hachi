@@ -2037,6 +2037,43 @@ input.grow, .grow input {
   font-weight: 700;
   text-align: center;
 }
+button.banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+.banner small {
+  margin-top: 2px;
+  font-weight: 400;
+  white-space: pre-wrap;
+}
+/* ホームのカードの「アーカイブ ◯株」。添え書き (.hero-sub) と同じ見た目の、押せる文字 */
+.hero-arch {
+  display: block;
+  color: inherit;
+  font-size: 12px;
+  line-height: 1.65;
+  opacity: 0.75;
+}
+.hero-arch b {
+  font-weight: 700;
+}
+.hero-sub .hero-arch {
+  opacity: 1;
+}
+/* 明日のケア (左) とアーカイブ (右)。幅が足りない端末では 2 行に折り返す */
+.hero-sub.split {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  column-gap: 12px;
+}
+/* 折り返しても右端 (育てている株の下) に置く */
+.hero-sub.split .hero-arch {
+  margin-left: auto;
+}
 .btn.archive-link {
   margin-top: 14px;
   color: var(--muted);

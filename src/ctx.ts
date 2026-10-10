@@ -12,6 +12,7 @@ export type Overlay =
   | { k: 'group'; id?: string }
   | { k: 'snooze'; plantId: string }
   | { k: 'archive' }
+  | { k: 'archiveInfo'; plantId: string }
   | { k: 'feedback' }
   | { k: 'releases' }
   | { k: 'photo'; ids: string[]; index: number }

@@ -7,6 +7,7 @@ import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import { heads, nextDue } from '../lib/schedule'
 import { describe, useWeather } from '../lib/weather'
 import { DueTag, Photo, PotIcon, SciName, SciText } from '../parts'
+import { archivedOf } from './Archive'
 import type { CareType, Plant, SchedType } from '../types'
 
 type Sort = 'water' | 'care' | 'name' | 'sci' | 'new' | 'days-desc' | 'days-asc' | 'price-desc' | 'price-asc'
@@ -78,7 +79,7 @@ function DueIcons({ p, due, t, size = 11, className = '' }: { p: Plant; due: Due
 const since = (p: Plant) => p.purchaseDate || p.createdDay
 
 export function Home() {
-  const { plants, allPlants, groups, logsOf, open, record } = useApp()
+  const { plants, allPlants, groups, logsOf, settings, open, record } = useApp()
   const [q, setQ] = useState('')
   const [loc, setLoc] = useState('')
   const [grp, setGrp] = useState('')
@@ -345,10 +346,17 @@ export function Home() {
     )
   }
 
-  const archivedCount = allPlants.length - plants.length
+  // アーカイブした株数 (まとめた登録は中身を 1 株ずつ)。いちばん下のリンクと、上のカードに出す
+  const archivedCount = heads(archivedOf(allPlants))
   const archiveLink = archivedCount > 0 && (
     <button className="btn ghost full archive-link" onClick={() => open({ k: 'archive' })}>
       <Archive size={16} /> アーカイブ {archivedCount}株
+    </button>
+  )
+  // 上のカードの、育てている株の下に出すぶん (設定で隠せる)。押すとアーカイブの一覧が開く
+  const archiveStat = archivedCount > 0 && (settings.showArchived ?? true) && (
+    <button className="hero-arch" onClick={() => open({ k: 'archive' })}>
+      アーカイブ <b>{archivedCount}株</b>
     </button>
   )
 
@@ -383,6 +391,7 @@ export function Home() {
           {heads(plants)}
           <small>株</small>
         </p>
+        {archiveStat}
       </div>
     </>
   )
@@ -407,8 +416,11 @@ export function Home() {
                 <small>株</small>
               </p>
             </div>
-            <p className="hero-sub">
-              明日のケア <b>{heads(dueTomorrow)}株</b>
+            <p className="hero-sub split">
+              <span>
+                明日のケア <b>{heads(dueTomorrow)}株</b>
+              </span>
+              {archiveStat}
             </p>
           </section>
           <section className="wx-card" aria-label="今日の天気">
