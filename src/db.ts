@@ -60,6 +60,12 @@ class HachiDB extends Dexie {
       const groups = (await tx.table('groups').toArray()) as Group[]
       if (!groups.some((g) => g.id === fresh.id || g.name === fresh.name)) await tx.table('groups').add(fresh)
     })
+    // v6: 同じく「食虫植物」を足した
+    this.version(6).upgrade(async (tx) => {
+      const fresh = defaultGroups().find((g) => g.id === 'g-carnivorous')!
+      const groups = (await tx.table('groups').toArray()) as Group[]
+      if (!groups.some((g) => g.id === fresh.id || g.name === fresh.name)) await tx.table('groups').add(fresh)
+    })
     this.on('populate', (tx) => tx.table('groups').bulkAdd(defaultGroups()))
   }
 }
