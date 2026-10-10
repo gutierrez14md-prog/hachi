@@ -14,6 +14,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '1.12.1',
+    date: '2026-10-10',
+    items: ['ケアの「今日」をオレンジ、「超過」を赤のラベルで表示するよう変更'],
+  },
+  {
     version: '1.12.0',
     date: '2026-10-10',
     items: ['リクエストに画像を 3 枚まで添付できる機能を追加', '写真を 90° ずつ回転する機能を追加', 'ホームの今日のケアの一覧を畳める機能を追加'],

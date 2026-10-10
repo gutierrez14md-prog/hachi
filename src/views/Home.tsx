@@ -2,11 +2,11 @@ import { AlignJustify, Archive, BookOpen, CalendarClock, Check, ChevronDown, Che
 import { useMemo, useState } from 'react'
 import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
-import { addDays, diffDays, dueLabel, fmtDay, fmtFull, fromKey, today } from '../lib/date'
+import { addDays, diffDays, fmtDay, fmtFull, fromKey, today, urgency, type Urgency } from '../lib/date'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import { heads, nextDue } from '../lib/schedule'
 import { describe, useWeather } from '../lib/weather'
-import { Photo, PotIcon, SciName } from '../parts'
+import { DueTag, Photo, PotIcon, SciName } from '../parts'
 import type { CareType, Plant, SchedType } from '../types'
 
 type Sort = 'water' | 'name' | 'sci' | 'new' | 'days-desc' | 'days-asc' | 'price-desc' | 'price-asc'
@@ -139,6 +139,12 @@ export function Home() {
         ? (p) => `${fmtFull(p.createdDay)} 追加`
         : null
 
+  // その株でいちばん急ぎのケア (水やり・肥料・活力剤のどれか)。タイルとミニの右上の丸に使う
+  const worst = (due: Record<SchedType, string | null>): Urgency => {
+    const all = SCHED.map((s) => urgency(due[s], t))
+    return all.includes('over') ? 'over' : all.includes('today') ? 'today' : ''
+  }
+
   // 見出しで区切る。分類や置き場所が入っていない株は、最後にまとめる
   type Row = (typeof list)[number]
   const sections: { key: string; title: string; items: Row[] }[] =
@@ -193,7 +199,13 @@ export function Home() {
                           {' ・ '}
                         </>
                       )}
-                      <span className={late ? 'late' : ''}>{w ? `${careLabel('water', p)} ${dueLabel(w)}` : `${careLabel('water', p)}の予定なし`}</span>
+                      {w ? (
+                        <>
+                          {careLabel('water', p)} <DueTag due={w} />
+                        </>
+                      ) : (
+                        `${careLabel('water', p)}の予定なし`
+                      )}
                     </small>
                   </span>
                   {mark(p)}
@@ -219,16 +231,16 @@ export function Home() {
         <ul className={`tiles ${view}`}>
           {items.map(({ p, due }) => {
             const w = due.water
-            const late = !!w && w <= t
+            const lv = worst(due)
             return (
               <li key={p.id} className={isOn(p) ? 'picked' : ''}>
-                <button onClick={() => tap(p)} aria-label={`${p.name}${late ? '（今日ケアが必要）' : ''}`} {...pressed(p)}>
+                <button onClick={() => tap(p)} aria-label={`${p.name}${lv === 'over' ? '（ケアの予定を過ぎています）' : lv ? '（今日ケアが必要）' : ''}`} {...pressed(p)}>
                   <Photo id={p.photoId} className="tile-img" />
                   <span className="tile-text">
                     <b>{p.name}</b>
-                    {view === 'tile' && <small>{sortKey ? sortKey(p) : w ? dueLabel(w) : ''}</small>}
+                    {view === 'tile' && <small>{sortKey ? sortKey(p) : w ? <DueTag due={w} /> : ''}</small>}
                   </span>
-                  {late && <i className="tile-due" style={careVar('water')} />}
+                  {lv && <i className={`tile-due ${lv}`} />}
                   {mark(p)}
                 </button>
               </li>
@@ -274,13 +286,12 @@ export function Home() {
       <ul className="rows">
         {items.map(({ p, due }) => {
           const w = due.water
-          const late = !!w && w <= t
           return (
             <li key={p.id} className={isOn(p) ? 'picked' : ''}>
               <button onClick={() => tap(p)} {...pressed(p)}>
                 {mark(p)}
                 <b>{p.name}</b>
-                <span className={late ? 'late' : ''}>{sortKey ? sortKey(p) : w ? dueLabel(w) : '—'}</span>
+                <span>{sortKey ? sortKey(p) : w ? <DueTag due={w} /> : '—'}</span>
               </button>
             </li>
           )
@@ -404,7 +415,9 @@ export function Home() {
                 <Photo id={p.photoId} className="thumb sm" />
                 <span>
                   <b>{p.name}</b>
-                  <small>{types.map((s) => dueLabel(due[s]!)).find((l) => l !== '今日') ?? '今日'}</small>
+                  <small>
+                    <DueTag due={types.map((s) => due[s]!).sort()[0]} />
+                  </small>
                 </span>
               </button>
               <div className="due-acts">

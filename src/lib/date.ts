@@ -34,6 +34,10 @@ export const fmtFull = (k: string) => {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
 }
 
+/** 予定日の急ぎぐあい: over = 過ぎている、today = 今日、'' = まだ先 (または予定なし) */
+export type Urgency = 'over' | 'today' | ''
+export const urgency = (due: string | null | undefined, t = today()): Urgency => (!due || due > t ? '' : due < t ? 'over' : 'today')
+
 /** 今日からの相対表記: 「今日」「あと3日」「2日超過」 */
 export const dueLabel = (k: string) => {
   const n = diffDays(k, today())

@@ -2,6 +2,7 @@ import { Camera, RotateCw, Wand2, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useApp } from './ctx'
 import { db } from './db'
+import { dueLabel, urgency } from './lib/date'
 import { rotatePhoto, savePhoto } from './lib/photo'
 import type { Plant } from './types'
 import { BackdropStudio } from './views/BackdropStudio'
@@ -260,6 +261,15 @@ export function DateInput({
       )}
     </span>
   )
+}
+
+/**
+ * 予定日までの残り (「今日」「2日超過」「あと3日」)。今日と超過は、名前の太字に埋もれないように色つきのバッジにする。
+ * 超過 = 赤の塗り、今日 = 薄いオレンジ地。色だけに頼らないよう、塗り方も変えている
+ */
+export function DueTag({ due }: { due: string }) {
+  const lv = urgency(due)
+  return lv ? <span className={`urg ${lv}`}>{dueLabel(due)}</span> : <>{dueLabel(due)}</>
 }
 
 export function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
