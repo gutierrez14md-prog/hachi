@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.6.2',
+    date: '2026-10-11',
+    items: ['植物の入手に「譲り受けた」を追加（購入金額と購入場所のかわりに、譲ってくれた人を入力）'],
+  },
+  {
     version: '4.6.1',
     date: '2026-10-11',
     items: [

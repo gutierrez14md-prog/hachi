@@ -39,6 +39,7 @@ export function PlantForm({ id }: { id?: string }) {
   // 置き場所と購入場所の候補は、これまでに登録した株から集める (アーカイブした株のぶんも含む)
   const locations = allPlants.map((p) => p.location)
   const places = allPlants.map((p) => p.purchasePlace ?? '')
+  const givers = allPlants.map((p) => p.giftFrom ?? '')
   const group = groups.find((g) => g.id === f.groupId)
 
   // 育て方メモを自分で書いていないか: 空か、どれかの分類のひな形そのまま (分類を選び直したら、前の分類のひな形が残らないように)
@@ -122,7 +123,11 @@ export function PlantForm({ id }: { id?: string }) {
       cultivar: inside ? undefined : f.cultivar?.trim() || undefined,
       members: inside,
       location: f.location.trim(),
-      purchasePlace: f.purchasePlace?.trim(),
+      // 譲り受けた株は、購入の情報を持たない (購入に戻したときは、譲ってくれた人を持たない)
+      purchasePlace: f.gift ? undefined : f.purchasePlace?.trim(),
+      purchasePrice: f.gift ? null : f.purchasePrice,
+      gift: f.gift || undefined,
+      giftFrom: (f.gift && f.giftFrom?.trim()) || undefined,
       waterLabel: f.waterLabel?.trim() || undefined,
       // 水やりは必須 (オフにはできない)
       care: cleanCare({ ...f.care, water: { ...f.care.water, enabled: true } }),
@@ -340,26 +345,43 @@ export function PlantForm({ id }: { id?: string }) {
       )}
 
       <h3 className="sec">入手</h3>
+      {/* 買った株か、人から譲り受けた株か。譲り受けた株では、金額と購入場所のかわりに、譲ってくれた人を入れる */}
+      <div className="seg how" role="group" aria-label="入手の方法">
+        <button type="button" className={f.gift ? '' : 'on'} aria-pressed={!f.gift} onClick={() => set({ gift: undefined })}>
+          購入
+        </button>
+        <button type="button" className={f.gift ? 'on' : ''} aria-pressed={!!f.gift} onClick={() => set({ gift: true })}>
+          譲り受けた
+        </button>
+      </div>
       <Field label="入手日">
         <DateInput clearable max={today()} value={f.purchaseDate ?? ''} onChange={(purchaseDate) => set({ purchaseDate })} aria-label="入手日" />
       </Field>
-      <Field label="購入金額 (円)">
-        <input
-          type="number"
-          inputMode="numeric"
-          min={0}
-          value={f.purchasePrice ?? ''}
-          onChange={(e) => set({ purchasePrice: e.target.value === '' ? null : Math.max(0, Number(e.target.value) || 0) })}
-        />
-      </Field>
-      <Field label="購入場所">
-        <PickInput
-          options={places}
-          value={f.purchasePlace ?? ''}
-          onChange={(purchasePlace) => set({ purchasePlace })}
-          placeholder="例: 園芸店、イベント、通販"
-        />
-      </Field>
+      {f.gift ? (
+        <Field label="譲ってくれた人">
+          <PickInput options={givers} value={f.giftFrom ?? ''} onChange={(giftFrom) => set({ giftFrom })} placeholder="例: 友人、家族、園芸仲間" />
+        </Field>
+      ) : (
+        <>
+          <Field label="購入金額 (円)">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              value={f.purchasePrice ?? ''}
+              onChange={(e) => set({ purchasePrice: e.target.value === '' ? null : Math.max(0, Number(e.target.value) || 0) })}
+            />
+          </Field>
+          <Field label="購入場所">
+            <PickInput
+              options={places}
+              value={f.purchasePlace ?? ''}
+              onChange={(purchasePlace) => set({ purchasePlace })}
+              placeholder="例: 園芸店、イベント、通販"
+            />
+          </Field>
+        </>
+      )}
 
       <h3 className="sec">ケアの設定</h3>
       <CareEditor

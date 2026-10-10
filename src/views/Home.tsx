@@ -171,7 +171,7 @@ export function Home() {
   const sortKey: ((p: Plant) => string) | null = sort.startsWith('days')
     ? (p) => `${diffDays(t, since(p)).toLocaleString('ja-JP')}日`
     : sort.startsWith('price')
-      ? (p) => (p.purchasePrice == null ? '金額なし' : `¥${p.purchasePrice.toLocaleString('ja-JP')}`)
+      ? (p) => (p.gift ? '譲り受けた' : p.purchasePrice == null ? '金額なし' : `¥${p.purchasePrice.toLocaleString('ja-JP')}`)
       : sort === 'new'
         ? (p) => `${fmtFull(p.createdDay)} 追加`
         : null

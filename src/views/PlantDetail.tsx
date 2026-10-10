@@ -30,6 +30,7 @@ export function PlantDetail({ id }: { id: string }) {
     ['分類', groups.find((g) => g.id === p.groupId)?.name],
     ['栽培方法', p.method && METHODS[p.method].label],
     ['入手日', p.purchaseDate && fmtFull(p.purchaseDate)],
+    ['入手', p.gift && (p.giftFrom ? `${p.giftFrom}から譲り受けた` : '譲り受けた')],
     ['購入場所', p.purchasePlace],
     ['購入金額', p.purchasePrice != null && `¥${p.purchasePrice.toLocaleString('ja-JP')}`],
   ].filter((f): f is [string, string] => !!f[1])

@@ -104,6 +104,10 @@ export interface Plant {
   purchasePrice?: number | null
   /** 入手日 YYYY-MM-DD */
   purchaseDate?: string
+  /** 購入ではなく、譲り受けた株。このときは購入金額と購入場所を持たない */
+  gift?: boolean
+  /** 譲ってくれた人 (gift のとき) */
+  giftFrom?: string
   /** アーカイブした日。入っている株は一覧・予定・通知から外す (記録と写真は残る) */
   archivedDay?: string
   /** アーカイブした理由など。あとから入れたり直したりできる (日付は archivedDay) */
