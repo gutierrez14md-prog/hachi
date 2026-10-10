@@ -6,7 +6,7 @@ import { addDays, diffDays, fmtDay, fmtFull, fromKey, today, urgency, type Urgen
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import { heads, nextDue } from '../lib/schedule'
 import { describe, useWeather } from '../lib/weather'
-import { DueTag, Photo, PotIcon, SciName } from '../parts'
+import { DueTag, Photo, PotIcon, SciName, SciText } from '../parts'
 import type { CareType, Plant, SchedType } from '../types'
 
 type Sort = 'water' | 'name' | 'sci' | 'new' | 'days-desc' | 'days-asc' | 'price-desc' | 'price-asc'
@@ -265,7 +265,7 @@ export function Home() {
                     <span className="book-sci plain">{p.members.map((m) => m.scientificName || m.name).filter(Boolean).join(' / ')}</span>
                   ) : (
                     <span className="book-sci">
-                      <i>{p.scientificName || '学名未登録'}</i>
+                      <SciText plant={p} empty="学名未登録" />
                       {p.cultivar && ` '${p.cultivar}'`}
                     </span>
                   )}

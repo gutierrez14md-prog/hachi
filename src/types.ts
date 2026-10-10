@@ -32,13 +32,27 @@ export interface Member {
   cultivar?: string
 }
 
+/**
+ * 交配親。親は 2 つで、それぞれが交配種のこともあるので、学名を 4 つまで持つ
+ * (親 1 が A × B × C、親 2 が D × E、など)。片方だけでもよい。
+ * sexed = 雌雄がわかっている。そのときは seed が雌親 (♀・種子親)、pollen が雄親 (♂・花粉親)。
+ * わからないときは、seed が親 1、pollen が親 2 というだけで、雌雄の意味は無い
+ */
+export interface Cross {
+  seed: string[]
+  pollen: string[]
+  sexed?: boolean
+}
+
 export interface Plant {
   id: string
   name: string
   /** 表示・検索・並び替えに使う学名。ハイブリッドは交配親を「 × 」でつないだもの */
   scientificName: string
-  /** ハイブリッド (交配種) のときだけ: 交配親の学名 (4 つまで) */
+  /** 以前の形式のハイブリッド (交配親を 1 列に並べたもの)。編集して保存すると parents に移る */
   scientificNames?: string[]
+  /** ハイブリッド (交配種) の交配親 */
+  parents?: Cross
   /** 園芸品種名・流通名 (白鯨 など)。学名のあとに ' ' で囲んで出す */
   cultivar?: string
   /**

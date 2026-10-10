@@ -1737,6 +1737,81 @@ input::-webkit-date-and-time-value {
   display: inline;
   font-size: inherit;
 }
+/* 雌雄を分けたハイブリッド: 雌親・雄親をそれぞれ 1 つのかたまりにする */
+.cross-side {
+  padding: 1px 6px;
+  border-radius: 7px;
+  background: var(--surface2);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+/* 一覧や選択欄では、名前の太字用の指定 (b を 1 行にする、など) を打ち消して、学名の行の中に流し込む */
+.sci-line b.sex, .book-sci b.sex {
+  display: inline-block;
+  width: auto;
+  min-width: 1.35em;
+  margin-right: 3px;
+  border-radius: 5px;
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.92em;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  color: #fff;
+  overflow: visible;
+}
+.sex.f {
+  background: #b5527c;
+}
+.sex.m {
+  background: #3f7fb0;
+}
+.cross-x {
+  font-weight: 700;
+}
+/* 詳細では、雌親と雄親を 1 行ずつに分けて見せる */
+.detail-h .cross-side {
+  display: block;
+  width: fit-content;
+  margin-top: 5px;
+  padding: 3px 9px;
+}
+.detail-h .cross-x {
+  display: block;
+  margin: 3px 0 0 6px;
+  line-height: 1;
+}
+.book-sci .cross-side {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-bottom: 2px;
+  font-size: 14px;
+}
+.book-sci .cross-x {
+  display: none;
+}
+/* 編集画面: 親ごとの欄のまとまり。雌雄がわかるときは、左の線に色が付く */
+.cross-box {
+  margin-bottom: 14px;
+  padding: 12px 12px 12px 14px;
+  border-radius: 14px;
+  border-left: 4px solid var(--line);
+  background: var(--surface2);
+}
+.cross-box.f {
+  border-left-color: #b5527c;
+}
+.cross-box.m {
+  border-left-color: #3f7fb0;
+}
+.line.cross-sex {
+  margin-bottom: 14px;
+}
+.cross-box .field:last-of-type {
+  margin-bottom: 10px;
+}
 .detail-h .sci-line {
   font-size: 15px;
   white-space: normal;

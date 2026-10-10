@@ -2,6 +2,7 @@ import { Camera, RotateCw, Wand2, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useApp } from './ctx'
 import { db } from './db'
+import { isGrouped } from './lib/cross'
 import { dueLabel, urgency } from './lib/date'
 import { rotatePhoto, savePhoto } from './lib/photo'
 import type { Plant } from './types'
@@ -47,16 +48,43 @@ export function Photo({ id, className = '', onClick }: { id?: string; className?
 }
 
 /**
+ * 学名そのもの (斜体)。親が交配種のハイブリッドは、親ごとに 1 つのかたまりにして出す
+ * (どこまでが片方の親の交配かが見てわかるように)。雌雄がわかっていれば、♀ ♂ の印を付ける
+ */
+export function SciText({ plant: p, empty = '' }: { plant: Pick<Plant, 'scientificName' | 'parents'>; empty?: string }) {
+  const c = p.parents
+  if (!c || !isGrouped(c)) return <i>{p.scientificName || empty}</i>
+  const side = (list: string[], mark: string, cls: string, label: string) =>
+    list.length > 0 && (
+      <span className="cross-side">
+        {c.sexed && (
+          <b className={`sex ${cls}`} aria-label={label}>
+            {mark}
+          </b>
+        )}
+        <i>{list.join(' × ')}</i>
+      </span>
+    )
+  return (
+    <span className="cross">
+      {side(c.seed, '♀', 'f', '雌親')}
+      {c.seed.length > 0 && c.pollen.length > 0 && <span className="cross-x"> × </span>}
+      {side(c.pollen, '♂', 'm', '雄親')}
+    </span>
+  )
+}
+
+/**
  * 名前の下に出す 1 行: 学名 (斜体) と品種名 (' ' で囲む。斜体にしない)。
  * 複数の植物をまとめた登録は、中身の名前を並べる
  */
-export function SciName({ plant: p }: { plant: Pick<Plant, 'scientificName' | 'cultivar' | 'members'> }) {
+export function SciName({ plant: p }: { plant: Pick<Plant, 'scientificName' | 'cultivar' | 'members' | 'parents'> }) {
   if (p.members?.length)
     return <span className="sci-line">{p.members.map((m) => m.name || m.scientificName).filter(Boolean).join('、')}</span>
   if (!p.scientificName && !p.cultivar) return null
   return (
     <span className="sci-line">
-      <i>{p.scientificName}</i>
+      <SciText plant={p} />
       {p.cultivar && ` '${p.cultivar}'`}
     </span>
   )

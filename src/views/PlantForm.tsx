@@ -5,9 +5,10 @@ import { useApp } from '../ctx'
 import { db, deletePlant, newId } from '../db'
 import { today } from '../lib/date'
 import { DateInput, Field, PhotoPicker, Sheet } from '../parts'
+import { crossText, fromFlat } from '../lib/cross'
 import { defaultCare } from '../presets'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
-import type { Member, Method, Plant, SchedType } from '../types'
+import type { Member, Method, Plant, SchedType, Cross } from '../types'
 import { CareEditor, cleanCare, hasInterval, WaterLabelField } from './CareEditor'
 import { CultivarInput, PickInput, searchName, searchSci, SuggestInput } from './SciInput'
 
@@ -20,7 +21,7 @@ export function PlantForm({ id }: { id?: string }) {
   const existing = allPlants.find((p) => p.id === id)
   const [f, setF] = useState<Plant>(
     () =>
-      existing ?? {
+      (existing && (existing.scientificNames && !existing.parents ? { ...existing, scientificNames: undefined, parents: fromFlat(existing.scientificNames) } : existing)) ?? {
         id: newId(),
         name: '',
         scientificName: '',
@@ -57,17 +58,47 @@ export function PlantForm({ id }: { id?: string }) {
     if (!existing) applyPreset(groups.find((g) => g.id === groupId))
   }
 
-  // ハイブリッドは交配親の学名を 4 つまで持つ。一覧や検索に使う scientificName は、それを × でつないだもの
-  const hybrid = !!f.scientificNames
-  const names = f.scientificNames ?? [f.scientificName]
-  const setNames = (list: string[]) => set(hybrid ? { scientificNames: list } : { scientificName: list[0] ?? '' })
+  // ハイブリッドは交配親を 2 つ持ち、それぞれ学名を 4 つまで入れられる (親そのものが交配種のこともあるため)。
+  // 一覧や検索に使う scientificName は、それを × でつないだもの
+  const cross = f.parents
+  const hybrid = !!cross
+  const names = cross ? [...cross.seed, ...cross.pollen] : [f.scientificName]
+  const setSide = (side: 'seed' | 'pollen', list: string[]) => set({ parents: { ...cross!, [side]: list } })
+  // 学名の欄を並べる (ふつうの学名にも、交配親にも使う)
+  const nameFields = (list: string[], onList: (l: string[]) => void, label: (i: number) => string, placeholder: (i: number) => string) =>
+    list.map((name, i) => (
+      <Field key={i} label={label(i)}>
+        <span className="with-x">
+          <SuggestInput
+            sci
+            search={searchSci}
+            value={name}
+            onChange={(v) => onList(list.map((n, j) => (j === i ? v : n)))}
+            onPick={(h) => onList(list.map((n, j) => (j === i ? h.sci : n)))}
+            placeholder={placeholder(i)}
+          />
+          {list.length > 1 && (
+            <button type="button" className="icon-btn muted" onClick={() => onList(list.filter((_, j) => j !== i))} aria-label={`${label(i)}を外す`}>
+              <X size={16} />
+            </button>
+          )}
+        </span>
+      </Field>
+    ))
 
   // 複数の植物をまとめた登録 (寄せ植え・着生)。中身ごとに名前・学名・品種名を持つ
   const members = f.members
   const setMember = (i: number, patch: Partial<Member>) => set({ members: members!.map((m, j) => (j === i ? { ...m, ...patch } : m)) })
 
   const save = async () => {
-    const parents = names.map((n) => n.trim()).filter(Boolean)
+    const clean = (l: string[]) => l.map((n) => n.trim()).filter(Boolean)
+    const flat = clean(names)
+    let sides: Cross | undefined
+    if (f.parents) {
+      const a = clean(f.parents.seed), b = clean(f.parents.pollen)
+      // 雌雄がわからないときは、親 1 が空なら親 2 を前に詰める
+      sides = f.parents.sexed ? { seed: a, pollen: b, sexed: true } : a.length ? { seed: a, pollen: b } : { seed: b, pollen: [] }
+    }
     const inside = members
       ?.map((m) => ({ name: m.name.trim(), scientificName: m.scientificName.trim(), cultivar: m.cultivar?.trim() || undefined }))
       .filter((m) => m.name || m.scientificName || m.cultivar)
@@ -75,8 +106,9 @@ export function PlantForm({ id }: { id?: string }) {
       ...f,
       name: f.name.trim(),
       // まとめた登録では、学名と品種名は中身のほうに持つ
-      scientificName: inside ? '' : parents.join(' × '),
-      scientificNames: hybrid && !inside ? parents : undefined,
+      scientificName: inside ? '' : sides ? crossText(sides) : flat.join(' × '),
+      scientificNames: undefined,
+      parents: sides && !inside && flat.length ? sides : undefined,
       cultivar: inside ? undefined : f.cultivar?.trim() || undefined,
       members: inside,
       location: f.location.trim(),
@@ -133,7 +165,7 @@ export function PlantForm({ id }: { id?: string }) {
           // 和名を入れ、学名がまだ空ならそれも入れる (入力済みの学名は上書きしない)
           onPick={(h) => {
             set({ name: h.ja ?? h.sci })
-            if (!members && !names[0].trim()) setNames([h.sci, ...names.slice(1)])
+            if (!members && !names[0]?.trim()) cross ? setSide('seed', [h.sci, ...cross.seed.slice(1)]) : set({ scientificName: h.sci })
           }}
           placeholder={members ? '例: 流木のチランジア' : '例: モンステラ'}
         />
@@ -199,25 +231,13 @@ export function PlantForm({ id }: { id?: string }) {
 
       {!members && (
         <>
-      {names.map((name, i) => (
-        <Field key={i} label={hybrid ? `学名 ${i + 1}` : '学名'}>
-          <span className="with-x">
-            <SuggestInput
-              sci
-              search={searchSci}
-              value={name}
-              onChange={(v) => setNames(names.map((n, j) => (j === i ? v : n)))}
-              onPick={(h) => setNames(names.map((n, j) => (j === i ? h.sci : n)))}
-              placeholder={i === 0 ? '例: Monstera deliciosa' : '交配親の学名'}
-            />
-            {names.length > 1 && (
-              <button type="button" className="icon-btn muted" onClick={() => setNames(names.filter((_, j) => j !== i))} aria-label={`学名 ${i + 1} を外す`}>
-                <X size={16} />
-              </button>
-            )}
-          </span>
-        </Field>
-      ))}
+      {!hybrid &&
+        nameFields(
+          [f.scientificName],
+          ([v]) => set({ scientificName: v ?? '' }),
+          () => '学名',
+          () => '例: Monstera deliciosa',
+        )}
       <label className="line toggle">
         <span className="line-main">
           <b>ハイブリッド（交配種）</b>
@@ -226,14 +246,43 @@ export function PlantForm({ id }: { id?: string }) {
           type="checkbox"
           className="switch"
           checked={hybrid}
-          // オフにしたら 1 つ目の学名だけ残す
-          onChange={(e) => set({ scientificNames: e.target.checked ? [f.scientificName, ''] : undefined, scientificName: names[0] })}
+          // オンにしたら入れてあった学名を親 1 に移す。オフにしたら 1 つ目の学名だけ残す
+          onChange={(e) =>
+            set(e.target.checked ? { parents: { seed: [f.scientificName], pollen: [''] } } : { parents: undefined, scientificName: names.find((n) => n.trim()) ?? '' })
+          }
         />
       </label>
-      {hybrid && names.length < MAX_NAMES && (
-        <button type="button" className="btn ghost sm preset" onClick={() => setNames([...names, ''])}>
-          <Plus size={15} /> 学名を追加
-        </button>
+      {cross && (
+        <>
+          {(
+            [
+              ['seed', cross.sexed ? '♀ 雌親' : '親 1', 'f'],
+              ['pollen', cross.sexed ? '♂ 雄親' : '親 2', 'm'],
+            ] as const
+          ).map(([side, title, cls]) => (
+            <div key={side} className={`cross-box ${cross.sexed ? cls : ''}`}>
+              {nameFields(
+                cross[side].length ? cross[side] : [''],
+                (l) => setSide(side, l),
+                (i) => (cross[side].length > 1 ? `${title} の学名 ${i + 1}` : `${title} の学名`),
+                () => '交配親の学名',
+              )}
+              {cross[side].length < MAX_NAMES && (
+                <button type="button" className="btn ghost sm" onClick={() => setSide(side, [...(cross[side].length ? cross[side] : ['']), ''])}>
+                  <Plus size={15} /> {title} が交配種のとき、学名を追加
+                </button>
+              )}
+            </div>
+          ))}
+          {/* 雌雄はわからないことも多いので、任意 (わかるときだけ、親 1 を雌親、親 2 を雄親として扱う) */}
+          <label className="line toggle cross-sex">
+            <span className="line-main">
+              <b>親の雌雄がわかる</b>
+              <small>親 1 を雌親（♀）、親 2 を雄親（♂）にする</small>
+            </span>
+            <input type="checkbox" className="switch" checked={!!cross.sexed} onChange={(e) => set({ parents: { ...cross, sexed: e.target.checked || undefined } })} />
+          </label>
+        </>
       )}
       <Field label="品種名">
         <CultivarInput sci={names[0]} value={f.cultivar ?? ''} onChange={(cultivar) => set({ cultivar })} />
