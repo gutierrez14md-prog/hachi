@@ -8,6 +8,23 @@ import nodemailer from 'nodemailer'
 const KINDS: Record<string, string> = { request: '機能リクエスト', bug: '不具合', other: 'その他' }
 const MAX_MESSAGE = 2000
 const MAX_NAME = 40
+// 画像は 3 枚まで。アプリ側で縮めた JPEG を base64 で受け取る (1 枚あたり約 1MB まで)
+const MAX_IMAGES = 3
+const MAX_IMAGE_CHARS = 1_400_000
+
+/** base64 の JPEG だけを受け取る。それ以外が混ざっていたら null */
+function readImages(raw: unknown): Buffer[] | null {
+  if (raw == null) return []
+  if (!Array.isArray(raw) || raw.length > MAX_IMAGES) return null
+  const out: Buffer[] = []
+  for (const s of raw) {
+    if (typeof s !== 'string' || s.length > MAX_IMAGE_CHARS || !/^[A-Za-z0-9+/]+=*$/.test(s)) return null
+    const buf = Buffer.from(s, 'base64')
+    if (buf[0] !== 0xff || buf[1] !== 0xd8 || buf[2] !== 0xff) return null
+    out.push(buf)
+  }
+  return out
+}
 
 const json = (status: number, body: object) => Response.json(body, { status })
 
@@ -16,7 +33,7 @@ export async function POST(request: Request): Promise<Response> {
   const origin = request.headers.get('origin')
   if (origin && new URL(origin).host !== request.headers.get('host')) return json(403, { error: 'forbidden' })
 
-  let body: { kind?: unknown; message?: unknown; name?: unknown; website?: unknown; agent?: unknown }
+  let body: { kind?: unknown; message?: unknown; name?: unknown; website?: unknown; agent?: unknown; images?: unknown }
   try {
     body = await request.json()
   } catch {
@@ -29,7 +46,8 @@ export async function POST(request: Request): Promise<Response> {
   const message = typeof body.message === 'string' ? body.message.trim() : ''
   const name = typeof body.name === 'string' ? body.name.trim().slice(0, MAX_NAME) : ''
   const agent = typeof body.agent === 'string' ? body.agent.slice(0, 300) : ''
-  if (!message || message.length > MAX_MESSAGE) return json(400, { error: 'invalid' })
+  const images = readImages(body.images)
+  if (!message || message.length > MAX_MESSAGE || !images) return json(400, { error: 'invalid' })
 
   const user = process.env.GMAIL_USER
   const pass = process.env.GMAIL_APP_PASSWORD
@@ -43,7 +61,8 @@ export async function POST(request: Request): Promise<Response> {
       from: `Hachi <${user}>`,
       to: process.env.FEEDBACK_TO || user,
       subject: `[Hachi] ${KINDS[kind]}${name ? ` (${name})` : ''}: ${message.replace(/\s+/g, ' ').slice(0, 40)}`,
-      text: [`種類: ${KINDS[kind]}`, `送信者: ${name || '(名前なし)'}`, '', message, '', '--', `端末: ${agent || '(不明)'}`].join('\n'),
+      text: [`種類: ${KINDS[kind]}`, `送信者: ${name || '(名前なし)'}`, '', message, '', '--', `画像: ${images.length} 枚`, `端末: ${agent || '(不明)'}`].join('\n'),
+      attachments: images.map((content, i) => ({ filename: `hachi-${i + 1}.jpg`, content, contentType: 'image/jpeg' })),
     })
     return json(200, { ok: true })
   } catch (e) {

@@ -589,6 +589,40 @@ input[type='number'] {
   justify-content: flex-end;
   gap: 6px;
 }
+/* 今日のケアの見出し。押すと一覧を畳む・開く */
+.due-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 2px 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.due-head b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.due-head svg {
+  margin-left: auto;
+}
+.card.due.folded .due-head {
+  padding-bottom: 2px;
+}
+.picker-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -8px 0 18px;
+}
+.shot-btn.turn {
+  top: auto;
+  bottom: 5px;
+  left: 5px;
+}
+.past-item img {
+  transition: transform 0.15s;
+}
 .card.due .btn.full {
   margin: 4px 0 10px;
   background: var(--surface2);

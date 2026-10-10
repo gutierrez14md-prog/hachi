@@ -1,4 +1,4 @@
-import { AlignJustify, Archive, BookOpen, CalendarClock, Check, Droplets, Grid2x2, Grid3x3, LayoutList, ListChecks, MapPin, Search, X } from 'lucide-react'
+import { AlignJustify, Archive, BookOpen, CalendarClock, Check, ChevronDown, ChevronUp, Droplets, Grid2x2, Grid3x3, LayoutList, ListChecks, MapPin, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
@@ -65,6 +65,8 @@ export function Home() {
     return GROUP_BYS.some(([id]) => id === saved) ? (saved as GroupBy) : 'none'
   })
   const [bulk, setBulk] = useState<Bulk | null>(null)
+  // 今日のケアの一覧を開いておくか (畳むと見出しの 1 行だけになる)
+  const [dueOpen, setDueOpen] = useState(() => localStorage.getItem('homeDue') !== '0')
   const picking = bulk?.step === 'plants'
   const t = today()
   const weather = useWeather(t)
@@ -383,8 +385,20 @@ export function Home() {
       )}
 
       {dueNow.length > 0 && !picking && (
-        <section className="card due">
-          {dueNow.map(({ p, types, due }) => (
+        <section className={`card due ${dueOpen ? '' : 'folded'}`}>
+          <button
+            className="due-head"
+            aria-expanded={dueOpen}
+            onClick={() => {
+              localStorage.setItem('homeDue', dueOpen ? '0' : '1')
+              setDueOpen(!dueOpen)
+            }}
+          >
+            <b>今日のケア</b>
+            <span>{dueNow.length}件</span>
+            {dueOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+          {dueOpen && dueNow.map(({ p, types, due }) => (
             <div className="due-row" key={p.id}>
               <button className="due-plant" onClick={() => open({ k: 'plant', id: p.id })}>
                 <Photo id={p.photoId} className="thumb sm" />
@@ -410,7 +424,7 @@ export function Home() {
               </div>
             </div>
           ))}
-          {waterDue.length > 1 && (
+          {dueOpen && waterDue.length > 1 && (
             <button className="btn ghost full" onClick={() => record(waterDue, 'water')}>
               <Check size={16} /> {waterDue.length}株まとめて水やり済みにする
             </button>

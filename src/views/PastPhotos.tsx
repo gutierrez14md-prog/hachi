@@ -1,4 +1,4 @@
-import { ImagePlus, X } from 'lucide-react'
+import { ImagePlus, RotateCw, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../ctx'
 import { db, newId } from '../db'
@@ -8,7 +8,8 @@ import { savePhoto } from '../lib/photo'
 import { DateInput, Sheet } from '../parts'
 import { PlantPick } from './PlantPick'
 
-type Item = { key: string; file: File; url: string; date: string }
+/** turns = 右へ 90° 回す回数 (保存するときに、その向きで書き出す) */
+type Item = { key: string; file: File; url: string; date: string; turns: number }
 
 /** このアプリを使い始める前の写真を、まとめて生長記録に入れる (ほかのアプリからの移行用) */
 export function PastPhotos(props: { plantId?: string }) {
@@ -25,7 +26,7 @@ export function PastPhotos(props: { plantId?: string }) {
 
   const add = async (files: File[]) => {
     const added = await Promise.all(
-      files.map(async (file) => ({ key: newId(), file, url: URL.createObjectURL(file), date: await photoDate(file) })),
+      files.map(async (file) => ({ key: newId(), file, url: URL.createObjectURL(file), date: await photoDate(file), turns: 0 })),
     )
     setItems((cur) => [...cur, ...added].sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999')))
   }
@@ -37,7 +38,7 @@ export function PastPhotos(props: { plantId?: string }) {
   const save = async () => {
     setBusy(true)
     for (const item of items) {
-      const photoId = await savePhoto(item.file)
+      const photoId = await savePhoto(item.file, item.turns)
       await db.journal.put({ id: newId(), plantId, date: item.date, text: '', photoId, past: true, at: Date.now() })
     }
     toast(`過去の写真を ${items.length} 枚追加しました`)
@@ -73,9 +74,16 @@ export function PastPhotos(props: { plantId?: string }) {
       <div className="past-list">
         {items.map((item) => (
           <div className="past-item" key={item.key}>
-            <img src={item.url} alt="" />
+            <img src={item.url} alt="" style={{ transform: `rotate(${item.turns * 90}deg)` }} />
             {/* 消す × は付けない (隣に「写真を外す」の × があって紛らわしいため)。空にするのは、カレンダーのリセットで */}
             <DateInput max={today()} value={item.date} aria-label="撮影日" onChange={(date) => setItems((cur) => cur.map((i) => (i.key === item.key ? { ...i, date } : i)))} />
+            <button
+              className="icon-btn muted"
+              onClick={() => setItems((cur) => cur.map((i) => (i.key === item.key ? { ...i, turns: i.turns + 1 } : i)))}
+              aria-label="右に回転"
+            >
+              <RotateCw size={16} />
+            </button>
             <button className="icon-btn muted" onClick={() => drop(item)} aria-label="この写真を外す">
               <X size={16} />
             </button>

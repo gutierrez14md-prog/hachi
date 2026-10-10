@@ -1,8 +1,8 @@
-import { Camera, Wand2, X } from 'lucide-react'
+import { Camera, RotateCw, Wand2, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useApp } from './ctx'
 import { db } from './db'
-import { savePhoto } from './lib/photo'
+import { rotatePhoto, savePhoto } from './lib/photo'
 import type { Plant } from './types'
 import { BackdropStudio } from './views/BackdropStudio'
 
@@ -82,9 +82,14 @@ export function PhotoPicker({ id, onChange }: { id?: string; onChange: (id: stri
         />
       </label>
       {id && (
-        <button type="button" className="btn ghost sm preset" onClick={() => setStudio(true)}>
-          <Wand2 size={15} /> 背景を変える
-        </button>
+        <div className="picker-acts">
+          <button type="button" className="btn ghost sm" onClick={async () => onChange(await rotatePhoto(id))}>
+            <RotateCw size={15} /> 回転
+          </button>
+          <button type="button" className="btn ghost sm" onClick={() => setStudio(true)}>
+            <Wand2 size={15} /> 背景を変える
+          </button>
+        </div>
       )}
       {studio && id && (
         <BackdropStudio
@@ -126,6 +131,17 @@ export function PhotosPicker({ ids, onChange }: { ids: string[]; onChange: (ids:
             </button>
             <button type="button" className="shot-btn wand" onClick={() => setStudio(id)} aria-label="背景を変える">
               <Wand2 size={14} />
+            </button>
+            <button
+              type="button"
+              className="shot-btn turn"
+              aria-label="右に回転"
+              onClick={async () => {
+                const next = await rotatePhoto(id)
+                onChange(ids.map((x) => (x === id ? next : x)))
+              }}
+            >
+              <RotateCw size={14} />
             </button>
           </div>
         ))}
