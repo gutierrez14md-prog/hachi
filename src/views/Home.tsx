@@ -513,42 +513,39 @@ export function Home() {
         </button>
       )}
 
-      {locations.length > 0 && (
-        <div className="chips scroll">
-          <button className={`chip ${!loc ? 'on' : ''}`} onClick={() => setLoc('')}>
-            すべて
-          </button>
-          {locations.map((l) => (
-            <button key={l} className={`chip ${loc === l ? 'on' : ''}`} onClick={() => setLoc(loc === l ? '' : l)}>
-              {l}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {usedGroups.length > 0 && (
-        <div className="chips scroll">
-          <button className={`chip ${!grp ? 'on' : ''}`} onClick={() => setGrp('')}>
-            全分類
-          </button>
-          {usedGroups.map((g) => (
-            <button key={g.id} className={`chip ${grp === g.id ? 'on' : ''}`} onClick={() => setGrp(grp === g.id ? '' : g.id)}>
-              {g.name}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {usedMethods.length > 1 && (
-        <div className="chips scroll">
-          <button className={`chip ${!method ? 'on' : ''}`} onClick={() => setMethod('')}>
-            全方法
-          </button>
-          {usedMethods.map((m) => (
-            <button key={m} className={`chip ${method === m ? 'on' : ''}`} onClick={() => setMethod(method === m ? '' : m)}>
-              {METHODS[m].label}
-            </button>
-          ))}
+      {/* 絞り込み: 場所・分類・栽培方法を 1 行に並べ、押すと候補が出る。絞り込んでいる欄は色が変わる */}
+      {(locations.length > 0 || usedGroups.length > 0 || usedMethods.length > 1) && (
+        <div className="filters">
+          {locations.length > 0 && (
+            <select className={loc ? 'on' : ''} value={loc} onChange={(e) => setLoc(e.target.value)} aria-label="場所で絞り込む">
+              <option value="">場所</option>
+              {locations.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </select>
+          )}
+          {usedGroups.length > 0 && (
+            <select className={grp ? 'on' : ''} value={grp} onChange={(e) => setGrp(e.target.value)} aria-label="分類で絞り込む">
+              <option value="">分類</option>
+              {usedGroups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          )}
+          {usedMethods.length > 1 && (
+            <select className={method ? 'on' : ''} value={method} onChange={(e) => setMethod(e.target.value)} aria-label="栽培方法で絞り込む">
+              <option value="">栽培方法</option>
+              {usedMethods.map((m) => (
+                <option key={m} value={m}>
+                  {METHODS[m].label}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       )}
 

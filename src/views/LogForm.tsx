@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { ALL_TYPES, CARE, careVar } from '../care'
 import { useApp } from '../ctx'
 import { today } from '../lib/date'
-import { DateInput, Field, Sheet } from '../parts'
+import { DateInput, Field, Photo, SciName, Sheet } from '../parts'
 import type { CareType } from '../types'
 import { PlantPick } from './PlantPick'
 
 export function LogForm(props: { plantId?: string; type?: CareType; date?: string }) {
-  const { plants, record, close } = useApp()
+  const { plants, allPlants, record, close } = useApp()
+  // 植物の詳細から開いたときは、その株に決まっているので、ほかの株の候補は出さない
+  const fixed = props.plantId ? allPlants.find((p) => p.id === props.plantId) : undefined
   const [sel, setSel] = useState<string[]>(props.plantId ? [props.plantId] : [])
   // 水やりと液肥のように、同じ日にまとめてやったケアを一度に記録できる
   const [types, setTypes] = useState<CareType[]>([props.type ?? 'water'])
@@ -48,7 +50,22 @@ export function LogForm(props: { plantId?: string; type?: CareType; date?: strin
         })}
       </div>
 
-      <PlantPick multi plants={plants} value={sel} onChange={setSel} />
+      {fixed ? (
+        <div className="field">
+          <span className="field-l">植物</span>
+          <div className="pick-list">
+            <div className="pick-row">
+              <Photo id={fixed.photoId} className="thumb sm" />
+              <span className="pick-text">
+                <b className="pn">{fixed.name}</b>
+                <SciName plant={fixed} />
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <PlantPick multi plants={plants} value={sel} onChange={setSel} />
+      )}
 
       <Field label="日付">
         <DateInput value={date} max={today()} onChange={setDate} aria-label="日付" />

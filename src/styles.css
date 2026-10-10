@@ -830,6 +830,32 @@ input[type='number'] {
   flex: 1;
   min-width: 0;
 }
+/* ホームの絞り込み (場所・分類・栽培方法)。選んでいないときは項目名、選ぶとその値が出て色が変わる */
+.filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.filters select {
+  flex: 1;
+  min-width: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 6px 26px 6px 12px;
+  border-radius: 999px;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23808a84' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+      right 10px center / 12px no-repeat,
+    var(--surface);
+}
+.filters select.on {
+  border-color: var(--ink);
+  background-color: var(--ink);
+  color: var(--bg);
+  font-weight: 600;
+}
 .btn.bulk-start {
   margin-bottom: 12px;
 }
