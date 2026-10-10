@@ -23,8 +23,8 @@ export interface Schedule {
 
 export type CareSettings = Record<SchedType, Schedule>
 
-/** 栽培方法: 土植え / 着生 / 腰水 / 水耕栽培 */
-export type Method = 'soil' | 'mount' | 'bottom' | 'hydro'
+/** 栽培方法: 土植え / 水苔 / 着生 / 腰水 / 水耕栽培 */
+export type Method = 'soil' | 'moss' | 'mount' | 'bottom' | 'hydro'
 
 export interface Member {
   name: string

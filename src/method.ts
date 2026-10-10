@@ -8,6 +8,7 @@ import type { CareType, Method } from './types'
  */
 export const METHODS: Record<Method, { label: string; water: string }> = {
   soil: { label: '土植え', water: '水やり' },
+  moss: { label: '水苔', water: '水やり' },
   mount: { label: '着生', water: '水やり' },
   bottom: { label: '腰水', water: '水足し' },
   hydro: { label: '水耕栽培', water: '水替え' },

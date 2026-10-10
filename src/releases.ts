@@ -14,6 +14,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '1.12.4',
+    date: '2026-10-10',
+    items: ['栽培方法に「水苔」を追加'],
+  },
+  {
     version: '1.12.3',
     date: '2026-10-10',
     items: ['ホームの絞り込み（場所・分類・栽培方法）を 1 行にまとめ、押して候補を選ぶ形に変更', '植物の詳細から開くケアの記録で、ほかの植物の候補を出さないよう変更'],
