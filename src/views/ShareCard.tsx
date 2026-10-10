@@ -250,6 +250,7 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
 
   return (
     <Sheet
+      form
       title="投稿用の画像"
       action={
         <>

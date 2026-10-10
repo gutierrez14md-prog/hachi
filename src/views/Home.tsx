@@ -9,9 +9,10 @@ import { describe, useWeather } from '../lib/weather'
 import { DueTag, Photo, PotIcon, SciName, SciText } from '../parts'
 import type { CareType, Plant, SchedType } from '../types'
 
-type Sort = 'water' | 'name' | 'sci' | 'new' | 'days-desc' | 'days-asc' | 'price-desc' | 'price-asc'
+type Sort = 'water' | 'care' | 'name' | 'sci' | 'new' | 'days-desc' | 'days-asc' | 'price-desc' | 'price-asc'
 const SORTS: [Sort, string][] = [
   ['water', '水やりが近い順'],
+  ['care', 'ケアが近い順'],
   ['name', '名前順'],
   ['sci', '学名順'],
   ['days-desc', '育てている日数が長い順'],
@@ -46,6 +47,33 @@ const GROUP_BYS: [GroupBy, string][] = [
  */
 type Bulk = { step: 'types' | 'plants'; types: CareType[]; sel: string[] }
 
+type Due = Record<SchedType, string | null>
+
+/** 予定がいちばん近いケア (水やり・肥料・活力剤のうち)。予定が 1 つも無ければ null */
+const nearest = (due: Due): SchedType | null =>
+  SCHED.reduce<SchedType | null>((best, s) => (due[s] && (!best || due[s]! < due[best]!) ? s : best), null)
+
+/**
+ * 今日やる (または過ぎている) ケアを、種類ごとの小さな丸いアイコンで並べる。
+ * 文字を増やさずに「何が必要か」を見せるためのもの。過ぎているケアは赤い縁で囲む
+ */
+function DueIcons({ p, due, t, size = 11, className = '' }: { p: Plant; due: Due; t: string; size?: number; className?: string }) {
+  const types = SCHED.filter((s) => due[s] && due[s]! <= t)
+  if (!types.length) return null
+  return (
+    <span className={`due-ics ${className}`} role="img" aria-label={types.map((s) => careLabel(s, p)).join('・')}>
+      {types.map((s) => {
+        const Icon = careIcon(s, p)
+        return (
+          <span key={s} className={`due-ic ${urgency(due[s], t)}`} style={careVar(s)}>
+            <Icon size={size} strokeWidth={2.5} />
+          </span>
+        )
+      })}
+    </span>
+  )
+}
+
 /** 育て始めた日: 入手日があればそれ、無ければ登録した日 */
 const since = (p: Plant) => p.purchaseDate || p.createdDay
 
@@ -75,7 +103,7 @@ export function Home() {
   const rows = useMemo(
     () =>
       plants.map((p, i) => {
-        const due = {} as Record<SchedType, string | null>
+        const due = {} as Due
         for (const s of SCHED) due[s] = nextDue(p, s, logsOf(p.id))
         return { p, due, i }
       }),
@@ -127,8 +155,16 @@ export function Home() {
         if (x == null || y == null) return (x == null ? 1 : 0) - (y == null ? 1 : 0) || byName(a, b)
         return (sort === 'price-desc' ? y - x : x - y) || byName(a, b)
       }
-      return (a.due.water ?? '9999').localeCompare(b.due.water ?? '9999') || a.p.name.localeCompare(b.p.name, 'ja')
+      // ケアが近い順: 水やり・肥料・活力剤のうち、いちばん近い予定で比べる (水やりを済ませても、肥料が残っていれば上に残る)
+      const key = (due: Due) => (sort === 'care' ? due[nearest(due) ?? 'water'] : due.water) ?? '9999'
+      return key(a.due).localeCompare(key(b.due)) || byName(a, b)
     })
+
+  // 行に出す予定: 今日やるものがあればそのうちいちばん古いもの。無ければ、ケアが近い順ではいちばん近いケア、ほかでは水やり
+  const lead = (due: Due): SchedType | null => {
+    const s = nearest(due)
+    return s && (due[s]! <= t || sort === 'care') ? s : due.water ? 'water' : null
+  }
 
   // 日数・金額・追加日で並べているときは、その値を行に出す (ふだんは出していない項目なので)
   const sortKey: ((p: Plant) => string) | null = sort.startsWith('days')
@@ -139,8 +175,8 @@ export function Home() {
         ? (p) => `${fmtFull(p.createdDay)} 追加`
         : null
 
-  // その株でいちばん急ぎのケア (水やり・肥料・活力剤のどれか)。タイルとミニの右上の丸に使う
-  const worst = (due: Record<SchedType, string | null>): Urgency => {
+  // その株でいちばん急ぎのケア (水やり・肥料・活力剤のどれか)。タイルとミニの読み上げに使う
+  const worst = (due: Due): Urgency => {
     const all = SCHED.map((s) => urgency(due[s], t))
     return all.includes('over') ? 'over' : all.includes('today') ? 'today' : ''
   }
@@ -182,6 +218,7 @@ export function Home() {
         <ul className="plants">
           {items.map(({ p, due }) => {
             const w = due.water
+            const s = lead(due)
             const late = !!w && w <= t
             const WaterIcon = careIcon('water', p)
             return (
@@ -199,12 +236,16 @@ export function Home() {
                           {' ・ '}
                         </>
                       )}
-                      {w ? (
+                      {!s ? (
+                        `${careLabel('water', p)}の予定なし`
+                      ) : due[s]! <= t ? (
                         <>
-                          {careLabel('water', p)} <DueTag due={w} />
+                          <DueIcons p={p} due={due} t={t} /> <DueTag due={due[s]!} />
                         </>
                       ) : (
-                        `${careLabel('water', p)}の予定なし`
+                        <>
+                          {careLabel(s, p)} <DueTag due={due[s]!} />
+                        </>
                       )}
                     </small>
                   </span>
@@ -225,22 +266,23 @@ export function Home() {
           })}
         </ul>
       )
-    // タイル (3 列) とミニ (5 列): 写真を並べて、名前を下に重ねる。今日ケアが必要な株には、右上に水色の印
+    // タイル (3 列) とミニ (5 列): 写真を並べて、名前を下に重ねる。今日ケアが必要な株には、右上にそのケアのアイコン
     if (view === 'tile' || view === 'mini')
       return (
         <ul className={`tiles ${view}`}>
           {items.map(({ p, due }) => {
-            const w = due.water
+            const s = lead(due)
             const lv = worst(due)
+            const what = SCHED.filter((x) => due[x] && due[x]! <= t).map((x) => careLabel(x, p)).join('・')
             return (
               <li key={p.id} className={isOn(p) ? 'picked' : ''}>
-                <button onClick={() => tap(p)} aria-label={`${p.name}${lv === 'over' ? '（ケアの予定を過ぎています）' : lv ? '（今日ケアが必要）' : ''}`} {...pressed(p)}>
+                <button onClick={() => tap(p)} aria-label={`${p.name}${lv === 'over' ? `（${what}の予定を過ぎています）` : lv ? `（今日${what}が必要）` : ''}`} {...pressed(p)}>
                   <Photo id={p.photoId} className="tile-img" />
                   <span className="tile-text">
                     <b>{p.name}</b>
-                    {view === 'tile' && <small>{sortKey ? sortKey(p) : w ? <DueTag due={w} /> : ''}</small>}
+                    {view === 'tile' && <small>{sortKey ? sortKey(p) : s ? <DueTag due={due[s]!} /> : ''}</small>}
                   </span>
-                  {lv && <i className={`tile-due ${lv}`} />}
+                  <DueIcons p={p} due={due} t={t} size={view === 'mini' ? 9 : 11} className="on-tile" />
                   {mark(p)}
                 </button>
               </li>
@@ -285,13 +327,16 @@ export function Home() {
     return (
       <ul className="rows">
         {items.map(({ p, due }) => {
-          const w = due.water
+          const s = lead(due)
           return (
             <li key={p.id} className={isOn(p) ? 'picked' : ''}>
               <button onClick={() => tap(p)} {...pressed(p)}>
                 {mark(p)}
                 <b>{p.name}</b>
-                <span>{sortKey ? sortKey(p) : w ? <DueTag due={w} /> : '—'}</span>
+                <span>
+                  <DueIcons p={p} due={due} t={t} />
+                  {sortKey ? sortKey(p) : s ? <DueTag due={due[s]!} /> : '—'}
+                </span>
               </button>
             </li>
           )

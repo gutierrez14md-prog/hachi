@@ -262,11 +262,12 @@ export function PhotosPicker({
 /**
  * 重ねて開く画面の枠。画面の端から少し離した角丸のカードで、action (保存など) は
  * スクロールせず常に下に見える。背景のタップと × で閉じる。
+ * form = 入力する画面。うっかり外側に触れて入力が消えないよう、背景のタップでは閉じない (× か保存で閉じる)
  */
-export function Sheet({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
+export function Sheet({ title, action, form, children }: { title: string; action?: ReactNode; form?: boolean; children: ReactNode }) {
   const { close } = useApp()
   return (
-    <div className="backdrop" onClick={(e) => e.target === e.currentTarget && close()}>
+    <div className="backdrop" onClick={(e) => !form && e.target === e.currentTarget && close()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title || undefined}>
         <button className="sheet-x" onClick={() => close()} aria-label="閉じる">
           <X size={16} strokeWidth={2.2} />

@@ -1,26 +1,21 @@
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db } from '../db'
-import { addDays, fmtDay, toKey, today } from '../lib/date'
+import { addDays, fmtDay, today } from '../lib/date'
 import { projected } from '../lib/schedule'
 import { careIcon, careLabel } from '../method'
 import { Photo } from '../parts'
-import type { CareLog, CareType, Plant, SchedType } from '../types'
-
-const DOW = ['日', '月', '火', '水', '木', '金', '土']
+import type { CareLog, Plant, SchedType } from '../types'
+import { MonthCal, monthRange, thisMonth } from './MonthCal'
 
 export function CalendarView() {
   const { plants, allPlants, logs, logsOf, open, record } = useApp()
   const t = today()
-  const [ym, setYm] = useState(() => ({ y: new Date().getFullYear(), m: new Date().getMonth() }))
+  const [ym, setYm] = useState(thisMonth)
   const [sel, setSel] = useState(t)
-
-  const first = toKey(new Date(ym.y, ym.m, 1))
-  const last = toKey(new Date(ym.y, ym.m + 1, 0))
-  const lead = new Date(ym.y, ym.m, 1).getDay()
-  const days = Array.from({ length: Number(last.slice(8)) }, (_, i) => addDays(first, i))
+  const { first, last } = monthRange(ym)
   // 記録済みはアーカイブした株のぶんも出す (予定は育てている株だけ)
   const plantOf = useMemo(() => new Map(allPlants.map((p) => [p.id, p])), [allPlants])
 
@@ -38,70 +33,13 @@ export function CalendarView() {
     return { done, plan }
   }, [plants, logs, logsOf, plantOf, first, last])
 
-  const move = (n: number) => {
-    const d = new Date(ym.y, ym.m + n, 1)
-    setYm({ y: d.getFullYear(), m: d.getMonth() })
-  }
-  const types = (list: { type: CareType }[] | undefined) => [...new Set(list?.map((x) => x.type))].slice(0, 4)
-
   const selDone = done.get(sel) ?? []
   const selPlan = plan.get(sel) ?? []
   const heading = sel === t ? '今日' : sel === addDays(t, 1) ? '明日' : fmtDay(sel)
 
   return (
     <>
-      <header className="cal-head">
-        <button className="sq" onClick={() => move(-1)} aria-label="前の月">
-          <ChevronLeft size={20} />
-        </button>
-        <div className="row">
-          <h1>
-            {ym.y}年{ym.m + 1}月
-          </h1>
-          {!t.startsWith(first.slice(0, 7)) && (
-            <button
-              className="chip"
-              onClick={() => {
-                setYm({ y: new Date().getFullYear(), m: new Date().getMonth() })
-                setSel(t)
-              }}
-            >
-              今日
-            </button>
-          )}
-        </div>
-        <button className="sq" onClick={() => move(1)} aria-label="次の月">
-          <ChevronRight size={20} />
-        </button>
-      </header>
-
-      <section className="card cal">
-        {DOW.map((d) => (
-          <div key={d} className="cal-dow">
-            {d}
-          </div>
-        ))}
-        {Array.from({ length: lead }, (_, i) => (
-          <div key={`b${i}`} />
-        ))}
-        {days.map((d) => (
-          <button
-            key={d}
-            className={`cal-day ${d === sel ? 'sel' : ''} ${d === t ? 'today' : ''}`}
-            onClick={() => setSel(d)}
-          >
-            <span className="cal-num">{Number(d.slice(8))}</span>
-            <span className="dots">
-              {types(done.get(d)).map((ty) => (
-                <i key={ty} className="dot" style={careVar(ty)} />
-              ))}
-              {types(plan.get(d)).map((ty) => (
-                <i key={`p${ty}`} className="dot plan" style={careVar(ty)} />
-              ))}
-            </span>
-          </button>
-        ))}
-      </section>
+      <MonthCal ym={ym} setYm={setYm} sel={sel} setSel={setSel} done={(d) => done.get(d)} plan={(d) => plan.get(d)} />
 
       <div className="legend">
         <span>

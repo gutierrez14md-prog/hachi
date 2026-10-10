@@ -1058,18 +1058,37 @@ input[type='number'] {
 .tiles.mini .tile-text b {
   font-size: 10px;
 }
-.tile-due {
+/* 今日やる (または過ぎている) ケアを示す、種類ごとの小さな丸いアイコン。過ぎているケアは赤い縁で囲む */
+.due-ics {
+  display: inline-flex;
+  gap: 5px;
+  margin-right: 3px;
+  vertical-align: -4px;
+}
+.due-ics .due-ic {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--c);
+  color: #fff;
+}
+.due-ics .due-ic.over {
+  box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 3px var(--over-bg);
+}
+/* 写真の上 (タイルの右上) では、テーマに関係なく白い縁を付ける */
+.due-ics.on-tile {
   position: absolute;
   top: 6px;
   right: 6px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--today-dot);
-  box-shadow: 0 0 0 2px #fff;
+  margin: 0;
 }
-.tile-due.over {
-  background: #c8463b;
+.due-ics.on-tile .due-ic {
+  box-shadow: 0 0 0 1.5px #fff;
+}
+.due-ics.on-tile .due-ic.over {
+  box-shadow: 0 0 0 1.5px #fff, 0 0 0 3.5px #c8463b;
 }
 /* 写真の上では、テーマに関係なく明るい地のバッジにする */
 .tile-text .urg {
@@ -1084,12 +1103,17 @@ input[type='number'] {
   background: #c8463b;
   color: #fff;
 }
-.tiles.mini .tile-due {
+.tiles.mini .due-ics {
   top: 4px;
   right: 4px;
-  width: 8px;
-  height: 8px;
-  box-shadow: 0 0 0 1.5px #fff;
+  gap: 4px;
+}
+.tiles.mini .due-ic {
+  width: 14px;
+  height: 14px;
+}
+.tiles.mini .due-ic.over {
+  box-shadow: 0 0 0 1px #fff, 0 0 0 2.5px #c8463b;
 }
 /* コンパクト */
 .rows {
@@ -1132,6 +1156,27 @@ input[type='number'] {
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 12px;
+}
+/* ほかの画面の中に置くカレンダー (植物の詳細) */
+.cal-head.sub {
+  margin-bottom: 8px;
+}
+.cal-head.sub h4 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.legend.sub {
+  margin-bottom: 12px;
+}
+/* 選んだ日の見出しと、その日に記録するボタン */
+.cal-sel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+}
+.cal-sel .card-t {
+  padding: 0;
 }
 .card.cal {
   display: grid;

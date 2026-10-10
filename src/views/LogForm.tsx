@@ -23,6 +23,7 @@ export function LogForm(props: { plantId?: string; type?: CareType; date?: strin
 
   return (
     <Sheet
+      form
       title="ケアを記録"
       action={
         <button className="btn primary sm" disabled={!sel.length || !types.length || !date} onClick={save}>

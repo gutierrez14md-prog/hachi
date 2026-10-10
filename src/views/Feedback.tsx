@@ -91,6 +91,7 @@ export function Feedback() {
 
   return (
     <Sheet
+      form
       title="リクエストを送る"
       action={
         <button className="btn primary sm" disabled={!message.trim() || busy || loading} onClick={send}>

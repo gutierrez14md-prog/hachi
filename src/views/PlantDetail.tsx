@@ -7,6 +7,7 @@ import { fmtDay, fmtFull, today } from '../lib/date'
 import { intervalOn, isSnoozed, lastDone, nextDue } from '../lib/schedule'
 import { careIcon, careLabel, METHODS } from '../method'
 import { DueTag, Photo, SciName, Sheet } from '../parts'
+import { PlantCalendar } from './PlantCalendar'
 import { JournalCard, sortJournal } from './Timeline'
 
 export function PlantDetail({ id }: { id: string }) {
@@ -128,6 +129,8 @@ export function PlantDetail({ id }: { id: string }) {
           })}
         </section>
       )}
+
+      <PlantCalendar plant={p} logs={logs} />
 
       {!archived && (
         <>

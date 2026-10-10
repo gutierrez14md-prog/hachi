@@ -114,7 +114,7 @@ export function PhotoAdjust({
 
   const shown = clamp(v)
   return (
-    <div className="backdrop top" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="backdrop top">
       <div className="sheet" role="dialog" aria-modal="true" aria-label="写真の位置と大きさ">
         <button className="sheet-x" onClick={onClose} aria-label="閉じる">
           <X size={16} strokeWidth={2.2} />

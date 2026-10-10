@@ -44,6 +44,7 @@ export function JournalForm(props: { plantId?: string; id?: string }) {
 
   return (
     <Sheet
+      form
       title={existing ? '生長記録を編集' : '生長記録'}
       action={
         <button className="btn primary sm" disabled={!ok} onClick={save}>

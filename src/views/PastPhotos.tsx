@@ -47,6 +47,7 @@ export function PastPhotos(props: { plantId?: string }) {
 
   return (
     <Sheet
+      form
       title="過去の写真を追加"
       action={
         <button className="btn primary sm" disabled={!plantId || !items.length || busy} onClick={save}>

@@ -58,7 +58,7 @@ export function BackdropStudio({ photoId, onDone, onClose }: { photoId: string; 
   }
 
   return (
-    <div className="backdrop top" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="backdrop top">
       <div className="sheet" role="dialog" aria-modal="true" aria-label="背景を変える">
         <button className="sheet-x" onClick={onClose} aria-label="閉じる">
           <X size={16} strokeWidth={2.2} />

@@ -148,6 +148,7 @@ export function PlantForm({ id }: { id?: string }) {
 
   return (
     <Sheet
+      form
       title={existing ? '植物を編集' : '植物を追加'}
       action={
         <button className="btn primary sm" disabled={!f.name.trim() || !hasInterval(f.care.water)} onClick={save}>

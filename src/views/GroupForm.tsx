@@ -44,6 +44,7 @@ export function GroupForm({ id }: { id?: string }) {
 
   return (
     <Sheet
+      form
       title={existing ? '分類を編集' : '分類を追加'}
       action={
         <button className="btn primary sm" disabled={!f.name.trim()} onClick={save}>
