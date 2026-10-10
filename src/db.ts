@@ -54,6 +54,12 @@ class HachiDB extends Dexie {
         .filter((p: Plant) => p.groupId === 'g-tillandsia')
         .modify(set)
     })
+    // v5: はじめから入っている分類に「多肉植物」を足した。すでに使っている端末にも入れる (同じ名前の分類を自分で作っていれば足さない)
+    this.version(5).upgrade(async (tx) => {
+      const fresh = defaultGroups().find((g) => g.id === 'g-succulent')!
+      const groups = (await tx.table('groups').toArray()) as Group[]
+      if (!groups.some((g) => g.id === fresh.id || g.name === fresh.name)) await tx.table('groups').add(fresh)
+    })
     this.on('populate', (tx) => tx.table('groups').bulkAdd(defaultGroups()))
   }
 }

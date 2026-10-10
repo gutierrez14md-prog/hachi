@@ -14,6 +14,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '1.12.2',
+    date: '2026-10-10',
+    items: ['はじめから入っている分類に「多肉植物」を追加'],
+  },
+  {
     version: '1.12.1',
     date: '2026-10-10',
     items: ['ケアの「今日」をオレンジ、「超過」を赤のラベルで表示するよう変更'],
