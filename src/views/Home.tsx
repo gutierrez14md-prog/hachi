@@ -1,10 +1,11 @@
-import { AlignJustify, Archive, BookOpen, CalendarClock, Check, ChevronDown, ChevronUp, Droplets, Grid2x2, Grid3x3, LayoutList, ListChecks, MapPin, Search, X } from 'lucide-react'
+import { AlignJustify, Archive, BookOpen, Download, CalendarClock, Check, ChevronDown, ChevronUp, Droplets, Grid2x2, Grid3x3, LayoutList, ListChecks, MapPin, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { addDays, diffDays, fmtDay, fmtFull, fromKey, today, urgency, type Urgency } from '../lib/date'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import { byWater, heads, nextDue } from '../lib/schedule'
+import { exportBackup, lastBackup } from '../lib/backup'
 import { describe, useWeather } from '../lib/weather'
 import { DueTag, Photo, PotIcon, SciName, SciText } from '../parts'
 import { archivedOf } from './Archive'
@@ -75,6 +76,10 @@ function DueIcons({ p, due, t, size = 11, className = '' }: { p: Plant; due: Due
   )
 }
 
+/** バックアップを知らせる間隔 (日)。書き出してから、または「あとで」を押してからの日数 */
+const BACKUP_EVERY = 30
+const BACKUP_LATER = 7
+
 /** 育て始めた日: 入手日があればそれ、無ければ登録した日 */
 const since = (p: Plant) => p.purchaseDate || p.createdDay
 
@@ -97,6 +102,19 @@ export function Home() {
   // 今日のケアの一覧を開いておくか (畳むと見出しの 1 行だけになる)
   const [dueOpen, setDueOpen] = useState(() => localStorage.getItem('homeDue') !== '0')
   const picking = !!bulk
+  // バックアップのお知らせ: データはこの端末の中にしか無く、ホーム画面のアイコンを消すとすべて消えるので、
+  // しばらく書き出していなければ知らせる。数えはじめは、最後に書き出した日 (無ければ最初の株を登録した日)
+  const [backupTick, setBackupTick] = useState(0)
+  const backupDue = useMemo(() => {
+    if (settings.backupRemind === false || !allPlants.length) return null
+    const today_ = today()
+    const later = localStorage.getItem('backupLater')
+    if (later && diffDays(today_, later) < BACKUP_LATER) return null
+    const last = lastBackup()
+    const from = last ?? allPlants.reduce((d, p) => (p.createdDay < d ? p.createdDay : d), today_)
+    return diffDays(today_, from) >= BACKUP_EVERY ? { last } : null
+    // backupTick: 書き出した / あとで を押したあとに数え直す
+  }, [settings.backupRemind, allPlants, backupTick])
   const t = today()
   const weather = useWeather(t)
   const sky = weather && describe(weather.code)
@@ -449,6 +467,38 @@ export function Home() {
         <section className="hero-card">
           <div className="hero-stats">{stats}</div>
           <p className="eyebrow">{fmtDay(t)}</p>
+        </section>
+      )}
+
+      {backupDue && !picking && (
+        <section className="card nudge">
+          <p>
+            <b>バックアップを取りましょう</b>
+            <small>
+              {backupDue.last ? `前回の書き出しから${diffDays(t, backupDue.last)}日たちました。` : 'まだ書き出していません。'}
+              データはこの端末の中だけにあり、ホーム画面のアイコンを消すと、写真も記録もすべて消えます。
+            </small>
+          </p>
+          <div className="row gap">
+            <button
+              className="btn primary sm"
+              onClick={async () => {
+                await exportBackup()
+                setBackupTick((n) => n + 1)
+              }}
+            >
+              <Download size={15} /> 書き出す
+            </button>
+            <button
+              className="btn ghost sm"
+              onClick={() => {
+                localStorage.setItem('backupLater', t)
+                setBackupTick((n) => n + 1)
+              }}
+            >
+              あとで
+            </button>
+          </div>
         </section>
       )}
 

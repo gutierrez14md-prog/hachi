@@ -9,6 +9,10 @@ const toDataUrl = (blob: Blob) =>
     r.readAsDataURL(blob)
   })
 
+const LAST = 'lastBackup'
+/** 最後にバックアップを書き出した日 (YYYY-MM-DD)。この端末で書き出したことが無ければ null */
+export const lastBackup = (): string | null => localStorage.getItem(LAST)
+
 /** 全データ (写真込み) を 1 つの JSON ファイルとしてダウンロードする */
 export async function exportBackup() {
   const photos = await db.photos.toArray()
@@ -27,6 +31,7 @@ export async function exportBackup() {
   a.href = url
   a.download = `hachi-backup-${today()}.json`
   a.click()
+  localStorage.setItem(LAST, today())
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 

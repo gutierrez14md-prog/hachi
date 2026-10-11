@@ -6,10 +6,10 @@ import { applyFont, applyNameFont, applyTheme, FONTS, getFont, getNameFont, getT
 import { db } from '../db'
 import { GUIDE } from '../guide'
 import { VERSION } from '../releases'
-import { exportBackup, importBackup } from '../lib/backup'
+import { exportBackup, importBackup, lastBackup } from '../lib/backup'
 import { enableNotifications, testNotification } from '../lib/reminder'
 import type { Settings } from '../types'
-import { today } from '../lib/date'
+import { fmtFull, today } from '../lib/date'
 import { heads, intervalOn } from '../lib/schedule'
 import { clearPlace, getPlace, locate } from '../lib/weather'
 import { careLabel, METHODS } from '../method'
@@ -19,6 +19,8 @@ import { MonthChips } from './CareEditor'
 export function SettingsView() {
   const { settings, plants, allPlants, groups, logs, journal, toast, open } = useApp()
   const [guideOpen, setGuideOpen] = useState(false)
+  const [themeOpen, setThemeOpen] = useState(false)
+  const [backedUp, setBackedUp] = useState(lastBackup)
   const [fontOpen, setFontOpen] = useState(false)
   const [groupsOpen, setGroupsOpen] = useState(false)
   const spent = allPlants.reduce((sum, p) => sum + (p.purchasePrice ?? 0), 0)
@@ -74,23 +76,31 @@ export function SettingsView() {
         <h1>設定</h1>
       </header>
 
-      <h3 className="sec">テーマ</h3>
-      <div className="themes">
-        {THEMES.map((t) => (
-          <button key={t.id} className={theme === t.id ? 'on' : ''} aria-pressed={theme === t.id} onClick={() => pickTheme(t.id)}>
-            <i style={{ '--a': t.bg, '--b': t.hero } as CSSProperties} />
-            {t.label}
+      {/* テーマ・フォント・分類は場所を取るので、押すまで閉じておく。閉じている間は、いまの選択を右に出す */}
+      <button className="fold first" aria-expanded={themeOpen} onClick={() => setThemeOpen((o) => !o)}>
+        テーマ
+        <span className="fold-side">
+          {theme === 'auto' ? `季節に合わせる（${THEMES.find((t) => t.id === seasonTheme())!.label}）` : THEMES.find((t) => t.id === theme)!.label}
+          <ChevronDown size={18} className={themeOpen ? 'flip' : ''} />
+        </span>
+      </button>
+      {themeOpen && (
+        <div className="themes">
+          {THEMES.map((t) => (
+            <button key={t.id} className={theme === t.id ? 'on' : ''} aria-pressed={theme === t.id} onClick={() => pickTheme(t.id)}>
+              <i style={{ '--a': t.bg, '--b': t.hero } as CSSProperties} />
+              {t.label}
+            </button>
+          ))}
+          {/* 春夏秋冬と、ハロウィン・クリスマスの時期に、自動で色が変わる */}
+          <button className={`wide ${theme === 'auto' ? 'on' : ''}`} aria-pressed={theme === 'auto'} onClick={() => pickTheme('auto')}>
+            季節に合わせる
+            <small>今は「{THEMES.find((t) => t.id === seasonTheme())!.label}」</small>
           </button>
-        ))}
-        {/* 春夏秋冬と、ハロウィン・クリスマスの時期に、自動で色が変わる */}
-        <button className={`wide ${theme === 'auto' ? 'on' : ''}`} aria-pressed={theme === 'auto'} onClick={() => pickTheme('auto')}>
-          季節に合わせる
-          <small>今は「{THEMES.find((t) => t.id === seasonTheme())!.label}」</small>
-        </button>
-      </div>
+        </div>
+      )}
 
-      {/* フォントと分類は場所を取るので、押すまで閉じておく。閉じている間は、いまの選択を右に出す */}
-      <button className="fold" aria-expanded={fontOpen} onClick={() => setFontOpen((o) => !o)}>
+      <button className="fold tight" aria-expanded={fontOpen} onClick={() => setFontOpen((o) => !o)}>
         フォント
         <span className="fold-side">
           {FONTS.find((f) => f.id === font)?.label} / {NAME_FONTS.find((f) => f.id === nameFont)?.label}
@@ -264,8 +274,18 @@ export function SettingsView() {
       <MonthChips value={settings.dormantMonths} onChange={(dormantMonths) => save({ dormantMonths })} />
 
       <h3 className="sec">バックアップ</h3>
+      <p className="warn">
+        <b>ホーム画面のアイコンを消すと、植物・記録・写真がすべて消えます。</b>
+        データはこの端末の中にしかなく、消えたものを戻せるのは、書き出しておいたバックアップだけです。ときどき書き出して、ファイルを残しておいてください。
+      </p>
       <div className="row gap">
-        <button className="btn ghost" onClick={exportBackup}>
+        <button
+          className="btn ghost"
+          onClick={async () => {
+            await exportBackup()
+            setBackedUp(lastBackup())
+          }}
+        >
           <Download size={16} /> 書き出す
         </button>
         <label className="btn ghost">
@@ -288,6 +308,19 @@ export function SettingsView() {
         </label>
       </div>
 
+      <p className="hint">{backedUp ? `最後に書き出した日: ${fmtFull(backedUp)}` : 'この端末では、まだ書き出していません。'}</p>
+      <section className="card">
+        <label className="line">
+          <span className="line-main">
+            <span>
+              <b>バックアップを知らせる</b>
+              <small>30日書き出していないと、ホームに出します</small>
+            </span>
+          </span>
+          <input type="checkbox" className="switch" checked={settings.backupRemind ?? true} onChange={(e) => save({ backupRemind: e.target.checked })} />
+        </label>
+      </section>
+
       <h3 className="sec">このアプリのURL</h3>
       <p className="url-box">{appUrl}</p>
       <div className="row gap">
@@ -300,8 +333,9 @@ export function SettingsView() {
           </button>
         )}
       </div>
-      <p className="hint">
-        ホーム画面に追加し直すときは、先に上の「書き出す」でバックアップを取ってください。iPhone は、ホーム画面のアイコンを消すとデータも消えます。追加し直したあと「読み込む」で、写真も含めて戻せます。
+      <p className="warn">
+        <b>ホーム画面に追加し直す前に、必ず上の「書き出す」でバックアップを取ってください。</b>
+        古いアイコンを消した時点で、中のデータはすべて消えます。追加し直したあと「読み込む」でファイルを選ぶと、写真も含めて戻せます。
       </p>
 
       <button className="fold" onClick={() => open({ k: 'feedback' })}>

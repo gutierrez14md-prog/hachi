@@ -22,7 +22,7 @@
           var now = new Date(), m = now.getMonth() + 1, d = now.getDate()
           t = m === 10 && d >= 25 ? 'halloween' : m === 12 && d >= 15 && d <= 25 ? 'christmas' : m >= 3 && m <= 5 ? 'spring' : m >= 6 && m <= 8 ? 'summer' : m >= 9 && m <= 11 ? 'autumn' : 'winter'
         }
-        var bg = { dark: '#121212', spring: '#f7edf0', summer: '#e8f2f6', autumn: '#f5eee3', winter: '#edf0f5', halloween: '#f0eaf3', christmas: '#edf2ec' }[t]
+        var bg = { dark: '#121212', leaf: '#d3ead0', spring: '#f7d6df', summer: '#cbe7f4', autumn: '#f3d9b8', winter: '#d5dfef', halloween: '#f8d09a', christmas: '#d0e4ce' }[t]
         if (bg) {
           document.documentElement.dataset.theme = t
           document.querySelector('meta[name="theme-color"]').content = bg

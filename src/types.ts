@@ -175,6 +175,8 @@ export interface Settings {
   showSpent?: boolean
   /** ホームのカードに、アーカイブした株数を出すか (入っていなければ出す) */
   showArchived?: boolean
+  /** しばらくバックアップを取っていないとき、ホームで知らせるか (入っていなければ知らせる) */
+  backupRemind?: boolean
   /** 肥料・活力剤を水に混ぜてあげる (水やりを兼ねる)。ケアの設定で、間隔を「水やり何回に 1 回」で選べるようになる */
   careWithWater?: boolean
 }

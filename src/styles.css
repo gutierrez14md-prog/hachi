@@ -48,67 +48,92 @@
   --today-dot: #f0a04a;
   color-scheme: dark;
 }
-/* 季節と行事の色。Light を土台に、地の色・線・上のカードだけを変える。
-   超過 (赤) と今日 (オレンジ) のバッジ、ケアの種類の色は、意味のある色なので Light のまま */
+/* 緑・季節・行事の色。地の色からカードの面まで、その色みで染める (白地に差し色、ではなく)。
+   超過 (赤) と今日 (オレンジ) のバッジ、ケアの種類の色は、意味のある色なので Light のまま。
+   文字と地の明るさの差は、どの組み合わせも 4.5 : 1 以上にしてある */
+:root[data-theme='leaf'] {
+  /* リーフ */
+  --bg: #d3ead0;
+  --surface: #f5fbf3;
+  --surface2: #b8d9b3;
+  --ink: #12301e;
+  --muted: #3d5a45;
+  --line: #a3c99d;
+  --hero: #2a7a47;
+  --hero-ink: #f3fcf1;
+  --danger: #8f2f29;
+}
 :root[data-theme='spring'] {
   /* 春 */
-  --bg: #f7edf0;
-  --surface2: #eedde2;
-  --ink: #3a1f29;
-  --muted: #7a5f68;
-  --line: #e2ccd3;
-  --hero: #8f3a57;
-  --hero-ink: #fdeef2;
+  --bg: #f7d6df;
+  --surface: #fff5f8;
+  --surface2: #f0bfcd;
+  --ink: #4a1529;
+  --muted: #714253;
+  --line: #e5aabb;
+  --hero: #b93a65;
+  --hero-ink: #ffffff;
+  --danger: #8f2f29;
 }
 :root[data-theme='summer'] {
   /* 夏 */
-  --bg: #e8f2f6;
-  --surface2: #d5e6ee;
-  --ink: #10303f;
-  --muted: #54707c;
-  --line: #c1d6e0;
-  --hero: #0f5f7a;
-  --hero-ink: #e8f6fa;
+  --bg: #cbe7f4;
+  --surface: #f3fbff;
+  --surface2: #aed8ec;
+  --ink: #0b3347;
+  --muted: #35596b;
+  --line: #98c9e0;
+  --hero: #0a759a;
+  --hero-ink: #ffffff;
+  --danger: #8f2f29;
 }
 :root[data-theme='autumn'] {
   /* 秋 */
-  --bg: #f5eee3;
-  --surface2: #e9dcc9;
-  --ink: #33231a;
-  --muted: #75624f;
-  --line: #dccbb3;
-  --hero: #8a3b1c;
-  --hero-ink: #fbeee0;
+  --bg: #f3d9b8;
+  --surface: #fff7ec;
+  --surface2: #e9c394;
+  --ink: #3d2110;
+  --muted: #6a4829;
+  --line: #dcb482;
+  --hero: #ad4318;
+  --hero-ink: #fff4e4;
+  --danger: #8f2f29;
 }
 :root[data-theme='winter'] {
   /* 冬 */
-  --bg: #edf0f5;
-  --surface2: #dde2ec;
-  --ink: #1c2433;
-  --muted: #5d6779;
-  --line: #c7cedb;
-  --hero: #2b3a5c;
-  --hero-ink: #eef2fa;
+  --bg: #d5dfef;
+  --surface: #f6f9fd;
+  --surface2: #bccae2;
+  --ink: #162238;
+  --muted: #43516b;
+  --line: #aabbd8;
+  --hero: #23406e;
+  --hero-ink: #eaf2ff;
+  --danger: #8f2f29;
 }
 :root[data-theme='halloween'] {
   /* ハロウィン */
-  --bg: #f0eaf3;
-  --surface2: #e0d5e7;
-  --ink: #2a1a33;
-  --muted: #6b5b74;
-  --line: #d1c3d9;
-  --hero: #3b1f4d;
-  --hero-ink: #ffb45e;
+  --bg: #f8d09a;
+  --surface: #fff6e8;
+  --surface2: #f1ba73;
+  --ink: #2b1638;
+  --muted: #643f52;
+  --line: #e5ab63;
+  --hero: #4a1f66;
+  --hero-ink: #ffb347;
+  --danger: #8f2f29;
 }
 :root[data-theme='christmas'] {
   /* クリスマス */
-  --bg: #edf2ec;
-  --surface2: #dae5da;
-  --ink: #1a2e22;
-  --muted: #5a6b5f;
-  --line: #c4d3c6;
-  --hero: #7d1f2a;
-  --hero-ink: #f7efe0;
+  --bg: #d0e4ce;
+  --surface: #f7fbf5;
+  --surface2: #b6d3b4;
+  --ink: #173322;
+  --muted: #3d5945;
+  --line: #a3c5a2;
+  --hero: #ad1f2c;
+  --hero-ink: #fff5e6;
+  --danger: #8f2f29;
 }
 /* フォントの候補 (src/lib/appearance.ts の FONTS と対応) */
 :root[data-font='neutral'] {
@@ -491,6 +516,42 @@ input[type='number'] {
 }
 .themes .wide small {
   font-weight: 400;
+}
+/* 取り返しのつかないことの注意書き (データが消える、など) */
+.warn {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+.warn b {
+  display: block;
+  color: var(--danger);
+  font-size: 13.5px;
+}
+.row + .warn, .row + .hint {
+  margin-top: 12px;
+}
+/* ホームの、バックアップのお知らせ */
+.card.nudge {
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+  border: 1.5px solid var(--danger);
+}
+.card.nudge small {
+  margin-top: 2px;
+  line-height: 1.6;
+}
+/* いちばん上に置く折りたたみ */
+.fold.first {
+  margin-top: 0;
+}
+.fold + .themes {
+  margin-top: 10px;
 }
 /* このアプリの URL */
 .url-box {

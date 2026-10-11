@@ -1,18 +1,19 @@
 // テーマとフォント。描画前に決まっていてほしいので IndexedDB ではなく localStorage に持つ
 // (テーマは index.html のインラインスクリプトが先に <html data-theme> へ反映する)
 /**
- * テーマ。Light / Dark のほかに、季節 (春夏秋冬) と行事 (ハロウィン・クリスマス) の色がある。色そのものは styles.css の :root[data-theme]。
+ * テーマ。Light / Dark のほかに、緑 (リーフ)、季節 (春夏秋冬)、行事 (ハロウィン・クリスマス) の色がある。色そのものは styles.css の :root[data-theme]。
  * bg は地の色 (ブラウザの上のバーの色と、設定の見本に使う)、hero は上のカードの色 (見本に使う)
  */
 export const THEMES = [
   { id: 'light', label: 'Light', bg: '#ecf0ed', hero: '#17241d' },
   { id: 'dark', label: 'Dark', bg: '#121212', hero: '#333333' },
-  { id: 'spring', label: '春', bg: '#f7edf0', hero: '#8f3a57' },
-  { id: 'summer', label: '夏', bg: '#e8f2f6', hero: '#0f5f7a' },
-  { id: 'autumn', label: '秋', bg: '#f5eee3', hero: '#8a3b1c' },
-  { id: 'winter', label: '冬', bg: '#edf0f5', hero: '#2b3a5c' },
-  { id: 'halloween', label: 'ハロウィン', bg: '#f0eaf3', hero: '#3b1f4d' },
-  { id: 'christmas', label: 'クリスマス', bg: '#edf2ec', hero: '#7d1f2a' },
+  { id: 'leaf', label: 'リーフ', bg: '#d3ead0', hero: '#2a7a47' },
+  { id: 'spring', label: '春', bg: '#f7d6df', hero: '#b93a65' },
+  { id: 'summer', label: '夏', bg: '#cbe7f4', hero: '#0a759a' },
+  { id: 'autumn', label: '秋', bg: '#f3d9b8', hero: '#ad4318' },
+  { id: 'winter', label: '冬', bg: '#d5dfef', hero: '#23406e' },
+  { id: 'halloween', label: 'ハロウィン', bg: '#f8d09a', hero: '#4a1f66' },
+  { id: 'christmas', label: 'クリスマス', bg: '#d0e4ce', hero: '#ad1f2c' },
 ] as const
 
 export type Theme = (typeof THEMES)[number]['id']
