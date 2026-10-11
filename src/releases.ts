@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.10.0',
+    date: '2026-10-11',
+    items: ['設定に肥料と活力剤の初期設定を追加（新しい植物に、決めておいた間隔・休眠期の扱い・交互にずらす設定がはじめから入る）'],
+  },
+  {
     version: '4.9.1',
     date: '2026-10-11',
     items: [

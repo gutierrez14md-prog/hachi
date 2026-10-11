@@ -28,6 +28,13 @@ export interface Schedule {
 
 export type CareSettings = Record<SchedType, Schedule>
 
+/** 新しい植物に入れる、肥料と活力剤の初期設定 (設定で決める)。stagger = 同じ回に重なったら交互にずらす */
+export interface CareDefaults {
+  fertilizer: Schedule
+  tonic: Schedule
+  stagger?: boolean
+}
+
 /** 栽培方法: 土植え / 水苔 / 着生 / 腰水 / 水耕栽培 */
 export type Method = 'soil' | 'moss' | 'mount' | 'bottom' | 'hydro'
 
@@ -179,4 +186,6 @@ export interface Settings {
   backupRemind?: boolean
   /** 肥料・活力剤を水に混ぜてあげる (水やりを兼ねる)。ケアの設定で、間隔を「水やり何回に 1 回」で選べるようになる */
   careWithWater?: boolean
+  /** 新しい植物の、肥料と活力剤の初期設定。入っていなければ、どちらもオフ */
+  careDefaults?: CareDefaults
 }

@@ -6,7 +6,7 @@ import { db, deletePlant, newId } from '../db'
 import { today } from '../lib/date'
 import { DateInput, Field, PhotoPicker, Sheet } from '../parts'
 import { crossText, fromFlat } from '../lib/cross'
-import { defaultCare } from '../presets'
+import { withCareDefaults, defaultCare } from '../presets'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import type { Member, Method, Plant, SchedType, Cross } from '../types'
 import { CareEditor, cleanCare, hasInterval, WaterLabelField } from './CareEditor'
@@ -28,7 +28,9 @@ export function PlantForm({ id }: { id?: string }) {
         location: '',
         profile: '',
         dormantMonths: settings.dormantMonths,
-        care: defaultCare(),
+        // 肥料と活力剤は、設定で決めた初期設定から始める
+        care: withCareDefaults(defaultCare(), settings.careDefaults),
+        stagger: settings.careDefaults?.stagger || undefined,
         createdDay: today(),
       },
   )
@@ -48,7 +50,8 @@ export function PlantForm({ id }: { id?: string }) {
     if (g)
       setF((v) => ({
         ...v,
-        care: structuredClone(g.care),
+        // 分類でオンにしていない肥料・活力剤は、設定で決めた初期設定にする
+        care: withCareDefaults(structuredClone(g.care), settings.careDefaults),
         dormantMonths: [...g.dormantMonths],
         // 自分で書いたメモは黙って上書きしない。入れ替えたいときは、メモの下の「育て方メモを反映」で
         profile: untouched(v.profile) ? g.profile : v.profile,

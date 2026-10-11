@@ -8,18 +8,29 @@ import { GUIDE } from '../guide'
 import { VERSION } from '../releases'
 import { exportBackup, importBackup, lastBackup } from '../lib/backup'
 import { enableNotifications, testNotification } from '../lib/reminder'
-import type { Settings } from '../types'
+import { CARE } from '../care'
+import { defaultCare } from '../presets'
+import type { CareDefaults, Schedule, Settings } from '../types'
 import { fmtFull, today } from '../lib/date'
 import { heads, intervalOn } from '../lib/schedule'
 import { clearPlace, getPlace, locate } from '../lib/weather'
 import { careLabel, METHODS } from '../method'
 import { DateInput } from '../parts'
-import { MonthChips } from './CareEditor'
+import { CareEditor, MonthChips } from './CareEditor'
 
 export function SettingsView() {
   const { settings, plants, allPlants, groups, logs, journal, toast, open } = useApp()
   const [guideOpen, setGuideOpen] = useState(false)
   const [themeOpen, setThemeOpen] = useState(false)
+  const [careOpen, setCareOpen] = useState(false)
+  // 新しい植物の、肥料と活力剤の初期設定 (決めていなければ、どちらもオフ)
+  // 数字を打っている途中で欄が巻き戻らないよう、画面では手元の値を持ち、変えるたびに保存する
+  const [careDefaults, setCareDefaults] = useState<CareDefaults>(() => settings.careDefaults ?? { fertilizer: defaultCare().fertilizer, tonic: defaultCare().tonic })
+  const saveCare = (next: CareDefaults) => {
+    setCareDefaults(next)
+    save({ careDefaults: next })
+  }
+  const brief = (c: Schedule) => (!c.enabled ? 'オフ' : c.everyWater ? (c.everyWater === 1 ? '毎回' : `${c.everyWater}回に1回`) : c.monthly ? '月ごと' : `${c.days}日ごと`)
   const [backedUp, setBackedUp] = useState(lastBackup)
   const [fontOpen, setFontOpen] = useState(false)
   const [groupsOpen, setGroupsOpen] = useState(false)
@@ -161,6 +172,29 @@ export function SettingsView() {
           <input type="checkbox" className="switch" checked={!!settings.careWithWater} onChange={(e) => save({ careWithWater: e.target.checked })} />
         </label>
       </section>
+      {/* 植物をたくさん登録するときに、毎回同じ設定を入れなくて済むように */}
+      <button className="fold tight" aria-expanded={careOpen} onClick={() => setCareOpen((o) => !o)}>
+        新しい植物の初期設定
+        <span className="fold-side">
+          {CARE.fertilizer.label} {brief(careDefaults.fertilizer)} / {CARE.tonic.label} {brief(careDefaults.tonic)}
+          <ChevronDown size={18} className={careOpen ? 'flip' : ''} />
+        </span>
+      </button>
+      {careOpen && (
+        <div className="care-defaults">
+          <p className="hint">
+            植物を追加するときに、はじめから入る設定です。分類で肥料・活力剤をオンにしている場合は、分類の設定が入ります。登録済みの植物は変わりません。
+          </p>
+          <CareEditor
+            only={['fertilizer', 'tonic']}
+            care={{ ...defaultCare(), fertilizer: careDefaults.fertilizer, tonic: careDefaults.tonic }}
+            dormantMonths={settings.dormantMonths}
+            onChange={({ care }) => care && saveCare({ ...careDefaults, fertilizer: care.fertilizer, tonic: care.tonic })}
+            stagger={careDefaults.stagger}
+            onStagger={(on) => saveCare({ ...careDefaults, stagger: on || undefined })}
+          />
+        </div>
+      )}
 
       <h3 className="sec">ホームの表示</h3>
       <section className="card">

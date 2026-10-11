@@ -546,6 +546,13 @@ input[type='number'] {
   margin-top: 2px;
   line-height: 1.6;
 }
+/* 設定の、肥料と活力剤の初期設定 */
+.care-defaults {
+  margin-top: 10px;
+}
+.care-defaults .hint {
+  margin: 0 2px 10px;
+}
 /* いちばん上に置く折りたたみ */
 .fold.first {
   margin-top: 0;

@@ -1,4 +1,4 @@
-import type { CareSettings, Group, Method, Schedule } from './types'
+import type { CareDefaults, CareSettings, Group, Method, Schedule } from './types'
 
 const sched = (enabled: boolean, days: number, offMode: Schedule['offMode'], offDays: number): Schedule => ({
   enabled,
@@ -14,6 +14,17 @@ export const defaultCare = (): CareSettings => ({
   fertilizer: sched(false, 30, 'pause', 60),
   tonic: sched(false, 14, 'pause', 30),
 })
+
+/**
+ * 肥料と活力剤に、設定で決めた初期設定を当てはめる。
+ * もとの設定 (分類のプリセットなど) でオンになっているケアは、そちらを優先する。水やりには触れない
+ */
+export function withCareDefaults(care: CareSettings, d?: CareDefaults): CareSettings {
+  if (!d) return care
+  const out = { ...care }
+  for (const s of ['fertilizer', 'tonic'] as const) if (!care[s].enabled) out[s] = structuredClone(d[s])
+  return out
+}
 
 /**
  * 品種名の候補のうち、はじめから入れておくもの。キーは学名 (小文字) の一部。

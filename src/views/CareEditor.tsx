@@ -97,6 +97,7 @@ export function CareEditor({
   extra,
   stagger,
   onStagger,
+  only,
   required,
   labels,
   icons,
@@ -115,6 +116,8 @@ export function CareEditor({
   /** 肥料と活力剤が同じ回に重なったら交互にずらすか。onStagger を渡したとき (植物の編集) だけ、スイッチを出す */
   stagger?: boolean
   onStagger?: (on: boolean) => void
+  /** 出すケアを絞る (設定の、肥料と活力剤の初期設定)。このときは、休眠期の月と、水やりの間隔からの目安を出さない */
+  only?: SchedType[]
 }) {
   const { settings } = useApp()
   // 今の水やりの間隔 (日)。「だいたい◯日ごと」の目安と、日数から回数への置き換えに使う
@@ -127,7 +130,7 @@ export function CareEditor({
 
   return (
     <>
-      {SCHED.map((s) => {
+      {SCHED.filter((s) => !only || only.includes(s)).map((s) => {
         const c = care[s]
         const Icon = icons?.[s] ?? CARE[s].Icon
         const label = labels?.[s] ?? CARE[s].label
@@ -180,7 +183,7 @@ export function CareEditor({
                     <EveryFig n={every} WaterIcon={icons?.water ?? CARE.water.Icon} Icon={Icon} />
                     <p className="hint">
                       {every === 1 ? `${labels?.water ?? CARE.water.label}のたびに` : `${labels?.water ?? CARE.water.label}${every}回ごとに`}、{label}も一緒にあげます。
-                      {waterDays > 0 && `今の間隔なら、だいたい${waterDays * every}日ごとです。`}
+                      {!only && waterDays > 0 && `今の間隔なら、だいたい${waterDays * every}日ごとです。`}
                     </p>
                     <label className="inline">
                       休眠期
@@ -270,7 +273,7 @@ export function CareEditor({
         </section>
       )}
 
-      {usesSeason && (
+      {usesSeason && !only && (
         <>
           <h3 className="sec">休眠期の月</h3>
           <MonthChips value={dormantMonths} onChange={(v) => onChange({ dormantMonths: v })} />
