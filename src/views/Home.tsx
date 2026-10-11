@@ -43,10 +43,10 @@ const GROUP_BYS: [GroupBy, string][] = [
 ]
 
 /**
- * まとめてケア: ケアの種類を選ぶ (types) → 一覧で株を選ぶ (plants) → 決定で、選んだ株にまとめて記録する。
- * 株を選んでいる間は、一覧の株を押すと詳細が開くかわりに、選択が入る
+ * まとめてケア: 一覧で株を選び (sel)、下のバーでケアの種類を選んで (types)、決定でまとめて記録する。
+ * 選んでいる間は、一覧の株を押すと詳細が開くかわりに、選択が入る
  */
-type Bulk = { step: 'types' | 'plants'; types: CareType[]; sel: string[] }
+type Bulk = { types: CareType[]; sel: string[] }
 
 type Due = Record<SchedType, string | null>
 
@@ -96,7 +96,7 @@ export function Home() {
   const [bulk, setBulk] = useState<Bulk | null>(null)
   // 今日のケアの一覧を開いておくか (畳むと見出しの 1 行だけになる)
   const [dueOpen, setDueOpen] = useState(() => localStorage.getItem('homeDue') !== '0')
-  const picking = bulk?.step === 'plants'
+  const picking = !!bulk
   const t = today()
   const weather = useWeather(t)
   const sky = weather && describe(weather.code)
@@ -580,7 +580,7 @@ export function Home() {
         </select>
       </div>
       {!picking && (
-        <button className="btn ghost full bulk-start" onClick={() => setBulk({ step: 'types', types: ['water'], sel: [] })}>
+        <button className="btn ghost full bulk-start" onClick={() => setBulk({ types: ['water'], sel: [] })}>
           <ListChecks size={16} /> まとめてケアを記録
         </button>
       )}
@@ -634,19 +634,14 @@ export function Home() {
       ))}
       {!picking && archiveLink}
 
-      {/* まとめてケア 1: ケアの種類を選ぶ (複数可) */}
-      {bulk?.step === 'types' && (
-        <div className="backdrop" onClick={(e) => e.target === e.currentTarget && setBulk(null)}>
-          <div className="sheet" role="dialog" aria-modal="true" aria-label="まとめてケアを記録">
-            <button className="sheet-x" onClick={() => setBulk(null)} aria-label="閉じる">
-              <X size={16} strokeWidth={2.2} />
-            </button>
-            <div className="sheet-b">
-              <h2 className="sheet-t">まとめてケアを記録</h2>
-              <h3 className="sec first">
-                ケアの種類 <span className="soft">複数選べます</span>
-              </h3>
-              <div className="type-grid">
+      {/* まとめてケア: 株を選んでいる間、下のバーにケアの種類と決定を出しておく (下部ナビの上に重なる) */}
+      {bulk && (
+        <>
+          <div className="bulk-space" />
+          <div className="bulk-bar">
+            <div className="bulk-in">
+              {/* ケアの種類 (複数可)。はみ出すぶんは横に送る */}
+              <div className="bulk-types" role="group" aria-label="ケアの種類">
                 {ALL_TYPES.map((ty) => {
                   const { Icon, label } = CARE[ty]
                   const on = bulk.types.includes(ty)
@@ -656,36 +651,16 @@ export function Home() {
                       className={on ? 'on' : ''}
                       aria-pressed={on}
                       style={careVar(ty)}
-                      onClick={() => setBulk({ ...bulk, types: on ? bulk.types.filter((x) => x !== ty) : ALL_TYPES.filter((x) => x === ty || bulk.types.includes(x)) })}
+                      onClick={() => setBulk((b) => b && { ...b, types: on ? b.types.filter((x) => x !== ty) : ALL_TYPES.filter((x) => x === ty || b.types.includes(x)) })}
                     >
-                      <span className="care-ic">
-                        <Icon size={18} />
-                      </span>
+                      <Icon size={15} />
                       {label}
                     </button>
                   )
                 })}
               </div>
-            </div>
-            <div className="sheet-f">
-              <button className="btn primary" disabled={!bulk.types.length} onClick={() => setBulk({ ...bulk, step: 'plants' })}>
-                植物を選ぶ
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* まとめてケア 2: 一覧で株を選んで、決定 (下のバーは、選んでいる間だけ下部ナビの上に出る) */}
-      {bulk && picking && (
-        <>
-          <div className="bulk-space" />
-          <div className="bulk-bar">
-            <div className="bulk-in">
               <div className="row">
-                <span className="bulk-what">
-                  <b>{bulk.types.map((ty) => CARE[ty].label).join('・')}</b>
-                  <small>{bulk.sel.length}株を選択中</small>
-                </span>
+                <b className="bulk-what">{bulk.sel.length}株を選択中</b>
                 <button
                   className="btn ghost sm"
                   onClick={() => {
@@ -703,13 +678,13 @@ export function Home() {
                 </button>
                 <button
                   className="btn primary grow"
-                  disabled={!bulk.sel.length}
+                  disabled={!bulk.sel.length || !bulk.types.length}
                   onClick={async () => {
                     await record(bulk.sel, bulk.types)
                     setBulk(null)
                   }}
                 >
-                  {bulk.sel.length ? `${bulk.sel.length}株に記録` : '株を選んでください'}
+                  {!bulk.sel.length ? '株を選んでください' : !bulk.types.length ? 'ケアの種類を選んでください' : `${bulk.sel.length}株に記録`}
                 </button>
               </div>
             </div>

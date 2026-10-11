@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.7.0',
+    date: '2026-10-11',
+    items: ['まとめてケア記録の手順を短縮（ケアの種類を選ぶ画面をなくし、株を選ぶ画面の下で種類を選んでそのまま記録）'],
+  },
+  {
     version: '4.6.3',
     date: '2026-10-11',
     items: ['はじめから入っている分類に「食虫植物」を追加（腰水・水足しの設定）'],
