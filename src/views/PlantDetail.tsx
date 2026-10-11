@@ -132,7 +132,7 @@ export function PlantDetail({ id }: { id: string }) {
                   </span>
                 </span>
                 {due && due <= t && (
-                  <button className="icon-btn muted" onClick={() => open({ k: 'snooze', plantId: id })} aria-label={`${label}を延期`}>
+                  <button className="icon-btn muted" onClick={() => open({ k: 'snooze', plantIds: [id] })} aria-label={`${label}を延期`}>
                     <CalendarClock size={18} />
                   </button>
                 )}

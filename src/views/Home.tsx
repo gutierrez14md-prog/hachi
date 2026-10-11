@@ -44,7 +44,7 @@ const GROUP_BYS: [GroupBy, string][] = [
 ]
 
 /**
- * まとめてケア: 一覧で株を選び (sel)、下のバーでケアの種類を選んで (types)、決定でまとめて記録する。
+ * まとめて記録・延期: 一覧で株を選び (sel)、下のバーでケアの種類を選んで (types)、まとめて記録するか、まとめて延期する。
  * 選んでいる間は、一覧の株を押すと詳細が開くかわりに、選択が入る
  */
 type Bulk = { types: CareType[]; sel: string[] }
@@ -551,7 +551,7 @@ export function Home() {
                       </button>
                     )
                   })}
-                  <button className="icon-btn muted" onClick={() => open({ k: 'snooze', plantId: p.id })} aria-label={`${p.name}のケアを延期`}>
+                  <button className="icon-btn muted" onClick={() => open({ k: 'snooze', plantIds: [p.id] })} aria-label={`${p.name}のケアを延期`}>
                     <CalendarClock size={18} />
                   </button>
                 </div>
@@ -630,7 +630,7 @@ export function Home() {
       </div>
       {!picking && (
         <button className="btn ghost full bulk-start" onClick={() => setBulk({ types: ['water'], sel: [] })}>
-          <ListChecks size={16} /> まとめてケアを記録
+          <ListChecks size={16} /> まとめて記録・延期
         </button>
       )}
 
@@ -725,6 +725,14 @@ export function Home() {
                 <button className="btn ghost" onClick={() => setBulk(null)}>
                   やめる
                 </button>
+                {/* 選んだ株の、選んだケア (予定を立てる水やり・肥料・活力剤) を、まとめて先へ送る */}
+                <button
+                  className="btn ghost"
+                  disabled={!bulk.sel.length || !bulk.types.some((ty) => SCHED.includes(ty as SchedType))}
+                  onClick={() => open({ k: 'snooze', plantIds: bulk.sel, types: SCHED.filter((s) => bulk.types.includes(s)), onDone: () => setBulk(null) })}
+                >
+                  <CalendarClock size={16} /> 延期
+                </button>
                 <button
                   className="btn primary grow"
                   disabled={!bulk.sel.length || !bulk.types.length}
@@ -733,7 +741,7 @@ export function Home() {
                     setBulk(null)
                   }}
                 >
-                  {!bulk.sel.length ? '株を選んでください' : !bulk.types.length ? 'ケアの種類を選んでください' : `${bulk.sel.length}株に記録`}
+                  {!bulk.sel.length ? '株を選んでください' : !bulk.types.length ? '種類を選んでください' : `${bulk.sel.length}株に記録`}
                 </button>
               </div>
             </div>

@@ -19,6 +19,14 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.11.0',
+    date: '2026-10-11',
+    items: [
+      '複数の株をまとめて延期する機能を追加（株とケアの種類を選んで「延期」。明日〜1週間後、または日付を選択）',
+      'ホームの「まとめてケアを記録」を「まとめて記録・延期」に名称変更',
+    ],
+  },
+  {
     version: '4.10.0',
     date: '2026-10-11',
     items: ['設定に肥料と活力剤の初期設定を追加（新しい植物に、決めておいた間隔・休眠期の扱い・交互にずらす設定がはじめから入る）'],

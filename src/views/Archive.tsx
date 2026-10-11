@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { SCHED } from '../care'
+import { CARE, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db } from '../db'
 import { addDays, fmtDay, fmtFull, today } from '../lib/date'
 import { nextDue } from '../lib/schedule'
 import { DateInput, Field, Photo, SciName, Sheet } from '../parts'
-import type { ArchiveInfo, ArchiveReason, Plant } from '../types'
+import type { ArchiveInfo, ArchiveReason, Plant, SchedType } from '../types'
 
 export const ARCHIVE_REASONS: [ArchiveReason, string][] = [
   ['dead', '枯れた'],
@@ -130,33 +130,55 @@ const OPTIONS: [number, string][] = [
   [7, '1週間後'],
 ]
 
-/** 今日のケアを先へ送る (雨だった、まだ土が湿っている、など)。記録は付けずに予定だけ動かす */
-export function Snooze({ plantId }: { plantId: string }) {
+/**
+ * ケアを先へ送る (雨だった、まだ土が湿っている、など)。記録は付けずに予定だけ動かす。
+ * 延期するのは、ふだんはその株で今日やる (または過ぎている) ケア。types を渡したとき (まとめて延期) は、そのケア
+ */
+export function Snooze({ plantIds, types, onDone }: { plantIds: string[]; types?: SchedType[]; onDone?: () => void }) {
   const { allPlants, logsOf, close, toast } = useApp()
   const [date, setDate] = useState('')
-  const p = allPlants.find((x) => x.id === plantId)
-  if (!p) return null
   const t = today()
-  const due = SCHED.filter((s) => {
-    const d = nextDue(p, s, logsOf(p.id))
-    return d && d <= t
+  // 株ごとの、延期するケア。延期するものが無い株 (そのケアを設定していない、など) は外す
+  const targets = plantIds.flatMap((id) => {
+    const p = allPlants.find((x) => x.id === id)
+    if (!p) return []
+    const which = types
+      ? types.filter((s) => p.care[s].enabled)
+      : SCHED.filter((s) => {
+          const d = nextDue(p, s, logsOf(p.id))
+          return d && d <= t
+        })
+    return which.length ? [{ p, which }] : []
   })
+  const one = plantIds.length === 1 ? allPlants.find((x) => x.id === plantIds[0]) : undefined
+  const who = one ? one.name : `${targets.length}株`
 
   // until = その日まで予定に出さない
   const pick = async (until: string, label: string) => {
-    const before = p.snooze ?? {}
-    const snooze = { ...before }
-    for (const s of due) snooze[s] = until
-    await db.plants.update(p.id, { snooze })
-    toast(`${p.name}のケアを${label}に延期しました`, () => db.plants.update(p.id, { snooze: before }))
+    const before = targets.map(({ p }) => ({ id: p.id, snooze: p.snooze ?? {} }))
+    await db.transaction('rw', db.plants, async () => {
+      for (const { p, which } of targets) {
+        const snooze = { ...(p.snooze ?? {}) }
+        for (const s of which) snooze[s] = until
+        await db.plants.update(p.id, { snooze })
+      }
+    })
+    toast(`${who}のケアを${label}に延期しました`, () => db.transaction('rw', db.plants, () => Promise.all(before.map((b) => db.plants.update(b.id, { snooze: b.snooze })))))
     close()
+    onDone?.()
   }
 
   return (
-    <Sheet title={`${p.name}のケアを延期`}>
+    <Sheet title={`${who}のケアを延期`}>
+      {types && (
+        <p className="hint lead">
+          {types.map((s) => CARE[s].label).join('・')}を、選んだ日まで予定に出しません。記録は付きません。
+          {targets.length < plantIds.length && `（選んだ${plantIds.length}株のうち、このケアを設定している${targets.length}株が対象です）`}
+        </p>
+      )}
       <div className="opts">
         {OPTIONS.map(([days, label]) => (
-          <button key={days} disabled={!due.length} onClick={() => pick(addDays(t, days), label)}>
+          <button key={days} disabled={!targets.length} onClick={() => pick(addDays(t, days), label)}>
             <b>{label}</b>
             <small>{fmtFull(addDays(t, days))}</small>
           </button>
@@ -166,7 +188,7 @@ export function Snooze({ plantId }: { plantId: string }) {
       <h3 className="sec">日付を選ぶ</h3>
       <div className="row gap">
         <DateInput clearable className="grow" min={addDays(t, 1)} value={date} onChange={setDate} aria-label="延期する日" />
-        <button className="btn primary" disabled={!due.length || !date || date <= t} onClick={() => pick(date, fmtDay(date))}>
+        <button className="btn primary" disabled={!targets.length || !date || date <= t} onClick={() => pick(date, fmtDay(date))}>
           この日まで延期
         </button>
       </div>

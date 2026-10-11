@@ -1173,6 +1173,11 @@ input[type='number'] {
   display: grid;
   gap: 10px;
 }
+/* 下のバーのボタンは 3 つ並ぶので、字を折り返さず、左右の余白を詰める */
+.bulk-bar .row.gap .btn {
+  white-space: nowrap;
+  padding-inline: 12px;
+}
 .bulk-what {
   font-size: 13.5px;
 }

@@ -191,7 +191,7 @@ export default function App() {
           case 'group':
             return <GroupForm key={i} id={o.id} />
           case 'snooze':
-            return <Snooze key={i} plantId={o.plantId} />
+            return <Snooze key={i} plantIds={o.plantIds} types={o.types} onDone={o.onDone} />
           case 'archive':
             return <Archive key={i} />
           case 'archiveInfo':

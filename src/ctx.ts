@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { CareLog, CareType, Group, Journal, Plant, Settings } from './types'
+import type { CareLog, CareType, Group, Journal, Plant, SchedType, Settings } from './types'
 
 /** タブの上に重ねて開く画面 */
 export type Overlay =
@@ -10,7 +10,8 @@ export type Overlay =
   | { k: 'journal'; plantId?: string; id?: string }
   | { k: 'past'; plantId?: string }
   | { k: 'group'; id?: string }
-  | { k: 'snooze'; plantId: string }
+  /** 延期。types を渡すと、今日やるケアではなく、そのケアを延期する (まとめて延期)。onDone = 延期したあとに呼ぶ */
+  | { k: 'snooze'; plantIds: string[]; types?: SchedType[]; onDone?: () => void }
   | { k: 'archive' }
   | { k: 'archiveInfo'; plantId: string }
   | { k: 'feedback' }
