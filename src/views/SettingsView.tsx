@@ -314,7 +314,7 @@ export function SettingsView() {
           <span className="line-main">
             <span>
               <b>バックアップを知らせる</b>
-              <small>30日書き出していないと、ホームに出します</small>
+              <small>まだ書き出していないときと、30日書き出していないときに、ホームの上に出します</small>
             </span>
           </span>
           <input type="checkbox" className="switch" checked={settings.backupRemind ?? true} onChange={(e) => save({ backupRemind: e.target.checked })} />

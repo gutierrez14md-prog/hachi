@@ -103,7 +103,7 @@ export function Home() {
   const [dueOpen, setDueOpen] = useState(() => localStorage.getItem('homeDue') !== '0')
   const picking = !!bulk
   // バックアップのお知らせ: データはこの端末の中にしか無く、ホーム画面のアイコンを消すとすべて消えるので、
-  // しばらく書き出していなければ知らせる。数えはじめは、最後に書き出した日 (無ければ最初の株を登録した日)
+  // 一度も書き出していないとき (株を登録していればすぐ) と、最後に書き出してから日がたったときに知らせる
   const [backupTick, setBackupTick] = useState(0)
   const backupDue = useMemo(() => {
     if (settings.backupRemind === false || !allPlants.length) return null
@@ -111,8 +111,7 @@ export function Home() {
     const later = localStorage.getItem('backupLater')
     if (later && diffDays(today_, later) < BACKUP_LATER) return null
     const last = lastBackup()
-    const from = last ?? allPlants.reduce((d, p) => (p.createdDay < d ? p.createdDay : d), today_)
-    return diffDays(today_, from) >= BACKUP_EVERY ? { last } : null
+    return !last || diffDays(today_, last) >= BACKUP_EVERY ? { last } : null
     // backupTick: 書き出した / あとで を押したあとに数え直す
   }, [settings.backupRemind, allPlants, backupTick])
   const t = today()

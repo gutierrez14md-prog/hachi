@@ -19,6 +19,14 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.9.1',
+    date: '2026-10-11',
+    items: [
+      'まだ一度も書き出していないときに、バックアップのお知らせがホームに出ない不具合を修正',
+      'テーマの名前を英語にそろえて変更（Leaf・Spring・Summer・Autumn・Winter・Halloween・Christmas）',
+    ],
+  },
+  {
     version: '4.9.0',
     date: '2026-10-11',
     items: [

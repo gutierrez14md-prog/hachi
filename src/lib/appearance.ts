@@ -7,13 +7,13 @@
 export const THEMES = [
   { id: 'light', label: 'Light', bg: '#ecf0ed', hero: '#17241d' },
   { id: 'dark', label: 'Dark', bg: '#121212', hero: '#333333' },
-  { id: 'leaf', label: 'リーフ', bg: '#d3ead0', hero: '#2a7a47' },
-  { id: 'spring', label: '春', bg: '#f7d6df', hero: '#b93a65' },
-  { id: 'summer', label: '夏', bg: '#cbe7f4', hero: '#0a759a' },
-  { id: 'autumn', label: '秋', bg: '#f3d9b8', hero: '#ad4318' },
-  { id: 'winter', label: '冬', bg: '#d5dfef', hero: '#23406e' },
-  { id: 'halloween', label: 'ハロウィン', bg: '#f8d09a', hero: '#4a1f66' },
-  { id: 'christmas', label: 'クリスマス', bg: '#d0e4ce', hero: '#ad1f2c' },
+  { id: 'leaf', label: 'Leaf', bg: '#d3ead0', hero: '#2a7a47' },
+  { id: 'spring', label: 'Spring', bg: '#f7d6df', hero: '#b93a65' },
+  { id: 'summer', label: 'Summer', bg: '#cbe7f4', hero: '#0a759a' },
+  { id: 'autumn', label: 'Autumn', bg: '#f3d9b8', hero: '#ad4318' },
+  { id: 'winter', label: 'Winter', bg: '#d5dfef', hero: '#23406e' },
+  { id: 'halloween', label: 'Halloween', bg: '#f8d09a', hero: '#4a1f66' },
+  { id: 'christmas', label: 'Christmas', bg: '#d0e4ce', hero: '#ad1f2c' },
 ] as const
 
 export type Theme = (typeof THEMES)[number]['id']
