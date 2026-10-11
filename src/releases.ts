@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.12.0',
+    date: '2026-10-11',
+    items: ['月ごとのケア間隔に、すべての月をまとめて 1 日ずつ短く・長くするボタンを追加'],
+  },
+  {
     version: '4.11.0',
     date: '2026-10-11',
     items: [

@@ -211,21 +211,45 @@ export function CareEditor({
                       </button>
                     </div>
                     {c.monthly ? (
-                      <div className="month-grid" aria-label="月ごとの間隔 (日)。空欄はお休み">
-                        {MONTHS.map((m) => (
-                          <label key={m}>
-                            <span>{m}月</span>
-                            <input
-                              type="number"
-                              inputMode="numeric"
-                              min={0}
-                              placeholder="休"
-                              value={c.monthly![m - 1] || ''}
-                              onChange={(e) => setCare(s, { monthly: c.monthly!.map((v, i) => (i === m - 1 ? num(e.target.value) : v)) })}
-                            />
-                          </label>
-                        ))}
-                      </div>
+                      <>
+                        <div className="month-grid" aria-label="月ごとの間隔 (日)。空欄はお休み">
+                          {MONTHS.map((m) => (
+                            <label key={m}>
+                              <span>{m}月</span>
+                              <input
+                                type="number"
+                                inputMode="numeric"
+                                min={0}
+                                placeholder="休"
+                                value={c.monthly![m - 1] || ''}
+                                onChange={(e) => setCare(s, { monthly: c.monthly!.map((v, i) => (i === m - 1 ? num(e.target.value) : v)) })}
+                              />
+                            </label>
+                          ))}
+                        </div>
+                        {/* 全部の月をまとめて 1 日ずつ動かす (この株は全体に少し早め、など)。お休みの月は動かさず、1 日より短くはしない */}
+                        <div className="month-shift">
+                          <span>すべての月を</span>
+                          <button
+                            type="button"
+                            className="btn ghost sm"
+                            disabled={!c.monthly.some((v) => v > 1)}
+                            onClick={() => setCare(s, { monthly: c.monthly!.map((v) => (v > 1 ? v - 1 : v)) })}
+                            aria-label="すべての月の間隔を 1 日短くする"
+                          >
+                            −1日
+                          </button>
+                          <button
+                            type="button"
+                            className="btn ghost sm"
+                            disabled={!c.monthly.some((v) => v > 0)}
+                            onClick={() => setCare(s, { monthly: c.monthly!.map((v) => (v > 0 ? v + 1 : v)) })}
+                            aria-label="すべての月の間隔を 1 日長くする"
+                          >
+                            ＋1日
+                          </button>
+                        </div>
+                      </>
                     ) : (
                       <>
                         <label className="inline">

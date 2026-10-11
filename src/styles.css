@@ -1952,6 +1952,15 @@ button.line {
   width: 100%;
   padding: 7px 2px;
 }
+/* 月ごとの間隔を、まとめて 1 日ずつ動かすボタン */
+.month-shift {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
 .care-b .hint {
   margin: 0;
 }
