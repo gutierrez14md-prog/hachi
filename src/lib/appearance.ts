@@ -1,6 +1,35 @@
 // テーマとフォント。描画前に決まっていてほしいので IndexedDB ではなく localStorage に持つ
 // (テーマは index.html のインラインスクリプトが先に <html data-theme> へ反映する)
-export type Theme = 'light' | 'dark'
+/**
+ * テーマ。Light / Dark のほかに、季節 (春夏秋冬) と行事 (ハロウィン・クリスマス) の色がある。色そのものは styles.css の :root[data-theme]。
+ * bg は地の色 (ブラウザの上のバーの色と、設定の見本に使う)、hero は上のカードの色 (見本に使う)
+ */
+export const THEMES = [
+  { id: 'light', label: 'Light', bg: '#ecf0ed', hero: '#17241d' },
+  { id: 'dark', label: 'Dark', bg: '#121212', hero: '#333333' },
+  { id: 'spring', label: '春', bg: '#f7edf0', hero: '#8f3a57' },
+  { id: 'summer', label: '夏', bg: '#e8f2f6', hero: '#0f5f7a' },
+  { id: 'autumn', label: '秋', bg: '#f5eee3', hero: '#8a3b1c' },
+  { id: 'winter', label: '冬', bg: '#edf0f5', hero: '#2b3a5c' },
+  { id: 'halloween', label: 'ハロウィン', bg: '#f0eaf3', hero: '#3b1f4d' },
+  { id: 'christmas', label: 'クリスマス', bg: '#edf2ec', hero: '#7d1f2a' },
+] as const
+
+export type Theme = (typeof THEMES)[number]['id']
+/** 選べるもの: テーマのどれか、または auto = 今の季節に合わせる */
+export type ThemeChoice = Theme | 'auto'
+
+/**
+ * 今日の季節のテーマ: 10/25〜10/31 はハロウィン、12/15〜12/25 はクリスマス、
+ * ほかは 3〜5 月が春、6〜8 月が夏、9〜11 月が秋、12〜2 月が冬。
+ * 描画前に反映するために、同じ決まりが index.html のインラインスクリプトにもある
+ */
+export function seasonTheme(now = new Date()): Theme {
+  const m = now.getMonth() + 1, d = now.getDate()
+  if (m === 10 && d >= 25) return 'halloween'
+  if (m === 12 && d >= 15 && d <= 25) return 'christmas'
+  return m >= 3 && m <= 5 ? 'spring' : m >= 6 && m <= 8 ? 'summer' : m >= 9 && m <= 11 ? 'autumn' : 'winter'
+}
 
 /** フォントの候補。q は Google Fonts の css2 に渡す family 指定。CSS 側の対応は styles.css の :root[data-font] */
 export const FONTS = [
@@ -52,12 +81,16 @@ const read = (k: string) => {
   }
 }
 
-export const getTheme = (): Theme => (read('theme') === 'dark' ? 'dark' : 'light')
+export const getTheme = (): ThemeChoice => {
+  const saved = read('theme')
+  return saved === 'auto' ? 'auto' : (THEMES.find((t) => t.id === saved)?.id ?? 'light')
+}
 
-export function applyTheme(theme: Theme) {
-  document.documentElement.dataset.theme = theme
-  localStorage.setItem('theme', theme)
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#121212' : '#ecf0ed')
+export function applyTheme(choice: ThemeChoice) {
+  const theme = THEMES.find((t) => t.id === (choice === 'auto' ? seasonTheme() : choice))!
+  document.documentElement.dataset.theme = theme.id
+  localStorage.setItem('theme', choice)
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.bg)
 }
 
 export const getFont = (): FontId => FONTS.find((f) => f.id === read('font'))?.id ?? 'stories'

@@ -15,10 +15,17 @@
     <title>Hachi</title>
     <script>
       // 端末のダークモードには追従しない。設定で選んだテーマを、描画前に反映する (src/lib/appearance.ts)
+      // auto (季節に合わせる) の決まりと、テーマごとの地の色は、appearance.ts の seasonTheme / THEMES と同じもの
       try {
-        if (localStorage.getItem('theme') === 'dark') {
-          document.documentElement.dataset.theme = 'dark'
-          document.querySelector('meta[name="theme-color"]').content = '#121212'
+        var t = localStorage.getItem('theme')
+        if (t === 'auto') {
+          var now = new Date(), m = now.getMonth() + 1, d = now.getDate()
+          t = m === 10 && d >= 25 ? 'halloween' : m === 12 && d >= 15 && d <= 25 ? 'christmas' : m >= 3 && m <= 5 ? 'spring' : m >= 6 && m <= 8 ? 'summer' : m >= 9 && m <= 11 ? 'autumn' : 'winter'
+        }
+        var bg = { dark: '#121212', spring: '#f7edf0', summer: '#e8f2f6', autumn: '#f5eee3', winter: '#edf0f5', halloween: '#f0eaf3', christmas: '#edf2ec' }[t]
+        if (bg) {
+          document.documentElement.dataset.theme = t
+          document.querySelector('meta[name="theme-color"]').content = bg
         }
       } catch (e) {}
     </script>

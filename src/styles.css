@@ -48,6 +48,68 @@
   --today-dot: #f0a04a;
   color-scheme: dark;
 }
+/* 季節と行事の色。Light を土台に、地の色・線・上のカードだけを変える。
+   超過 (赤) と今日 (オレンジ) のバッジ、ケアの種類の色は、意味のある色なので Light のまま */
+:root[data-theme='spring'] {
+  /* 春 */
+  --bg: #f7edf0;
+  --surface2: #eedde2;
+  --ink: #3a1f29;
+  --muted: #7a5f68;
+  --line: #e2ccd3;
+  --hero: #8f3a57;
+  --hero-ink: #fdeef2;
+}
+:root[data-theme='summer'] {
+  /* 夏 */
+  --bg: #e8f2f6;
+  --surface2: #d5e6ee;
+  --ink: #10303f;
+  --muted: #54707c;
+  --line: #c1d6e0;
+  --hero: #0f5f7a;
+  --hero-ink: #e8f6fa;
+}
+:root[data-theme='autumn'] {
+  /* 秋 */
+  --bg: #f5eee3;
+  --surface2: #e9dcc9;
+  --ink: #33231a;
+  --muted: #75624f;
+  --line: #dccbb3;
+  --hero: #8a3b1c;
+  --hero-ink: #fbeee0;
+}
+:root[data-theme='winter'] {
+  /* 冬 */
+  --bg: #edf0f5;
+  --surface2: #dde2ec;
+  --ink: #1c2433;
+  --muted: #5d6779;
+  --line: #c7cedb;
+  --hero: #2b3a5c;
+  --hero-ink: #eef2fa;
+}
+:root[data-theme='halloween'] {
+  /* ハロウィン */
+  --bg: #f0eaf3;
+  --surface2: #e0d5e7;
+  --ink: #2a1a33;
+  --muted: #6b5b74;
+  --line: #d1c3d9;
+  --hero: #3b1f4d;
+  --hero-ink: #ffb45e;
+}
+:root[data-theme='christmas'] {
+  /* クリスマス */
+  --bg: #edf2ec;
+  --surface2: #dae5da;
+  --ink: #1a2e22;
+  --muted: #5a6b5f;
+  --line: #c4d3c6;
+  --hero: #7d1f2a;
+  --hero-ink: #f7efe0;
+}
 /* フォントの候補 (src/lib/appearance.ts の FONTS と対応) */
 :root[data-font='neutral'] {
   --font-body: 'Noto Sans JP';
@@ -391,6 +453,55 @@ input[type='number'] {
   color: var(--ink);
   font-weight: 600;
   box-shadow: var(--shadow);
+}
+/* テーマの選択: 地の色と上のカードの色を半分ずつ塗った丸を、見本にする */
+.themes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.themes button {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 10px 2px 8px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.themes button.on {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.themes i {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--a) 50%, var(--b) 50%);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 12%);
+}
+.themes .wide {
+  grid-column: 1 / -1;
+  grid-auto-flow: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+}
+.themes .wide small {
+  font-weight: 400;
+}
+/* このアプリの URL */
+.url-box {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  user-select: all;
 }
 .fonts {
   display: grid;

@@ -1,7 +1,8 @@
-import { Archive, Bell, ChevronDown, ChevronRight, CloudSun, Download, FlaskConical, Plus, Upload } from 'lucide-react'
+import { Archive, Bell, ChevronDown, ChevronRight, CloudSun, Copy, Download, FlaskConical, Plus, Share2, Upload } from 'lucide-react'
+import type { CSSProperties } from 'react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
-import { applyFont, applyNameFont, applyTheme, FONTS, getFont, getNameFont, getTheme, NAME_FONTS } from '../lib/appearance'
+import { applyFont, applyNameFont, applyTheme, FONTS, getFont, getNameFont, getTheme, NAME_FONTS, seasonTheme, THEMES, type ThemeChoice } from '../lib/appearance'
 import { db } from '../db'
 import { GUIDE } from '../guide'
 import { VERSION } from '../releases'
@@ -25,6 +26,20 @@ export function SettingsView() {
   const save = (patch: Partial<Settings>) => db.settings.put({ ...settings, ...patch })
   const supported = 'Notification' in window
   const [theme, setTheme] = useState(getTheme)
+  const pickTheme = (choice: ThemeChoice) => {
+    applyTheme(choice)
+    setTheme(choice)
+  }
+  // このアプリの URL (ホーム画面に追加し直すときや、人に教えるとき用)
+  const appUrl = location.origin + location.pathname
+  const copyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(appUrl)
+      toast('URL をコピーしました')
+    } catch {
+      toast('コピーできませんでした。URL を長押しして選んでください')
+    }
+  }
   const [font, setFont] = useState(getFont)
   const [nameFont, setNameFont] = useState(getNameFont)
 
@@ -60,19 +75,18 @@ export function SettingsView() {
       </header>
 
       <h3 className="sec">テーマ</h3>
-      <div className="seg">
-        {(['light', 'dark'] as const).map((v) => (
-          <button
-            key={v}
-            className={theme === v ? 'on' : ''}
-            onClick={() => {
-              applyTheme(v)
-              setTheme(v)
-            }}
-          >
-            {v === 'light' ? 'Light' : 'Dark'}
+      <div className="themes">
+        {THEMES.map((t) => (
+          <button key={t.id} className={theme === t.id ? 'on' : ''} aria-pressed={theme === t.id} onClick={() => pickTheme(t.id)}>
+            <i style={{ '--a': t.bg, '--b': t.hero } as CSSProperties} />
+            {t.label}
           </button>
         ))}
+        {/* 春夏秋冬と、ハロウィン・クリスマスの時期に、自動で色が変わる */}
+        <button className={`wide ${theme === 'auto' ? 'on' : ''}`} aria-pressed={theme === 'auto'} onClick={() => pickTheme('auto')}>
+          季節に合わせる
+          <small>今は「{THEMES.find((t) => t.id === seasonTheme())!.label}」</small>
+        </button>
       </div>
 
       {/* フォントと分類は場所を取るので、押すまで閉じておく。閉じている間は、いまの選択を右に出す */}
@@ -273,6 +287,22 @@ export function SettingsView() {
           />
         </label>
       </div>
+
+      <h3 className="sec">このアプリのURL</h3>
+      <p className="url-box">{appUrl}</p>
+      <div className="row gap">
+        <button className="btn ghost" onClick={copyUrl}>
+          <Copy size={16} /> URLをコピー
+        </button>
+        {'share' in navigator && (
+          <button className="btn ghost" onClick={() => navigator.share({ title: 'Hachi', url: appUrl }).catch(() => {})}>
+            <Share2 size={16} /> 共有
+          </button>
+        )}
+      </div>
+      <p className="hint">
+        ホーム画面に追加し直すときは、先に上の「書き出す」でバックアップを取ってください。iPhone は、ホーム画面のアイコンを消すとデータも消えます。追加し直したあと「読み込む」で、写真も含めて戻せます。
+      </p>
 
       <button className="fold" onClick={() => open({ k: 'feedback' })}>
         リクエストを送る
