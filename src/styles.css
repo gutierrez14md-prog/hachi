@@ -1262,6 +1262,19 @@ input[type='number'] {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+/* タイルでは、空白 (単語の切れ目) で折り返す。「エスキナンサス ラディカンス」を「エスキナンサス ラディ / カンス」にしない。
+   1 語が 1 行に入らないときだけ、語の途中で折る。ミニは 1 行が短く、語が入らないことが多いので、どこででも折る */
+.tiles.tile:is(.name-two, .name-all) .tile-text b {
+  word-break: keep-all;
+  /* 7 文字の語 (エスキナンサス、パキポディウム) が 1 行に入るよう、狭い端末では字を少しだけ小さくする */
+  font-size: min(13.5px, (100cqw - 10px) / 7.2);
+}
+.tiles.tile button {
+  container-type: inline-size;
+}
+.tiles.tile:is(.name-two, .name-all) .tile-text {
+  padding-inline: 5px;
+}
 .tiles.name-two .tile-text b {
   display: -webkit-box;
   -webkit-box-orient: vertical;

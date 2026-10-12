@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.15.1',
+    date: '2026-10-12',
+    items: ['タイルで名前を 2 行以上にしたとき、言葉の途中ではなく空白のところで折り返すよう変更'],
+  },
+  {
     version: '4.15.0',
     date: '2026-10-12',
     items: ['ホームの写真の一覧（タイル・ミニ）で、長い名前を 2 行まで、またはすべて表示する設定を追加'],
