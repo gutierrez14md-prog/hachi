@@ -24,6 +24,11 @@ export interface Schedule {
    * 入っていれば日数は使わず、水やりの回数で数える (予定日は必ず水やりの日に重なる)。水やり自身には使わない
    */
   everyWater?: number
+  /**
+   * あげる月 (1〜12)。水やりに合わせるケア (everyWater) で、「夏だけ液肥」のように月を選んだとき。
+   * 入っていれば、選んだ月の水やりでだけあげる (休眠期の扱い offMode は使わない)
+   */
+  months?: number[]
 }
 
 export type CareSettings = Record<SchedType, Schedule>

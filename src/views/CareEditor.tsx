@@ -2,7 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
-import { today } from '../lib/date'
+import { monthsText, today } from '../lib/date'
 import { intervalOn, MAX_EVERY } from '../lib/schedule'
 import { careLabel, WATER_LABELS } from '../method'
 import { Field } from '../parts'
@@ -61,6 +61,8 @@ export function cleanCare(care: CareSettings): CareSettings {
       offDays: Math.max(1, c.offDays),
       monthly: c.monthly ? MONTHS.map((m) => Math.max(0, c.monthly![m - 1] || 0)) : null,
       everyWater: s !== 'water' && c.everyWater ? Math.min(MAX_EVERY, Math.max(1, c.everyWater)) : undefined,
+      // あげる月は、水やりに合わせるケアだけのもの
+      months: s !== 'water' && c.everyWater && c.months ? [...c.months].sort((a, b) => a - b) : undefined,
     }
   }
   return out
@@ -185,13 +187,34 @@ export function CareEditor({
                       {every === 1 ? `${labels?.water ?? CARE.water.label}のたびに` : `${labels?.water ?? CARE.water.label}${every}回ごとに`}、{label}も一緒にあげます。
                       {!only && waterDays > 0 && `今の間隔なら、だいたい${waterDays * every}日ごとです。`}
                     </p>
+                    {/* あげる時期: 一年中 / 休眠期はお休み / 月を選ぶ (夏の生長期だけ液肥、など) */}
                     <label className="inline">
-                      休眠期
-                      <select value={c.offMode === 'pause' ? 'pause' : 'same'} onChange={(e) => setCare(s, { offMode: e.target.value as Schedule['offMode'] })}>
-                        <option value="same">生長期と同じ</option>
-                        <option value="pause">お休み</option>
+                      あげる時期
+                      <select
+                        value={c.months ? 'months' : c.offMode === 'pause' ? 'pause' : 'same'}
+                        onChange={(e) =>
+                          setCare(
+                            s,
+                            e.target.value === 'months'
+                              ? // はじめは、休眠期でない月を選んだ状態にする
+                                { months: MONTHS.filter((m) => !dormantMonths.includes(m)) }
+                              : { months: undefined, offMode: e.target.value as Schedule['offMode'] },
+                          )
+                        }
+                      >
+                        <option value="same">一年中</option>
+                        <option value="pause">休眠期はお休み</option>
+                        <option value="months">月を選ぶ</option>
                       </select>
                     </label>
+                    {c.months && (
+                      <>
+                        <MonthChips value={c.months} onChange={(months) => setCare(s, { months })} />
+                        <p className="hint">
+                          {c.months.length ? `${monthsText(c.months)}の${labels?.water ?? CARE.water.label}でだけあげます。ほかの月は予定に出ません。` : 'あげる月を選んでください。'}
+                        </p>
+                      </>
+                    )}
                   </>
                 ) : (
                   <>

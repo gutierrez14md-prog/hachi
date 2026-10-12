@@ -34,6 +34,17 @@ export const fmtFull = (k: string) => {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
 }
 
+/** 月の並びを短く書く: [6, 7, 8, 10] → 「6〜8・10月」 */
+export const monthsText = (months: number[]) => {
+  const runs: [number, number][] = []
+  for (const m of [...months].sort((a, b) => a - b)) {
+    const last = runs[runs.length - 1]
+    if (last && last[1] === m - 1) last[1] = m
+    else runs.push([m, m])
+  }
+  return runs.length ? runs.map(([a, b]) => (a === b ? `${a}` : `${a}〜${b}`)).join('・') + '月' : ''
+}
+
 /** 予定日の急ぎぐあい: over = 過ぎている、today = 今日、'' = まだ先 (または予定なし) */
 export type Urgency = 'over' | 'today' | ''
 export const urgency = (due: string | null | undefined, t = today()): Urgency => (!due || due > t ? '' : due < t ? 'over' : 'today')

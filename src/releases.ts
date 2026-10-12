@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.13.0',
+    date: '2026-10-12',
+    items: ['水やりに合わせる肥料・活力剤に、あげる月の選択を追加（夏の生長期だけあげる、など。肥料と活力剤で別々に選べる）'],
+  },
+  {
     version: '4.12.0',
     date: '2026-10-11',
     items: ['月ごとのケア間隔に、すべての月をまとめて 1 日ずつ短く・長くするボタンを追加'],

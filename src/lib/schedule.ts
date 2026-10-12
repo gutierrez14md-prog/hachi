@@ -51,7 +51,7 @@ const NEVER = 999
  * これからの水やりを順にたどり、その回に一緒にあげるケア (水やりの回数で数えるもの) を visit に渡す。
  * visit が false を返したら止める。clamp = 過ぎている水やりを今日やるものとして数える (カレンダーの見込み用)
  *   ・前回あげてからの水やりの回数が「何回に 1 回」に届いた回であげる
- *   ・休眠期お休みの月、開始日の前、延期中の回は飛ばし、そのあと最初の水やりであげる
+ *   ・あげない月 (選んだ月以外、または休眠期お休みの月)、開始日の前、延期中の回は飛ばし、そのあと最初の水やりであげる
  *   ・stagger の株で 2 つが重なったら、あいだの空いているほうだけあげる (もう片方は次の水やりへ)
  */
 function waterings(p: Plant, logs: CareLog[], visit: (date: string, given: SchedType[]) => boolean, clamp = false) {
@@ -66,11 +66,13 @@ function waterings(p: Plant, logs: CareLog[], visit: (date: string, given: Sched
   const open = (s: SchedType, d: string) => {
     const c = p.care[s]
     if ((c.start && d < c.start) || (p.snooze?.[s] && d < p.snooze[s]!)) return false
+    // あげる月を選んでいれば、その月だけ。選んでいなければ、休眠期お休みの月を外す
+    if (c.months) return c.months.includes(monthOf(d))
     return !(c.offMode === 'pause' && p.dormantMonths.includes(monthOf(d)))
   }
   const t = today()
   let d: string | null = first < t ? t : first
-  for (let i = 0; d && i < 120; i++) {
+  for (let i = 0; d && i < 400; i++) {
     let given = types.filter((s) => since[s] + 1 >= p.care[s].everyWater! && open(s, d!))
     if (p.stagger && given.length > 1) given = [given.reduce((a, b) => (since[b] > since[a] ? b : a))]
     for (const s of types) since[s] = given.includes(s) ? 0 : since[s] + 1

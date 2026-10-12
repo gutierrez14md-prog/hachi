@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db } from '../db'
-import { fmtDay, fmtFull, today } from '../lib/date'
+import { fmtDay, fmtFull, monthsText, today } from '../lib/date'
 import { byWater, intervalOn, isSnoozed, lastDone, nextDue } from '../lib/schedule'
 import { careIcon, careLabel, METHODS } from '../method'
 import { DueTag, Photo, SciName, Sheet } from '../parts'
@@ -122,7 +122,7 @@ export function PlantDetail({ id }: { id: string }) {
                     </b>
                     <small>
                       {byWater(p, s)
-                        ? `${careLabel('water', p)}${p.care[s].everyWater === 1 ? 'のたび' : `${p.care[s].everyWater}回に1回`}`
+                        ? `${careLabel('water', p)}${p.care[s].everyWater === 1 ? 'のたび' : `${p.care[s].everyWater}回に1回`}${p.care[s].months ? `（${monthsText(p.care[s].months!)}）` : ''}`
                         : every
                           ? `今月は${every}日ごと`
                           : '今月はお休み'}
