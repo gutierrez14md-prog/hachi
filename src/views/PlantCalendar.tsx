@@ -5,7 +5,7 @@ import { useApp } from '../ctx'
 import { db } from '../db'
 import { addDays, fmtDay, today } from '../lib/date'
 import { lightLabel, projected } from '../lib/schedule'
-import { careIcon, careLabel } from '../method'
+import { careLabel, logIcon, planIcon } from '../method'
 import type { CareLog, Plant, SchedType } from '../types'
 import { MonthCal, monthRange, thisMonth } from './MonthCal'
 
@@ -69,7 +69,7 @@ export function PlantCalendar({ plant: p, logs }: { plant: Plant; logs: CareLog[
           )}
         </div>
         {selPlan.map(({ type }) => {
-          const Icon = careIcon(type, p)
+          const Icon = planIcon(type, p, sel)
           return (
             <div className="line" key={`p${type}`}>
               <span className="care-ic" style={careVar(type)}>
@@ -83,7 +83,7 @@ export function PlantCalendar({ plant: p, logs }: { plant: Plant; logs: CareLog[
           )
         })}
         {selDone.map((l) => {
-          const Icon = careIcon(l.type, p)
+          const Icon = logIcon(l, p)
           return (
             <div className="line" key={l.id}>
               <span className="care-ic" style={careVar(l.type)}>

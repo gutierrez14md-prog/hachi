@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.16.1',
+    date: '2026-10-13',
+    items: ['ちょろ水のアイコンを、ふつうの水やり（しずく）と分けてスポイトに変更'],
+  },
+  {
     version: '4.16.0',
     date: '2026-10-13',
     items: ['まとめて記録に日付の選択を追加（下のバーの「今日」を押して、過去の日の記録としてまとめて入れられる）'],

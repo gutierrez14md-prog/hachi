@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { addDays, diffDays, fmtDay, fmtFull, fromKey, today, urgency, type Urgency } from '../lib/date'
-import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
+import { careIcon, careLabel, METHOD_IDS, METHODS, planIcon } from '../method'
 import { byWater, heads, lightLabel, nextDue } from '../lib/schedule'
 import { exportBackup, lastBackup } from '../lib/backup'
 import { describe, useWeather } from '../lib/weather'
@@ -65,7 +65,7 @@ function DueIcons({ p, due, t, size = 11, className = '' }: { p: Plant; due: Due
   return (
     <span className={`due-ics ${className}`} role="img" aria-label={types.map((s) => careLabel(s, p)).join('・')}>
       {types.map((s) => {
-        const Icon = careIcon(s, p)
+        const Icon = planIcon(s, p, t)
         return (
           <span key={s} className={`due-ic ${urgency(due[s], t)}`} style={careVar(s)}>
             <Icon size={size} strokeWidth={2.5} />
@@ -238,7 +238,7 @@ export function Home() {
             const w = due.water
             const s = lead(due)
             const late = !!w && w <= t
-            const WaterIcon = careIcon('water', p)
+            const WaterIcon = planIcon('water', p, t)
             return (
               <li key={p.id} className={`plant ${isOn(p) ? 'picked' : ''}`}>
                 <button className="plant-main" onClick={() => tap(p)} {...pressed(p)}>
@@ -518,7 +518,7 @@ export function Home() {
           {dueOpen && dueNow.map(({ p, types, due }) => {
             // 水やりと一緒にあげるケア (水に混ぜる肥料・活力剤) は、水やりとまとめて 1 つのボタンにする
             const mixed = types.includes('water') ? types.filter((s) => byWater(p, s)) : []
-            const WaterIcon = careIcon('water', p)
+            const WaterIcon = planIcon('water', p, t)
             return (
               <div className="due-row" key={p.id}>
                 <button className="due-plant" onClick={() => open({ k: 'plant', id: p.id })}>
@@ -542,7 +542,7 @@ export function Home() {
                     </button>
                   )}
                   {types.filter((s) => !mixed.includes(s)).map((s) => {
-                    const Icon = careIcon(s, p)
+                    const Icon = planIcon(s, p, t)
                     const label = lightLabel(p, s, t) ?? careLabel(s, p)
                     return (
                       <button key={s} className="pill" style={careVar(s)} onClick={() => record([p.id], s)}>

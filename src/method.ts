@@ -1,6 +1,7 @@
-import { GlassWater, RefreshCw, SprayCan, Waves, type LucideIcon } from 'lucide-react'
+import { GlassWater, Pipette, RefreshCw, SprayCan, Waves, type LucideIcon } from 'lucide-react'
 import { CARE } from './care'
-import type { CareType, Method } from './types'
+import { LIGHT, lightWater } from './lib/schedule'
+import type { CareLog, CareType, Method, Plant } from './types'
 
 /**
  * 栽培方法。water は、その方法での「水やり」にあたる作業の呼び名
@@ -27,6 +28,17 @@ const WATER_ICONS: Record<string, LucideIcon> = {
 /** ケアのアイコン。水やりだけ、呼び名に合わせて変える */
 export const careIcon = (type: CareType, of?: { method?: Method; waterLabel?: string }): LucideIcon =>
   (type === 'water' && WATER_ICONS[careLabel(type, of)]) || CARE[type].Icon
+
+/** ちょろ水のアイコン。ふつうの水やり (しずく) と見分けられるよう、ほんの少しの水 = スポイトにする (色は水やりと同じ) */
+export const LIGHT_ICON: LucideIcon = Pipette
+
+/** その日にやるケアのアイコン。ちょろ水の月の水やりは、ちょろ水のアイコン */
+export const planIcon = (type: CareType, p: Pick<Plant, 'care' | 'method' | 'waterLabel'>, day: string): LucideIcon =>
+  type === 'water' && lightWater(p, day) ? LIGHT_ICON : careIcon(type, p)
+
+/** 記録のアイコン。ちょろ水として残した水やり (メモが「ちょろ水」) は、ちょろ水のアイコン */
+export const logIcon = (l: Pick<CareLog, 'type' | 'note'>, p?: { method?: Method; waterLabel?: string }): LucideIcon =>
+  l.type === 'water' && l.note === LIGHT ? LIGHT_ICON : careIcon(l.type, p)
 
 /** 「水やりの呼び名」の欄に出す候補 */
 export const WATER_LABELS = ['水やり', 'ソーキング', 'ミスティング', '水足し', '水替え']

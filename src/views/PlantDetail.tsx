@@ -5,7 +5,7 @@ import { useApp } from '../ctx'
 import { db } from '../db'
 import { fmtDay, fmtFull, monthsText, today } from '../lib/date'
 import { byWater, intervalOn, isSnoozed, lastDone, lightWater, nextDue } from '../lib/schedule'
-import { careIcon, careLabel, METHODS } from '../method'
+import { careIcon, careLabel, logIcon, METHODS, planIcon } from '../method'
 import { DueTag, Photo, SciName, Sheet } from '../parts'
 import { archiveText } from './Archive'
 import { PlantCalendar } from './PlantCalendar'
@@ -105,9 +105,10 @@ export function PlantDetail({ id }: { id: string }) {
         <section className="card">
           <h3 className="card-t">次のケア</h3>
           {sched.map((s) => {
-            const Icon = careIcon(s, p)
             const label = careLabel(s, p)
             const due = nextDue(p, s, logs)
+            // 次の水やりがちょろ水なら、ちょろ水のアイコン
+            const Icon = planIcon(s, p, due ?? t)
             const last = lastDone(logs, s)
             const every = intervalOn(p, p.care[s], t)
             return (
@@ -193,7 +194,7 @@ export function PlantDetail({ id }: { id: string }) {
       {logs.length ? (
         <section className="card">
           {(showAll ? logs : logs.slice(0, 10)).map((l) => {
-            const Icon = careIcon(l.type, p)
+            const Icon = logIcon(l, p)
             const label = careLabel(l.type, p)
             return (
               <div className="line" key={l.id}>
