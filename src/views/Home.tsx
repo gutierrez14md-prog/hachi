@@ -287,7 +287,7 @@ export function Home() {
     // タイル (3 列) とミニ (5 列): 写真を並べて、名前を下に重ねる。今日ケアが必要な株には、右上にそのケアのアイコン
     if (view === 'tile' || view === 'mini')
       return (
-        <ul className={`tiles ${view}`}>
+        <ul className={`tiles ${view} name-${settings.tileName ?? 'one'}`}>
           {items.map(({ p, due }) => {
             const s = lead(due)
             const lv = worst(due)

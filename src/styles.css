@@ -1257,6 +1257,26 @@ input[type='number'] {
   font-size: 13.5px;
   line-height: 1.35;
 }
+/* 名前の出し方 (設定で選ぶ): 2 行まで / すべて。すべてのときは、写真に大きく重なってもよい */
+.tiles:is(.name-two, .name-all) .tile-text b {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.tiles.name-two .tile-text b {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.tiles.name-all .tile-text b {
+  overflow: visible;
+}
+/* 写真より長くなる名前は、頭から見えるようにして、入りきらない終わりのほうを切る */
+.tiles.name-all .tile-text {
+  box-sizing: border-box;
+  max-height: 100%;
+  overflow: hidden;
+  padding-top: 8px;
+}
 .tile-text small {
   color: rgb(255 255 255 / 80%);
   font-size: 10.5px;

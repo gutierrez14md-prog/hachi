@@ -1,4 +1,4 @@
-import { Archive, Bell, ChevronDown, ChevronRight, CloudSun, Copy, Download, FlaskConical, Plus, Share2, Upload } from 'lucide-react'
+import { Archive, Bell, ChevronDown, ChevronRight, CloudSun, Copy, Download, FlaskConical, Grid2x2, Plus, Share2, Upload } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
@@ -209,6 +209,23 @@ export function SettingsView() {
             </span>
           </span>
           <input type="checkbox" className="switch" checked={settings.showArchived ?? true} onChange={(e) => save({ showArchived: e.target.checked })} />
+        </label>
+        {/* 写真の一覧 (タイル・ミニ) の名前。1 行だと長い名前が途中で切れるので、行数を選べる */}
+        <label className="line">
+          <span className="care-ic">
+            <Grid2x2 size={18} />
+          </span>
+          <span className="line-main">
+            <span>
+              <b>写真の一覧の名前</b>
+              <small>タイルとミニで、長い名前をどこまで出すか</small>
+            </span>
+          </span>
+          <select value={settings.tileName ?? 'one'} onChange={(e) => save({ tileName: e.target.value as Settings['tileName'] })} aria-label="写真の一覧の名前">
+            <option value="one">1行</option>
+            <option value="two">2行まで</option>
+            <option value="all">すべて</option>
+          </select>
         </label>
       </section>
 

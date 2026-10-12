@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.15.0',
+    date: '2026-10-12',
+    items: ['ホームの写真の一覧（タイル・ミニ）で、長い名前を 2 行まで、またはすべて表示する設定を追加'],
+  },
+  {
     version: '4.14.1',
     date: '2026-10-12',
     items: ['水やりを控えめにする月の呼び名を「ちょろ水」に変更（「水やり（控えめ）」ではなく、その月の水やりを「ちょろ水」と表示）'],
