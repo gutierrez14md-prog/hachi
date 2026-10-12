@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.16.0',
+    date: '2026-10-13',
+    items: ['まとめて記録に日付の選択を追加（下のバーの「今日」を押して、過去の日の記録としてまとめて入れられる）'],
+  },
+  {
     version: '4.15.1',
     date: '2026-10-12',
     items: ['タイルで名前を 2 行以上にしたとき、言葉の途中ではなく空白のところで折り返すよう変更'],

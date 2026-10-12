@@ -1,4 +1,4 @@
-import { AlignJustify, Archive, BookOpen, Download, CalendarClock, Check, ChevronDown, ChevronUp, Droplets, Grid2x2, Grid3x3, LayoutList, ListChecks, MapPin, Search, X } from 'lucide-react'
+import { AlignJustify, Archive, BookOpen, Download, CalendarClock, CalendarDays, Check, ChevronDown, ChevronUp, Droplets, Grid2x2, Grid3x3, LayoutList, ListChecks, MapPin, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
@@ -47,7 +47,7 @@ const GROUP_BYS: [GroupBy, string][] = [
  * まとめて記録・延期: 一覧で株を選び (sel)、下のバーでケアの種類を選んで (types)、まとめて記録するか、まとめて延期する。
  * 選んでいる間は、一覧の株を押すと詳細が開くかわりに、選択が入る
  */
-type Bulk = { types: CareType[]; sel: string[] }
+type Bulk = { types: CareType[]; sel: string[]; /** 記録する日。ふつうは今日。付け忘れたぶんを入れるときは、過去の日 */ date: string }
 
 type Due = Record<SchedType, string | null>
 
@@ -629,7 +629,7 @@ export function Home() {
         </select>
       </div>
       {!picking && (
-        <button className="btn ghost full bulk-start" onClick={() => setBulk({ types: ['water'], sel: [] })}>
+        <button className="btn ghost full bulk-start" onClick={() => setBulk({ types: ['water'], sel: [], date: t })}>
           <ListChecks size={16} /> まとめて記録・延期
         </button>
       )}
@@ -709,6 +709,19 @@ export function Home() {
                 })}
               </div>
               <div className="row">
+                {/* 記録する日。押すと日付を選べる (昨日の付け忘れをまとめて入れる、など)。今日でないときは色を変える */}
+                <label className={`bulk-date ${bulk.date === t ? '' : 'on'}`}>
+                  <CalendarDays size={15} />
+                  {bulk.date === t ? '今日' : `${fromKey(bulk.date).getMonth() + 1}/${fromKey(bulk.date).getDate()}`}
+                  <input
+                    type="date"
+                    max={t}
+                    value={bulk.date}
+                    aria-label="記録する日"
+                    // 空にされたとき、先の日を選ばれたときは、受け取らない
+                    onChange={(e) => e.target.value && e.target.value <= t && setBulk((b) => b && { ...b, date: e.target.value })}
+                  />
+                </label>
                 <b className="bulk-what">{bulk.sel.length}株を選択中</b>
                 <button
                   className="btn ghost sm"
@@ -737,7 +750,7 @@ export function Home() {
                   className="btn primary grow"
                   disabled={!bulk.sel.length || !bulk.types.length}
                   onClick={async () => {
-                    await record(bulk.sel, bulk.types)
+                    await record(bulk.sel, bulk.types, bulk.date)
                     setBulk(null)
                   }}
                 >
