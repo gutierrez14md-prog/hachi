@@ -4,7 +4,7 @@ import { ALL_TYPES, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db } from '../db'
 import { addDays, fmtDay, today } from '../lib/date'
-import { projected } from '../lib/schedule'
+import { lightMark, projected } from '../lib/schedule'
 import { careIcon, careLabel } from '../method'
 import type { CareLog, Plant, SchedType } from '../types'
 import { MonthCal, monthRange, thisMonth } from './MonthCal'
@@ -76,7 +76,10 @@ export function PlantCalendar({ plant: p, logs }: { plant: Plant; logs: CareLog[
                 <Icon size={16} />
               </span>
               <span className="line-main">
-                <b>{careLabel(type, p)}</b>
+                <b>
+                  {careLabel(type, p)}
+                  {lightMark(p, type, sel)}
+                </b>
               </span>
               <span className="soft">{sel === t ? 'ケアが必要' : '予定'}</span>
             </div>

@@ -63,6 +63,7 @@ export function cleanCare(care: CareSettings): CareSettings {
       everyWater: s !== 'water' && c.everyWater ? Math.min(MAX_EVERY, Math.max(1, c.everyWater)) : undefined,
       // あげる月は、水やりに合わせるケアだけのもの
       months: s !== 'water' && c.everyWater && c.months ? [...c.months].sort((a, b) => a - b) : undefined,
+      light: s === 'water' && c.light?.length ? [...c.light].sort((a, b) => a - b) : undefined,
     }
   }
   return out
@@ -294,6 +295,23 @@ export function CareEditor({
                             </>
                           )}
                         </label>
+                      </>
+                    )}
+                  </>
+                )}
+                {/* 水やりを控えめにする月 (休眠期でも、表土を湿らせる程度にはやっておく、など) */}
+                {s === 'water' && (
+                  <>
+                    <label className="inline">
+                      控えめにする月を決める
+                      <input type="checkbox" className="switch" checked={!!c.light} onChange={(e) => setCare(s, { light: e.target.checked ? [...dormantMonths] : undefined })} />
+                    </label>
+                    {c.light && (
+                      <>
+                        <MonthChips value={c.light} onChange={(light) => setCare(s, { light })} />
+                        <p className="hint">
+                          選んだ月は、表土を湿らせる程度にする月として、予定に「{label}（控えめ）」と出ます。間隔は変わらないので、上で決めてください。
+                        </p>
                       </>
                     )}
                   </>

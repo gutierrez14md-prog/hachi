@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.14.0',
+    date: '2026-10-12',
+    items: ['水やりを控えめにする月の設定を追加（休眠期に表土を湿らせる程度にする月。予定に「水やり（控えめ）」と表示し、記録のメモにも残す）'],
+  },
+  {
     version: '4.13.0',
     date: '2026-10-12',
     items: ['水やりに合わせる肥料・活力剤に、あげる月の選択を追加（夏の生長期だけあげる、など。肥料と活力剤で別々に選べる）'],

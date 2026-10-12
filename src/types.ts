@@ -29,6 +29,11 @@ export interface Schedule {
    * 入っていれば、選んだ月の水やりでだけあげる (休眠期の扱い offMode は使わない)
    */
   months?: number[]
+  /**
+   * 水やりを控えめにする月 (1〜12)。休眠期に、表土を湿らせる程度にしておく月など。水やりだけのもの。
+   * 間隔は変えず、その月の水やりに「控えめ」と出す (記録にも「控えめ」と残す)
+   */
+  light?: number[]
 }
 
 export type CareSettings = Record<SchedType, Schedule>

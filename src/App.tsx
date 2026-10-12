@@ -6,10 +6,10 @@ import { Ctx, type AppCtx, type Overlay } from './ctx'
 import { db, DEFAULT_SETTINGS, newId } from './db'
 import { today } from './lib/date'
 import { checkNotify, syncReminder } from './lib/reminder'
-import { byWater } from './lib/schedule'
+import { byWater, LIGHT, lightWater } from './lib/schedule'
 import { careLabel } from './method'
 import { PotIcon } from './parts'
-import type { CareLog } from './types'
+import type { CareLog, CareType } from './types'
 import { Archive, ArchiveForm, Snooze } from './views/Archive'
 import { CalendarView } from './views/CalendarView'
 import { Feedback } from './views/Feedback'
@@ -88,7 +88,12 @@ export default function App() {
   const record = useCallback<AppCtx['record']>(
     async (plantIds, type, date = today(), note = '') => {
       const types = Array.isArray(type) ? type : [type]
-      const rows: CareLog[] = types.flatMap((ty) => plantIds.map((plantId) => ({ id: newId(), plantId, type: ty, date, note, at: Date.now() })))
+      // 控えめにする月の水やりは、メモを書いていなければ「控えめ」と残す (あとで履歴を見たときにわかるように)
+      const noteFor = (plantId: string, ty: CareType) => {
+        const p = ty === 'water' && !note ? allPlants?.find((x) => x.id === plantId) : undefined
+        return p && lightWater(p, date) ? LIGHT : note
+      }
+      const rows: CareLog[] = types.flatMap((ty) => plantIds.map((plantId) => ({ id: newId(), plantId, type: ty, date, note: noteFor(plantId, ty), at: Date.now() })))
       // 水やりに合わせてあげるケア (水に混ぜる肥料・活力剤) は水やりを兼ねるので、その日の水やりがまだなら一緒に記録する
       const watered = types.includes('water')
         ? []
@@ -97,7 +102,7 @@ export default function App() {
             const mixed = p && types.some((ty) => (ty === 'fertilizer' || ty === 'tonic') && byWater(p, ty))
             return mixed && !logsOf(id).some((l) => l.type === 'water' && l.date === date)
           })
-      rows.push(...watered.map((plantId) => ({ id: newId(), plantId, type: 'water' as const, date, note: '', at: Date.now() })))
+      rows.push(...watered.map((plantId) => ({ id: newId(), plantId, type: 'water' as const, date, note: noteFor(plantId, 'water'), at: Date.now() })))
       await db.logs.bulkAdd(rows)
       // 呼び名は栽培方法に合わせる (水替え など)。呼び名の違う株が混ざるときは、ふつうの呼び名にする
       const label = types
