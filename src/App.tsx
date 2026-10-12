@@ -6,7 +6,7 @@ import { Ctx, type AppCtx, type Overlay } from './ctx'
 import { db, DEFAULT_SETTINGS, newId } from './db'
 import { today } from './lib/date'
 import { checkNotify, syncReminder } from './lib/reminder'
-import { byWater, LIGHT, lightWater } from './lib/schedule'
+import { byWater, LIGHT, lightLabel, lightWater } from './lib/schedule'
 import { careLabel } from './method'
 import { PotIcon } from './parts'
 import type { CareLog, CareType } from './types'
@@ -88,7 +88,7 @@ export default function App() {
   const record = useCallback<AppCtx['record']>(
     async (plantIds, type, date = today(), note = '') => {
       const types = Array.isArray(type) ? type : [type]
-      // 控えめにする月の水やりは、メモを書いていなければ「控えめ」と残す (あとで履歴を見たときにわかるように)
+      // ちょろ水にする月の水やりは、メモを書いていなければ「ちょろ水」と残す (あとで履歴を見たときにわかるように)
       const noteFor = (plantId: string, ty: CareType) => {
         const p = ty === 'water' && !note ? allPlants?.find((x) => x.id === plantId) : undefined
         return p && lightWater(p, date) ? LIGHT : note
@@ -104,15 +104,19 @@ export default function App() {
           })
       rows.push(...watered.map((plantId) => ({ id: newId(), plantId, type: 'water' as const, date, note: noteFor(plantId, 'water'), at: Date.now() })))
       await db.logs.bulkAdd(rows)
-      // 呼び名は栽培方法に合わせる (水替え など)。呼び名の違う株が混ざるときは、ふつうの呼び名にする
+      // 呼び名は栽培方法に合わせる (水替え など)。ちょろ水の月の水やりは「ちょろ水」。呼び名の違う株が混ざるときは、ふつうの呼び名にする
+      const nameOf = (ty: CareType, id: string) => {
+        const p = allPlants?.find((x) => x.id === id)
+        return (p && lightLabel(p, ty, date)) ?? careLabel(ty, p)
+      }
       const label = types
         .map((ty) => {
-          const names = new Set(plantIds.map((id) => careLabel(ty, allPlants?.find((p) => p.id === id))))
+          const names = new Set(plantIds.map((id) => nameOf(ty, id)))
           return names.size === 1 ? [...names][0] : CARE[ty].label
         })
         .join('・')
       const what = plantIds.length > 1 ? `${plantIds.length}株の${label}` : label
-      const also = watered.length ? `（${careLabel('water', allPlants?.find((p) => p.id === watered[0]))}も記録）` : ''
+      const also = watered.length ? `（${nameOf('water', watered[0])}も記録）` : ''
       showToast(`${what}を記録しました${also}`, () => db.logs.bulkDelete(rows.map((r) => r.id)))
     },
     [showToast, allPlants, logsOf],

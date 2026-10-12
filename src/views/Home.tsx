@@ -4,7 +4,7 @@ import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { addDays, diffDays, fmtDay, fmtFull, fromKey, today, urgency, type Urgency } from '../lib/date'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
-import { byWater, heads, lightMark, nextDue } from '../lib/schedule'
+import { byWater, heads, lightLabel, nextDue } from '../lib/schedule'
 import { exportBackup, lastBackup } from '../lib/backup'
 import { describe, useWeather } from '../lib/weather'
 import { DueTag, Photo, PotIcon, SciName, SciText } from '../parts'
@@ -538,17 +538,16 @@ export function Home() {
                         const Icon = careIcon(s, p)
                         return <Icon key={s} size={15} />
                       })}
-                      {['water' as const, ...mixed].map((s) => careLabel(s, p) + lightMark(p, s, t)).join('＋')}
+                      {['water' as const, ...mixed].map((s) => lightLabel(p, s, t) ?? careLabel(s, p)).join('＋')}
                     </button>
                   )}
                   {types.filter((s) => !mixed.includes(s)).map((s) => {
                     const Icon = careIcon(s, p)
-                    const label = careLabel(s, p)
+                    const label = lightLabel(p, s, t) ?? careLabel(s, p)
                     return (
                       <button key={s} className="pill" style={careVar(s)} onClick={() => record([p.id], s)}>
                         <Icon size={15} />
                         {mixed.length > 0 ? `${label}のみ` : label}
-                        {lightMark(p, s, t)}
                       </button>
                     )
                   })}

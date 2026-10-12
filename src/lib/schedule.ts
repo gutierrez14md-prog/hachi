@@ -38,11 +38,15 @@ export function lastDone(logs: CareLog[], type: string): string | null {
   return last
 }
 
-/** その日の水やりは、控えめにする月のものか (表土を湿らせる程度) */
+/** その日の水やりは、ちょろ水にする月のものか (表土を湿らせる程度) */
 export const lightWater = (p: Pick<Plant, 'care'>, day: string) => !!p.care.water.light?.includes(monthOf(day))
-/** 控えめの水やりに添える言葉。呼び名のあとに付ける (「水やり（控えめ）」) */
-export const LIGHT = '控えめ'
-export const lightMark = (p: Pick<Plant, 'care'>, type: string, day: string) => (type === 'water' && lightWater(p, day) ? `（${LIGHT}）` : '')
+/**
+ * 表土を湿らせる程度の水やりの呼び名。「水やり（控えめ）」のように添えると回数の話にも読めるので、
+ * その月の水やりそのものを、この名前で出す (サボテンや多肉を育てる人が使う言葉)
+ */
+export const LIGHT = 'ちょろ水'
+/** その日のそのケアが、ちょろ水ならその呼び名。ふつうの水やりや、ほかのケアなら undefined (ふだんの呼び名を使う) */
+export const lightLabel = (p: Pick<Plant, 'care'>, type: string, day: string) => (type === 'water' && lightWater(p, day) ? LIGHT : undefined)
 
 /** 水やりの回数で数えるケアか (水に混ぜてあげる肥料・活力剤) */
 export const byWater = (p: Pick<Plant, 'care'>, type: SchedType) => type !== 'water' && p.care[type].enabled && !!p.care[type].everyWater

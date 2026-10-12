@@ -299,18 +299,18 @@ export function CareEditor({
                     )}
                   </>
                 )}
-                {/* 水やりを控えめにする月 (休眠期でも、表土を湿らせる程度にはやっておく、など) */}
+                {/* ちょろ水にする月 (休眠期でも、表土を湿らせる程度にはやっておく、など) */}
                 {s === 'water' && (
                   <>
                     <label className="inline">
-                      控えめにする月を決める
+                      ちょろ水にする月を決める
                       <input type="checkbox" className="switch" checked={!!c.light} onChange={(e) => setCare(s, { light: e.target.checked ? [...dormantMonths] : undefined })} />
                     </label>
                     {c.light && (
                       <>
                         <MonthChips value={c.light} onChange={(light) => setCare(s, { light })} />
                         <p className="hint">
-                          選んだ月は、表土を湿らせる程度にする月として、予定に「{label}（控えめ）」と出ます。間隔は変わらないので、上で決めてください。
+                          選んだ月の{label}は、表土を湿らせる程度の「ちょろ水」として予定に出ます。間隔は変わらないので、上で決めてください。
                         </p>
                       </>
                     )}

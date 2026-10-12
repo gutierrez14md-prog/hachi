@@ -121,7 +121,7 @@ export function PlantDetail({ id }: { id: string }) {
                       {label} <span className="soft">{due ? <DueTag due={due} /> : '予定なし'}</span>
                     </b>
                     <small>
-                      {s === 'water' && due && lightWater(p, due) && '次は控えめに（表土を湿らせる程度） ・ '}
+                      {s === 'water' && due && lightWater(p, due) && '次はちょろ水（表土を湿らせる程度） ・ '}
                       {byWater(p, s)
                         ? `${careLabel('water', p)}${p.care[s].everyWater === 1 ? 'のたび' : `${p.care[s].everyWater}回に1回`}${p.care[s].months ? `（${monthsText(p.care[s].months!)}）` : ''}`
                         : every
