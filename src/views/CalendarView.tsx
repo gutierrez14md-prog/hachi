@@ -1,17 +1,17 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db } from '../db'
 import { addDays, fmtDay, today } from '../lib/date'
 import { heads, projected } from '../lib/schedule'
-import { careLabel, logIcon } from '../method'
+import { logIcon, logLabel } from '../method'
 import { CarePills, Photo } from '../parts'
 import type { CareLog, Plant, SchedType } from '../types'
 import { MonthCal, monthRange, thisMonth } from './MonthCal'
 
 export function CalendarView() {
-  const { plants, allPlants, logs, logsOf, open } = useApp()
+  const { plants, allPlants, logs, logsOf, open, toast } = useApp()
   const t = today()
   const [ym, setYm] = useState(thisMonth)
   const [sel, setSel] = useState(t)
@@ -33,7 +33,13 @@ export function CalendarView() {
     return { done, plan }
   }, [plants, logs, logsOf, plantOf, first, last])
 
-  const selDone = done.get(sel) ?? []
+  // 記録済みも、株ごとに 1 行にまとめる
+  const selDone: { p: Plant; logs: CareLog[] }[] = []
+  for (const l of done.get(sel) ?? []) {
+    const row = selDone.find((r) => r.p.id === l.plantId)
+    if (row) row.logs.push(l)
+    else selDone.push({ p: plantOf.get(l.plantId)!, logs: [l] })
+  }
   // その日の予定は、株ごとに 1 行にまとめる (水やりと肥料が重なる株を、2 行に分けない)
   const selPlan: { p: Plant; types: SchedType[] }[] = []
   for (const { p, type } of plan.get(sel) ?? []) {
@@ -92,27 +98,46 @@ export function CalendarView() {
 
       {selDone.length > 0 && (
         <section className="card">
-          <h3 className="card-t">記録済み {selDone.length}件</h3>
-          {selDone.map((l) => {
-            const p = plantOf.get(l.plantId)!
-            const Icon = logIcon(l, p)
-            const label = careLabel(l.type, p)
+          <h3 className="card-t">記録済み {heads(selDone.map((r) => r.p))}株</h3>
+          {selDone.map(({ p, logs }) => {
+            // メモは名前の下に並べる (ちょろ水の印として入れたメモは、札の名前でわかるので出さない)
+            const notes = logs.filter((l) => l.note && logLabel(l, p) !== l.note)
             return (
-              <div className="line" key={l.id}>
+              <div className="line" key={p.id}>
                 <button className="line-main" onClick={() => open({ k: 'plant', id: p.id })}>
                   <Photo id={p.photoId} className="thumb sm" />
                   <span>
                     <b className="pn">{p.name}</b>
-                    {l.note && <small>{l.note}</small>}
+                    {notes.map((l) => (
+                      <small key={l.id}>
+                        {logLabel(l, p)}：{l.note}
+                      </small>
+                    ))}
                   </span>
                 </button>
-                <span className="tag" style={careVar(l.type)}>
-                  <Icon size={14} />
-                  {label}
-                </span>
-                <button className="icon-btn muted" onClick={() => db.logs.delete(l.id)} aria-label="記録を削除">
-                  <Trash2 size={16} />
-                </button>
+                {/* 記録の札。押すと、その 1 件を消す (取り消せる) */}
+                <div className="due-acts">
+                  {logs.map((l) => {
+                    const Icon = logIcon(l, p)
+                    const label = logLabel(l, p)
+                    return (
+                      <button
+                        key={l.id}
+                        className="tag del"
+                        style={careVar(l.type)}
+                        aria-label={`${p.name}の${label}の記録を消す`}
+                        onClick={async () => {
+                          await db.logs.delete(l.id)
+                          toast(`${label}の記録を消しました`, () => db.logs.put(l))
+                        }}
+                      >
+                        <Icon size={14} />
+                        {label}
+                        <X size={12} />
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )
           })}

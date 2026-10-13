@@ -40,6 +40,10 @@ export const planIcon = (type: CareType, p: Pick<Plant, 'care' | 'method' | 'wat
 export const logIcon = (l: Pick<CareLog, 'type' | 'note'>, p?: { method?: Method; waterLabel?: string }): LucideIcon =>
   l.type === 'water' && l.note === LIGHT ? LIGHT_ICON : careIcon(l.type, p)
 
+/** 記録の呼び名。ちょろ水として残した水やりは「ちょろ水」 */
+export const logLabel = (l: Pick<CareLog, 'type' | 'note'>, p?: { method?: Method; waterLabel?: string }) =>
+  l.type === 'water' && l.note === LIGHT ? LIGHT : careLabel(l.type, p)
+
 /** 「水やりの呼び名」の欄に出す候補 */
 export const WATER_LABELS = ['水やり', 'ソーキング', 'ミスティング', '水足し', '水替え']
 

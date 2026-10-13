@@ -1,14 +1,22 @@
 import { X } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { db } from '../db'
-import { CROP_ASPECT, cropPhoto } from '../lib/photo'
-import type { PhotoCrop } from '../types'
+import { CROP_ASPECT, cropPhoto, hasTone, NO_TONE, toneCss } from '../lib/photo'
+import type { PhotoCrop, PhotoTone } from '../types'
+
+type Adjust = Pick<PhotoCrop, 'x' | 'y' | 'zoom' | 'tone'>
+const TONES: [keyof PhotoTone, string][] = [
+  ['b', '明るさ'],
+  ['c', 'コントラスト'],
+  ['s', '彩度'],
+]
 
 const MAX_ZOOM = 4
 
 /**
- * 写真の位置と大きさの調整。枠の中で写真を指で動かし、2 本指かスライダーで拡大する。
- * 決定すると、枠の範囲を切り出した新しい写真を保存して onDone に渡す。
+ * 写真の調整: 位置と大きさ (枠の中で写真を指で動かし、2 本指かスライダーで拡大する) と、
+ * 明るさ・コントラスト・彩度 (スライダー。枠の写真にその場で反映する)。
+ * 決定すると、枠の範囲を切り出して色みを調整した新しい写真を保存して onDone に渡す。
  * 元の写真 (photoId) は残すので、あとから調整し直せる (start = 前回の調整)。
  * own = 枠を 4:3 にせず、写真そのものの形にする (生長記録用。写真の形は変えずに、寄せたり拡大したりする)
  */
@@ -21,8 +29,8 @@ export function PhotoAdjust({
 }: {
   photoId: string
   own?: boolean
-  start?: Pick<PhotoCrop, 'x' | 'y' | 'zoom'>
-  onDone: (photoId: string, crop: Pick<PhotoCrop, 'x' | 'y' | 'zoom'>) => void
+  start?: Adjust
+  onDone: (photoId: string, crop: Adjust) => void
   onClose: () => void
 }) {
   const frame = useRef<HTMLDivElement>(null)
@@ -33,6 +41,7 @@ export function PhotoAdjust({
   const [width, setWidth] = useState(0)
   // x, y = 枠の中心に来る写真上の位置 (0〜1)。zoom = 1 で、写真が枠をちょうど覆う大きさ
   const [v, setV] = useState({ x: start?.x ?? 0.5, y: start?.y ?? 0.5, zoom: start?.zoom ?? 1 })
+  const [tone, setTone] = useState<PhotoTone>(start?.tone ?? NO_TONE)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -105,7 +114,7 @@ export function PhotoAdjust({
     setSaving(true)
     try {
       const crop = clamp(v)
-      onDone(await cropPhoto(photoId, crop, aspect), crop)
+      onDone(await cropPhoto(photoId, crop, aspect, tone), { ...crop, tone: hasTone(tone) ? tone : undefined })
     } catch {
       setError('画像を保存できませんでした')
       setSaving(false)
@@ -115,12 +124,12 @@ export function PhotoAdjust({
   const shown = clamp(v)
   return (
     <div className="backdrop top">
-      <div className="sheet" role="dialog" aria-modal="true" aria-label="写真の位置と大きさ">
+      <div className="sheet" role="dialog" aria-modal="true" aria-label="写真の調整">
         <button className="sheet-x" onClick={onClose} aria-label="閉じる">
           <X size={16} strokeWidth={2.2} />
         </button>
         <div className="sheet-b">
-          <h2 className="sheet-t">写真の位置と大きさ</h2>
+          <h2 className="sheet-t">写真の調整</h2>
           <div className="adjust-frame" style={{ aspectRatio: aspect, '--ar': aspect } as React.CSSProperties} ref={frame} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
             {url && (
               <img
@@ -128,7 +137,7 @@ export function PhotoAdjust({
                 alt=""
                 draggable={false}
                 onLoad={(e) => setSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
-                style={size && width ? { width: dw, height: dh, left: width / 2 - shown.x * dw, top: height / 2 - shown.y * dh } : { opacity: 0 }}
+                style={size && width ? { width: dw, height: dh, left: width / 2 - shown.x * dw, top: height / 2 - shown.y * dh, filter: hasTone(tone) ? toneCss(tone) : undefined } : { opacity: 0 }}
               />
             )}
             {/* 一覧のタイルは正方形に切り取られるので、その範囲の目安 (植物の写真だけ) */}
@@ -139,15 +148,34 @@ export function PhotoAdjust({
               拡大
               <input type="range" min={1} max={MAX_ZOOM} step={0.01} value={shown.zoom} onChange={(e) => setV((c) => clamp({ ...c, zoom: Number(e.target.value) }))} />
             </label>
-            <button className="btn ghost sm" onClick={() => setV({ x: 0.5, y: 0.5, zoom: 1 })}>
-              元に戻す
+          </div>
+          {/* 明るさ・コントラスト・彩度。まん中 (0) が元のまま */}
+          <div className="tone">
+            {TONES.map(([k, label]) => (
+              <label key={k}>
+                <span>{label}</span>
+                <input type="range" min={-100} max={100} step={1} value={tone[k]} onChange={(e) => setTone((c) => ({ ...c, [k]: Number(e.target.value) }))} aria-label={label} />
+                <output>{tone[k] > 0 ? `+${tone[k]}` : tone[k]}</output>
+              </label>
+            ))}
+          </div>
+          <div className="tone-reset">
+            <button
+              className="btn ghost sm"
+              disabled={!hasTone(tone) && shown.zoom === 1 && shown.x === 0.5 && shown.y === 0.5}
+              onClick={() => {
+                setV({ x: 0.5, y: 0.5, zoom: 1 })
+                setTone(NO_TONE)
+              }}
+            >
+              すべて元に戻す
             </button>
           </div>
           {error && <p className="hint late">{error}</p>}
         </div>
         <div className="sheet-f">
           <button className="btn primary" disabled={!size || saving} onClick={save}>
-            この位置にする
+            これで決定
           </button>
         </div>
       </div>

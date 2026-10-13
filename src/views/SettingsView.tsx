@@ -1,4 +1,4 @@
-import { Archive, Bell, ChevronDown, ChevronRight, CloudSun, Copy, Download, FlaskConical, Grid2x2, Plus, Share2, Upload } from 'lucide-react'
+import { ALargeSmall, Archive, Bell, ChevronDown, ChevronRight, CloudSun, Copy, Download, FlaskConical, Grid2x2, Plus, Share2, Upload } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
@@ -225,6 +225,22 @@ export function SettingsView() {
             <option value="one">1行</option>
             <option value="two">2行まで</option>
             <option value="all">すべて</option>
+          </select>
+        </label>
+        <label className="line">
+          <span className="care-ic">
+            <ALargeSmall size={18} />
+          </span>
+          <span className="line-main">
+            <span>
+              <b>写真の一覧の文字の大きさ</b>
+              <small>タイルとミニの、名前の大きさ</small>
+            </span>
+          </span>
+          <select value={settings.tileNameSize ?? 'm'} onChange={(e) => save({ tileNameSize: e.target.value as Settings['tileNameSize'] })} aria-label="写真の一覧の文字の大きさ">
+            <option value="s">小</option>
+            <option value="m">標準</option>
+            <option value="l">大</option>
           </select>
         </label>
       </section>

@@ -123,7 +123,7 @@ export function PhotoPicker({ id, crop, onChange }: { id?: string; crop?: PhotoC
       {id && (
         <div className="picker-acts">
           <button type="button" className="btn ghost sm" onClick={() => setAdjust(true)}>
-            <Move size={15} /> 位置と大きさ
+            <Move size={15} /> 位置・明るさ
           </button>
           <button type="button" className="btn ghost sm" onClick={async () => onChange(await rotatePhoto(id))}>
             <RotateCw size={15} /> 回転
@@ -213,7 +213,7 @@ export function PhotosPicker({
             >
               <RotateCw size={14} />
             </button>
-            <button type="button" className="shot-btn move" onClick={() => setAdjust(id)} aria-label="位置と大きさを調整">
+            <button type="button" className="shot-btn move" onClick={() => setAdjust(id)} aria-label="位置・大きさ・明るさを調整">
               <Move size={14} />
             </button>
           </div>

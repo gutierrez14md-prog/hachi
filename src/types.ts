@@ -67,12 +67,21 @@ export interface Cross {
 }
 
 /** 写真の切り出し方。x, y = 枠の中心に来る写真上の位置 (0〜1)、zoom = 拡大率 (1 で写真が枠をちょうど覆う) */
+/** 写真の色みの調整。どれも -100〜100 で、0 が元のまま。b = 明るさ、c = コントラスト、s = 彩度 */
+export interface PhotoTone {
+  b: number
+  c: number
+  s: number
+}
+
 export interface PhotoCrop {
   /** 調整前の写真 */
   origId: string
   x: number
   y: number
   zoom: number
+  /** 明るさ・コントラスト・彩度の調整 (していなければ無い) */
+  tone?: PhotoTone
 }
 
 /** アーカイブした理由: 枯れた / 譲渡 / 売却 / その他 */
@@ -196,6 +205,8 @@ export interface Settings {
   backupRemind?: boolean
   /** ホームの写真の一覧 (タイル・ミニ) で、名前をどこまで出すか: 1 行で省略 / 2 行まで / すべて (入っていなければ 1 行) */
   tileName?: 'one' | 'two' | 'all'
+  /** ホームの写真の一覧 (タイル・ミニ) の、名前の文字の大きさ: 小 / 標準 / 大 (入っていなければ標準) */
+  tileNameSize?: 's' | 'm' | 'l'
   /** 肥料・活力剤を水に混ぜてあげる (水やりを兼ねる)。ケアの設定で、間隔を「水やり何回に 1 回」で選べるようになる */
   careWithWater?: boolean
   /** 新しい植物の、肥料と活力剤の初期設定。入っていなければ、どちらもオフ */

@@ -1284,7 +1284,8 @@ input[type='number'] {
   white-space: nowrap;
   font-family: var(--font-name, var(--font-body)), var(--font-body), serif;
   font-weight: var(--name-weight, 700);
-  font-size: 13.5px;
+  /* 大きさは設定で選ぶ (--nfs)。下の .tiles.size-s / .size-l */
+  font-size: var(--nfs);
   line-height: 1.35;
 }
 /* 名前の出し方 (設定で選ぶ): 2 行まで / すべて。すべてのときは、写真に大きく重なってもよい */
@@ -1297,7 +1298,7 @@ input[type='number'] {
 .tiles.tile:is(.name-two, .name-all) .tile-text b {
   word-break: keep-all;
   /* 7 文字の語 (エスキナンサス、パキポディウム) が 1 行に入るよう、狭い端末では字を少しだけ小さくする */
-  font-size: min(13.5px, (100cqw - 10px) / 7.2);
+  font-size: min(var(--nfs), (100cqw - 10px) / 7.2);
 }
 .tiles.tile button {
   container-type: inline-size;
@@ -1328,8 +1329,24 @@ input[type='number'] {
 .tiles.mini .tile-text {
   padding: 12px 4px 3px;
 }
-.tiles.mini .tile-text b {
-  font-size: 10px;
+/* 名前の文字の大きさ (設定で選ぶ: 小 / 標準 / 大)。タイルとミニで、それぞれの基準から変える */
+.tiles {
+  --nfs: 13.5px;
+}
+.tiles.size-s {
+  --nfs: 11.5px;
+}
+.tiles.size-l {
+  --nfs: 16px;
+}
+.tiles.mini {
+  --nfs: 10px;
+}
+.tiles.mini.size-s {
+  --nfs: 8.5px;
+}
+.tiles.mini.size-l {
+  --nfs: 12px;
 }
 /* 今日やる (または過ぎている) ケアを示す、種類ごとの小さな丸いアイコン。過ぎているケアは赤い縁で囲む */
 .due-ics {
@@ -1755,6 +1772,39 @@ input[type='number'] {
   flex: 1;
   min-width: 0;
   accent-color: var(--ink);
+}
+/* 写真の調整: 明るさ・コントラスト・彩度のスライダー */
+.tone {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+.tone label {
+  display: grid;
+  grid-template-columns: 6.5em 1fr 2.6em;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.tone input {
+  min-width: 0;
+  accent-color: var(--ink);
+}
+.tone output {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+.tone-reset {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+/* 記録の札 (押すと、その記録を消す)。× は控えめに */
+button.tag.del svg:last-child {
+  opacity: 0.55;
 }
 .share-shots button.on {
   opacity: 1;

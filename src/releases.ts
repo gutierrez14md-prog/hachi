@@ -19,6 +19,15 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.17.0',
+    date: '2026-10-13',
+    items: [
+      '写真の明るさ・コントラスト・彩度の調整を追加（植物の写真と生長記録の写真。「位置・明るさ」の画面で調整）',
+      'ホームの写真の一覧（タイル・ミニ）の、名前の文字の大きさの設定を追加（小・標準・大）',
+      'カレンダーの記録済みを、株ごとに 1 行にまとめて表示するよう変更（札を押すとその記録を消せる）',
+    ],
+  },
+  {
     version: '4.16.2',
     date: '2026-10-13',
     items: [
