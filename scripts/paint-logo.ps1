@@ -1,5 +1,5 @@
 # Builds public/logo.png and public/logo-dark.png from public/mascot.png:
-# crops the transparent margin, paints the bee (abdomen yellow; head, chest and hands white),
+# crops the transparent margin, paints the stripes of the bee's abdomen yellow (head, body, wings and pot stay transparent),
 # and writes a dark-theme copy whose line art is flipped to white.
 # Run:  powershell -File scripts/paint-logo.ps1 -Src public/mascot.png -OutDir public -PreviewDir <any folder>
 # Keep this file ASCII-only: Windows PowerShell 5.1 reads scripts without a BOM in the system code page.
@@ -97,7 +97,7 @@ public static class BeePaint {
 }
 "@
 
-$seeds = @(1220,620,6,0,  1185,741,2,0,  1115,590,5,1,  1120,650,5,1,  917,662,3,1,  1080,400,9,1)
+$seeds = @(1220,620,6,0,  1185,741,2,0)
 $box = @(870, 226, 1420, 780)          
 $crop = @(114, 230, 1300, 544)         
 $log = [BeePaint]::Run($Src, "$OutDir\logo.png", "$OutDir\logo-dark.png", $seeds, $box, $crop, 288, @(0xF9,0xC9,0x3E, 0xFF,0xFF,0xFF))

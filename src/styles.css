@@ -277,7 +277,8 @@ i, .sci {
 }
 .brand {
   height: 44px;
-  margin: -4px 0 10px -2px;
+  /* iPhone は画面のいちばん上 (時計や電池の下あたりまで) がぼかされるので、ロゴがかからないよう少し下げる */
+  margin: 10px 0 10px -2px;
 }
 /* はじめての画面 (植物が 0 株) では、まん中に大きなロゴを出すので、上の小さなロゴは隠す */
 .page:has(.empty-logo) > .brand {
