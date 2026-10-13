@@ -11,6 +11,7 @@ import { careLabel } from './method'
 import { Logo, PotIcon } from './parts'
 import type { CareLog, CareType } from './types'
 import { Archive, ArchiveForm, Snooze } from './views/Archive'
+import { BeeSays } from './views/Bee'
 import { CalendarView } from './views/CalendarView'
 import { Feedback } from './views/Feedback'
 import { GroupForm } from './views/GroupForm'
@@ -149,7 +150,11 @@ export default function App() {
   return (
     <Ctx.Provider value={ctx}>
       <main className="page">
-        <Logo className="brand" />
+        {/* ロゴと、その右のハチのひとこと (吹き出し) */}
+        <header className="head">
+          <Logo className="brand" />
+          {(settings.beeSays ?? true) && <BeeSays tab={tab} />}
+        </header>
         {tab === 'home' && <Home />}
         {tab === 'cal' && <CalendarView />}
         {tab === 'tl' && <Timeline />}

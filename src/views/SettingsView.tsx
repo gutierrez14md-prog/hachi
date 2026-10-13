@@ -1,4 +1,4 @@
-import { ALargeSmall, Archive, Bell, ChevronDown, ChevronRight, CloudSun, Copy, Download, FlaskConical, Grid2x2, Plus, Share2, Upload } from 'lucide-react'
+import { ALargeSmall, Archive, Bell, ChevronDown, ChevronRight, CloudSun, Copy, Download, FlaskConical, Grid2x2, MessageCircle, Plus, Share2, Upload } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
@@ -242,6 +242,18 @@ export function SettingsView() {
             <option value="m">標準</option>
             <option value="l">大</option>
           </select>
+        </label>
+        <label className="line">
+          <span className="care-ic">
+            <MessageCircle size={18} />
+          </span>
+          <span className="line-main">
+            <span>
+              <b>ハチのひとことを出す</b>
+              <small>ロゴの右の吹き出し。押すと、次のひとこと</small>
+            </span>
+          </span>
+          <input type="checkbox" className="switch" checked={settings.beeSays ?? true} onChange={(e) => save({ beeSays: e.target.checked })} />
         </label>
       </section>
 

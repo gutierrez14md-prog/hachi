@@ -353,13 +353,55 @@ i, .sci {
 :root[data-theme='dark'] .logo .logo-dark {
   display: block;
 }
-.brand {
-  height: 44px;
-  /* iPhone は画面のいちばん上 (時計や電池の下あたりまで) がぼかされるので、ロゴがかからないよう少し下げる */
+/* 上部: ロゴと、その右のハチのひとこと。
+   iPhone は画面のいちばん上 (時計や電池の下あたりまで) がぼかされるので、かからないよう少し下げる */
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin: 22px 0 10px -2px;
 }
+.brand {
+  flex: none;
+  height: 44px;
+}
+/* ハチのひとこと: ハチのほう (左) にしっぽの付いた吹き出し。2 行まで。押すと、次の言葉に替わる */
+.bubble {
+  position: relative;
+  min-width: 0;
+  padding: 6px 11px;
+  border-radius: 13px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: left;
+}
+.bubble::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  margin-top: -5.5px;
+  border-radius: 2px;
+  background: inherit;
+  transform: rotate(45deg);
+}
+.bubble span {
+  position: relative;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.bubble:active {
+  transform: scale(0.97);
+}
 /* はじめての画面 (植物が 0 株) では、まん中に大きなロゴを出すので、上の小さなロゴは隠す */
-.page:has(.empty-logo) > .brand {
+.page:has(.empty-logo) > .head {
   display: none;
 }
 .empty-logo {

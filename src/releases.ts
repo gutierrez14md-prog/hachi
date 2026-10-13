@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.20.0',
+    date: '2026-10-13',
+    items: ['ロゴの右に「ハチのひとこと」を追加（今日のお世話・天気・季節・記録のことなどを話す吹き出し。押すと次のひとこと。設定でオフにできる）'],
+  },
+  {
     version: '4.19.1',
     date: '2026-10-13',
     items: ['ロゴのハチの色塗りをやめ、元の絵のままに変更', '上部のロゴの位置をさらに下に変更'],
