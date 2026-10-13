@@ -374,10 +374,10 @@ i, .sci {
   border-radius: 14px;
   background: var(--surface);
   box-shadow: var(--shadow);
-  /* 丸文字 (Hachi Maru Pop。Bee.tsx が読み込む)。読み込むまでは本文の書体 */
-  font-family: 'Hachi Maru Pop', var(--font-body), sans-serif;
+  /* 丸ゴシック (Zen Maru Gothic。Bee.tsx が読み込む)。読み込むまでは本文の書体 */
+  font-family: 'Zen Maru Gothic', var(--font-body), sans-serif;
   font-size: 13.5px;
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1.4;
   text-align: left;
 }

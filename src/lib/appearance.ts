@@ -133,8 +133,8 @@ function loadFonts(linkId: string, q: string) {
   link.href = `https://fonts.googleapis.com/css2?${q}&display=swap`
 }
 
-/** ハチのひとこと (吹き出し) の書体: 丸文字。メインフォントに何を選んでいても、吹き出しはこの書体で出す */
-export const loadBeeFont = () => loadFonts('bee-font-css', 'family=Hachi+Maru+Pop')
+/** ハチのひとこと (吹き出し) の書体: 丸ゴシック (丸文字はかわいいが、小さい字では読みにくかった)。メインフォントに何を選んでいても、吹き出しはこの書体で出す */
+export const loadBeeFont = () => loadFonts('bee-font-css', 'family=Zen+Maru+Gothic:wght@500')
 
 export function applyFont(id: FontId) {
   const font = FONTS.find((f) => f.id === id)!

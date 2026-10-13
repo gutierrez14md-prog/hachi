@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.20.2',
+    date: '2026-10-13',
+    items: ['ハチのひとことの書体を、読みやすい丸ゴシックに変更'],
+  },
+  {
     version: '4.20.1',
     date: '2026-10-13',
     items: ['ハチのひとことの文字を大きくし、丸文字の書体に変更', '吹き出しのしっぽを、ハチのほうへ長くとがった形に変更'],
