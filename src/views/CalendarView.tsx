@@ -4,14 +4,14 @@ import { CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db } from '../db'
 import { addDays, fmtDay, today } from '../lib/date'
-import { lightLabel, projected } from '../lib/schedule'
-import { careLabel, logIcon, planIcon } from '../method'
-import { Photo } from '../parts'
+import { heads, projected } from '../lib/schedule'
+import { careLabel, logIcon } from '../method'
+import { CarePills, Photo } from '../parts'
 import type { CareLog, Plant, SchedType } from '../types'
 import { MonthCal, monthRange, thisMonth } from './MonthCal'
 
 export function CalendarView() {
-  const { plants, allPlants, logs, logsOf, open, record } = useApp()
+  const { plants, allPlants, logs, logsOf, open } = useApp()
   const t = today()
   const [ym, setYm] = useState(thisMonth)
   const [sel, setSel] = useState(t)
@@ -34,7 +34,13 @@ export function CalendarView() {
   }, [plants, logs, logsOf, plantOf, first, last])
 
   const selDone = done.get(sel) ?? []
-  const selPlan = plan.get(sel) ?? []
+  // その日の予定は、株ごとに 1 行にまとめる (水やりと肥料が重なる株を、2 行に分けない)
+  const selPlan: { p: Plant; types: SchedType[] }[] = []
+  for (const { p, type } of plan.get(sel) ?? []) {
+    const row = selPlan.find((r) => r.p.id === p.id)
+    if (row) row.types.push(type)
+    else selPlan.push({ p, types: [type] })
+  }
   const heading = sel === t ? '今日' : sel === addDays(t, 1) ? '明日' : fmtDay(sel)
 
   return (
@@ -66,30 +72,21 @@ export function CalendarView() {
 
       {selPlan.length > 0 && (
         <section className="card">
-          <h3 className="card-t">{sel === t ? 'ケアが必要' : `予定 ${selPlan.length}件`}</h3>
-          {selPlan.map(({ p, type }) => {
-            const Icon = planIcon(type, p, sel)
-            const label = lightLabel(p, type, sel) ?? careLabel(type, p)
-            return (
-              <div className="line" key={p.id + type}>
-                <button className="line-main" onClick={() => open({ k: 'plant', id: p.id })}>
-                  <Photo id={p.photoId} className="thumb sm" />
-                  <b className="pn">{p.name}</b>
-                </button>
-                {sel === t ? (
-                  <button className="pill" style={careVar(type)} onClick={() => record([p.id], type)}>
-                    <Icon size={15} />
-                    {label}
-                  </button>
-                ) : (
-                  <span className="tag" style={careVar(type)}>
-                    <Icon size={14} />
-                    {label}
-                  </span>
-                )}
+          {/* 数は株数 (ホームと同じ数え方。まとめた登録は中身を 1 株ずつ) */}
+          <h3 className="card-t">
+            {sel === t ? 'ケアが必要' : '予定'} {heads(selPlan.map((r) => r.p))}株
+          </h3>
+          {selPlan.map(({ p, types }) => (
+            <div className="line" key={p.id}>
+              <button className="line-main" onClick={() => open({ k: 'plant', id: p.id })}>
+                <Photo id={p.photoId} className="thumb sm" />
+                <b className="pn">{p.name}</b>
+              </button>
+              <div className="due-acts">
+                <CarePills p={p} types={types} day={sel} record={sel === t} />
               </div>
-            )
-          })}
+            </div>
+          ))}
         </section>
       )}
 

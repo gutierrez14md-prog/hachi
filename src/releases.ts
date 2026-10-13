@@ -19,6 +19,15 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.16.2',
+    date: '2026-10-13',
+    items: [
+      'カレンダーのその日の予定で、複数のケアが重なる株を 1 行にまとめて表示するよう変更',
+      'カレンダーの予定の数を、ケアの数ではなく株数で数えるよう修正',
+      'カレンダーで今日を選んだときにも、ケアが必要な株数を表示',
+    ],
+  },
+  {
     version: '4.16.1',
     date: '2026-10-13',
     items: ['ちょろ水のアイコンを、ふつうの水やり（しずく）と分けてスポイトに変更'],

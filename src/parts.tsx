@@ -1,11 +1,14 @@
 import { Camera, Move, RotateCw, Wand2, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { careVar } from './care'
 import { useApp } from './ctx'
 import { db } from './db'
 import { isGrouped } from './lib/cross'
 import { dueLabel, urgency } from './lib/date'
 import { rotatePhoto, savePhoto } from './lib/photo'
-import type { PhotoCrop, Plant } from './types'
+import { byWater, lightLabel } from './lib/schedule'
+import { careLabel, planIcon } from './method'
+import type { PhotoCrop, Plant, SchedType } from './types'
 import { BackdropStudio } from './views/BackdropStudio'
 import { PhotoAdjust } from './views/PhotoAdjust'
 
@@ -352,6 +355,55 @@ export function DateInput({
 export function DueTag({ due }: { due: string }) {
   const lv = urgency(due)
   return lv ? <span className={`urg ${lv}`}>{dueLabel(due)}</span> : <>{dueLabel(due)}</>
+}
+
+/**
+ * その株の、その日のケアを 1 行に並べる。record = 今日やるぶんで、押すと今日の日付で記録するボタン。
+ * record でなければ、これからの予定として見せるだけの札。
+ * 水やりと一緒にあげるケア (水に混ぜる肥料・活力剤) は、水やりとまとめて 1 つにする
+ * (ボタンのときは、水だけにする「◯◯のみ」も並べる。その回の肥料は次の水やりに回る)
+ */
+export function CarePills({ p, types, day, record: rec }: { p: Plant; types: SchedType[]; day: string; record?: boolean }) {
+  const { record } = useApp()
+  const mixed = types.includes('water') ? types.filter((s) => byWater(p, s)) : []
+  const both: SchedType[] = ['water', ...mixed]
+  const name = (s: SchedType) => lightLabel(p, s, day) ?? careLabel(s, p)
+  const icons = (list: SchedType[]) =>
+    list.map((s) => {
+      const Icon = planIcon(s, p, day)
+      return <Icon key={s} size={rec ? 15 : 14} />
+    })
+  // まとめたもののほかに並べるケア。札のときは、まとめに入れた水やりをもう一度出さない
+  const rest = types.filter((s) => !mixed.includes(s) && (rec || !mixed.length || s !== 'water'))
+  return (
+    <>
+      {mixed.length > 0 &&
+        (rec ? (
+          <button className="pill" style={careVar(mixed[0])} onClick={() => record([p.id], both)}>
+            {icons(both)}
+            {both.map(name).join('＋')}
+          </button>
+        ) : (
+          <span className="tag" style={careVar(mixed[0])}>
+            {icons(both)}
+            {both.map(name).join('＋')}
+          </span>
+        ))}
+      {rest.map((s) =>
+        rec ? (
+          <button key={s} className="pill" style={careVar(s)} onClick={() => record([p.id], s)}>
+            {icons([s])}
+            {mixed.length > 0 && s === 'water' ? `${name(s)}のみ` : name(s)}
+          </button>
+        ) : (
+          <span key={s} className="tag" style={careVar(s)}>
+            {icons([s])}
+            {name(s)}
+          </span>
+        ),
+      )}
+    </>
+  )
 }
 
 export function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {

@@ -3,11 +3,11 @@ import { useMemo, useState } from 'react'
 import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { addDays, diffDays, fmtDay, fmtFull, fromKey, today, urgency, type Urgency } from '../lib/date'
-import { careIcon, careLabel, METHOD_IDS, METHODS, planIcon } from '../method'
-import { byWater, heads, lightLabel, nextDue } from '../lib/schedule'
+import { careLabel, METHOD_IDS, METHODS, planIcon } from '../method'
+import { heads, nextDue } from '../lib/schedule'
 import { exportBackup, lastBackup } from '../lib/backup'
 import { describe, useWeather } from '../lib/weather'
-import { DueTag, Photo, PotIcon, SciName, SciText } from '../parts'
+import { CarePills, DueTag, Photo, PotIcon, SciName, SciText } from '../parts'
 import { archivedOf } from './Archive'
 import type { CareType, Plant, SchedType } from '../types'
 
@@ -516,9 +516,6 @@ export function Home() {
             {dueOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </button>
           {dueOpen && dueNow.map(({ p, types, due }) => {
-            // 水やりと一緒にあげるケア (水に混ぜる肥料・活力剤) は、水やりとまとめて 1 つのボタンにする
-            const mixed = types.includes('water') ? types.filter((s) => byWater(p, s)) : []
-            const WaterIcon = planIcon('water', p, t)
             return (
               <div className="due-row" key={p.id}>
                 <button className="due-plant" onClick={() => open({ k: 'plant', id: p.id })}>
@@ -531,26 +528,7 @@ export function Home() {
                   </span>
                 </button>
                 <div className="due-acts">
-                  {mixed.length > 0 && (
-                    <button className="pill" style={careVar(mixed[0])} onClick={() => record([p.id], ['water', ...mixed])}>
-                      <WaterIcon size={15} />
-                      {mixed.map((s) => {
-                        const Icon = careIcon(s, p)
-                        return <Icon key={s} size={15} />
-                      })}
-                      {['water' as const, ...mixed].map((s) => lightLabel(p, s, t) ?? careLabel(s, p)).join('＋')}
-                    </button>
-                  )}
-                  {types.filter((s) => !mixed.includes(s)).map((s) => {
-                    const Icon = planIcon(s, p, t)
-                    const label = lightLabel(p, s, t) ?? careLabel(s, p)
-                    return (
-                      <button key={s} className="pill" style={careVar(s)} onClick={() => record([p.id], s)}>
-                        <Icon size={15} />
-                        {mixed.length > 0 ? `${label}のみ` : label}
-                      </button>
-                    )
-                  })}
+                  <CarePills p={p} types={types} day={t} record />
                   <button className="icon-btn muted" onClick={() => open({ k: 'snooze', plantIds: [p.id] })} aria-label={`${p.name}のケアを延期`}>
                     <CalendarClock size={18} />
                   </button>
