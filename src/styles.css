@@ -152,6 +152,84 @@
   --font-display: 'IBM Plex Mono';
   --font-sci: 'IBM Plex Mono';
 }
+/* 追加の組。太さが 1 種類しかない極太の見出し書体は、ブラウザに太字を作らせると潰れるので、作らせない (font-synthesis-weight) */
+:root[data-font='maru'] {
+  --font-body: 'Zen Maru Gothic';
+  --font-display: 'Fredoka';
+  --font-sci: 'Fredoka';
+  --ds: 1.05;
+}
+:root[data-font='kiwi'] {
+  --font-body: 'Kiwi Maru';
+  --font-display: 'Comfortaa';
+  --font-sci: 'Comfortaa';
+}
+:root[data-font='mincho'] {
+  --font-body: 'Zen Old Mincho';
+  --font-display: 'Playfair Display';
+  --font-sci: 'Playfair Display';
+  --ds: 1.1;
+}
+:root[data-font='klee'] {
+  --font-body: 'Klee One';
+  --font-display: 'Klee One';
+  --ds: 1.05;
+}
+:root[data-font='tegaki'] {
+  --font-body: 'Yomogi';
+  --font-display: 'Caveat';
+  --font-sci: 'Caveat';
+  --ds: 1.25;
+}
+:root[data-font='marker'] {
+  --font-body: 'Yusei Magic';
+  --font-display: 'Yusei Magic';
+  --ds: 1.05;
+}
+:root[data-font='hachimaru'] {
+  --font-body: 'Hachi Maru Pop';
+  --font-display: 'Hachi Maru Pop';
+  --ds: 0.92;
+}
+:root[data-font='pop'] {
+  --font-body: 'Zen Maru Gothic';
+  --font-display: 'Mochiy Pop One';
+  --ds: 0.95;
+  font-synthesis-weight: none;
+}
+:root[data-font='rock'] {
+  --font-body: 'RocknRoll One';
+  --font-display: 'RocknRoll One';
+  --ds: 0.98;
+}
+:root[data-font='pixel'] {
+  --font-body: 'DotGothic16';
+  --font-display: 'DotGothic16';
+  --ds: 1.05;
+}
+:root[data-font='code'] {
+  --font-body: 'M PLUS 1 Code';
+  --font-display: 'M PLUS 1 Code';
+}
+:root[data-font='stick'] {
+  --font-body: 'Stick';
+  --font-display: 'Stick';
+  --ds: 1.05;
+}
+:root[data-font='reggae'] {
+  --font-display: 'Reggae One';
+  --ds: 0.95;
+  font-synthesis-weight: none;
+}
+:root[data-font='rampart'] {
+  --font-display: 'Rampart One';
+  font-synthesis-weight: none;
+}
+:root[data-font='heavy'] {
+  --font-display: 'Dela Gothic One';
+  --ds: 0.9;
+  font-synthesis-weight: none;
+}
 
 * {
   box-sizing: border-box;

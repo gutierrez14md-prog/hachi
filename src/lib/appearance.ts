@@ -58,6 +58,22 @@ export const FONTS = [
     desc: 'IBM Plex Mono + IBM Plex Sans JP',
     q: 'family=IBM+Plex+Mono:ital,wght@0,500;0,600;1,400&family=IBM+Plex+Sans+JP:wght@400;500;700',
   },
+  // ここから下は、個性の強いものも含めた追加の組 (丸ゴシック、明朝、手書き、ドット、袋文字 など)
+  { id: 'maru', label: 'Maru', desc: 'やわらかい丸ゴシック', q: 'family=Fredoka:wght@400;600;700&family=Zen+Maru+Gothic:wght@400;500;700' },
+  { id: 'kiwi', label: 'Kiwi', desc: '丸みのある明朝', q: 'family=Comfortaa:wght@400;600;700&family=Kiwi+Maru:wght@400;500' },
+  { id: 'mincho', label: 'Mincho', desc: 'すべて明朝', q: 'family=Playfair+Display:ital,wght@0,600;0,800;1,500&family=Zen+Old+Mincho:wght@400;500;700' },
+  { id: 'klee', label: 'Kyokasho', desc: '教科書体', q: 'family=Klee+One:wght@400;600' },
+  { id: 'tegaki', label: 'Tegaki', desc: '手書き', q: 'family=Caveat:wght@500;700&family=Yomogi' },
+  { id: 'marker', label: 'Marker', desc: 'マーカーペン', q: 'family=Yusei+Magic' },
+  { id: 'hachimaru', label: 'Hachi Maru', desc: '丸文字', q: 'family=Hachi+Maru+Pop' },
+  { id: 'pop', label: 'Pop', desc: 'ポップな見出し', q: 'family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@400;500;700' },
+  { id: 'rock', label: 'Rock', desc: '角ばった太字', q: 'family=RocknRoll+One' },
+  { id: 'pixel', label: 'Pixel', desc: 'ドット文字', q: 'family=DotGothic16' },
+  { id: 'code', label: 'Code', desc: '等幅', q: 'family=M+PLUS+1+Code:wght@400;500;700' },
+  { id: 'stick', label: 'Stick', desc: '細い線の文字', q: 'family=Stick' },
+  { id: 'reggae', label: 'Reggae', desc: '力強い見出し', q: 'family=Reggae+One&family=Zen+Kaku+Gothic+New:wght@400;500;700' },
+  { id: 'rampart', label: 'Rampart', desc: '袋文字の見出し', q: 'family=Rampart+One&family=Zen+Kaku+Gothic+New:wght@400;500;700' },
+  { id: 'heavy', label: 'Heavy', desc: '極太の見出し', q: 'family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700' },
 ] as const
 
 export type FontId = (typeof FONTS)[number]['id']
@@ -69,6 +85,14 @@ export const NAME_FONTS = [
   { id: 'kaisei', label: 'Kaisei Decol', desc: '装飾のあるレトロな明朝', family: 'Kaisei Decol', weight: 700, q: 'family=Kaisei+Decol:wght@700' },
   { id: 'yuji', label: '佑字 肅', desc: '筆文字', family: 'Yuji Syuku', weight: 400, q: 'family=Yuji+Syuku' },
   { id: 'dela', label: 'Dela Gothic', desc: '極太のゴシック', family: 'Dela Gothic One', weight: 400, q: 'family=Dela+Gothic+One' },
+  { id: 'maru', label: 'Zen Maru', desc: '丸ゴシック', family: 'Zen Maru Gothic', weight: 700, q: 'family=Zen+Maru+Gothic:wght@700' },
+  { id: 'klee', label: 'Klee One', desc: '教科書体', family: 'Klee One', weight: 600, q: 'family=Klee+One:wght@600' },
+  { id: 'hachimaru', label: 'Hachi Maru Pop', desc: '丸文字', family: 'Hachi Maru Pop', weight: 400, q: 'family=Hachi+Maru+Pop' },
+  { id: 'yusei', label: 'Yusei Magic', desc: 'マーカーペン', family: 'Yusei Magic', weight: 400, q: 'family=Yusei+Magic' },
+  { id: 'potta', label: 'Potta One', desc: '筆のポップ体', family: 'Potta One', weight: 400, q: 'family=Potta+One' },
+  { id: 'dot', label: 'DotGothic', desc: 'ドット文字', family: 'DotGothic16', weight: 400, q: 'family=DotGothic16' },
+  { id: 'reggae', label: 'Reggae One', desc: '力強い太字', family: 'Reggae One', weight: 400, q: 'family=Reggae+One' },
+  { id: 'rampart', label: 'Rampart One', desc: '袋文字', family: 'Rampart One', weight: 400, q: 'family=Rampart+One' },
   { id: 'body', label: '標準', desc: '本文と同じ', family: '', weight: 700, q: '' },
 ] as const
 
