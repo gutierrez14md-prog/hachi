@@ -8,7 +8,7 @@ import { today } from './lib/date'
 import { checkNotify, syncReminder } from './lib/reminder'
 import { byWater, LIGHT, lightLabel, lightWater } from './lib/schedule'
 import { careLabel } from './method'
-import { PotIcon } from './parts'
+import { Logo, PotIcon } from './parts'
 import type { CareLog, CareType } from './types'
 import { Archive, ArchiveForm, Snooze } from './views/Archive'
 import { CalendarView } from './views/CalendarView'
@@ -149,8 +149,7 @@ export default function App() {
   return (
     <Ctx.Provider value={ctx}>
       <main className="page">
-        {/* ロゴ: 「Hachi」の文字と、鉢を抱えたハチのキャラクター (public/logo.png。元の絵は public/mascot.png) */}
-        <img className="brand" src={`${import.meta.env.BASE_URL}logo.png`} alt="Hachi" width={344} height={144} />
+        <Logo className="brand" />
         {tab === 'home' && <Home />}
         {tab === 'cal' && <CalendarView />}
         {tab === 'tl' && <Timeline />}

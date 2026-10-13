@@ -12,6 +12,21 @@ import type { PhotoCrop, Plant, SchedType } from './types'
 import { BackdropStudio } from './views/BackdropStudio'
 import { PhotoAdjust } from './views/PhotoAdjust'
 
+/**
+ * ロゴ: 「Hachi」の文字と、鉢を抱えたハチのキャラクター。
+ * 絵は 2 枚ある: 黒い線の logo.png と、Dark 用に線だけ白くした logo-dark.png (どちらを出すかは CSS がテーマで切り替える)。
+ * 元の絵は public/mascot.png で、scripts/paint-logo.ps1 が余白を切って色を塗り、この 2 枚を作る
+ */
+export function Logo({ className = '' }: { className?: string }) {
+  const src = (name: string) => `${import.meta.env.BASE_URL}${name}`
+  return (
+    <span className={`logo ${className}`} role="img" aria-label="Hachi">
+      <img className="logo-light" src={src('logo.png')} alt="" width={688} height={288} />
+      <img className="logo-dark" src={src('logo-dark.png')} alt="" width={688} height={288} />
+    </span>
+  )
+}
+
 /** アプリのシンボル (鉢植え)。lucide のアイコンと同じ線の太さ・使い方に合わせている */
 export function PotIcon({ size = 24 }: { size?: number }) {
   return (

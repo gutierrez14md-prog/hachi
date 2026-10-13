@@ -7,7 +7,7 @@ import { careLabel, METHOD_IDS, METHODS, planIcon } from '../method'
 import { heads, nextDue } from '../lib/schedule'
 import { exportBackup, lastBackup } from '../lib/backup'
 import { describe, useWeather } from '../lib/weather'
-import { CarePills, DueTag, Photo, PotIcon, SciName, SciText } from '../parts'
+import { CarePills, DueTag, Logo, Photo, SciName, SciText } from '../parts'
 import { archivedOf } from './Archive'
 import type { CareType, Plant, SchedType } from '../types'
 
@@ -380,10 +380,8 @@ export function Home() {
   if (!plants.length)
     return (
       <div className="empty">
-        <div className="empty-icon">
-          <PotIcon size={36} />
-        </div>
-        <h1>Hachi</h1>
+        {/* はじめての画面では、ロゴを大きく出す (上の小さなロゴは隠す) */}
+        <Logo className="empty-logo" />
         <p>育てている植物を登録して、水やりや生長を記録しましょう。</p>
         <button className="btn primary" onClick={() => open({ k: 'plantForm' })}>
           最初の植物を追加

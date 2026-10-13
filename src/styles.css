@@ -259,19 +259,33 @@ i, .sci {
   padding: calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 96px);
   min-height: 100dvh;
 }
-.brand {
+/* ロゴ。黒い線の絵と、Dark 用に線を白くした絵の 2 枚を持ち、テーマで出し分ける */
+.logo {
+  display: block;
+}
+.logo img {
   display: block;
   width: auto;
+  height: 100%;
+}
+.logo .logo-dark,
+:root[data-theme='dark'] .logo .logo-light {
+  display: none;
+}
+:root[data-theme='dark'] .logo .logo-dark {
+  display: block;
+}
+.brand {
   height: 44px;
   margin: -4px 0 10px -2px;
-  /* 読み込めなかったときは alt の「Hachi」が出る。そのときの字 */
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
 }
-/* ロゴの線は黒なので、Dark では明るさだけを反転して白い線にする (葉の緑は緑のまま残る) */
-:root[data-theme='dark'] .brand {
-  filter: invert(1) hue-rotate(180deg);
+/* はじめての画面 (植物が 0 株) では、まん中に大きなロゴを出すので、上の小さなロゴは隠す */
+.page:has(.empty-logo) > .brand {
+  display: none;
+}
+.empty-logo {
+  height: 104px;
+  max-width: 100%;
 }
 .top {
   margin-bottom: 16px;
