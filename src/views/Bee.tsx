@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { SCHED } from '../care'
 import { beeLines, type BeeTab } from '../bee'
 import { useApp } from '../ctx'
+import { loadBeeFont } from '../lib/appearance'
 import { lastBackup } from '../lib/backup'
 import { addDays, today } from '../lib/date'
 import { heads, isSnoozed, lightWater, nextDue } from '../lib/schedule'
@@ -15,6 +16,7 @@ export function BeeSays({ tab }: { tab: BeeTab }) {
   const { plants, logs, journal, logsOf } = useApp()
   const t = today()
   const weather = useWeather(t)
+  useEffect(loadBeeFont, [])
   // 何番目の言葉を出しているか (押すたびに進む)
   const [n, setN] = useState(0)
 

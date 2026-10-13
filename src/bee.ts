@@ -1,7 +1,7 @@
 // ハチのひとこと: ロゴの右の吹き出しに出す言葉。
 // いまの状況 (今日のお世話、天気、季節、記録の数 など) から言えることを集めて並べる。
 // 先頭は、そのタブでいちばん役に立つ一言 (ホームなら今日のお世話)。吹き出しを押すと、次の言葉に替わる。
-// 言葉を足すときは、1 行に 17 文字ほど・2 行までに収まる長さ (34 文字くらいまで) にする
+// 言葉を足すときは、2 行に収まる長さにする (吹き出しは 1 行に 12 文字ほど。全角で 22 文字くらいまで)
 import { addDays, diffDays, monthOf } from './lib/date'
 import type { Weather } from './lib/weather'
 import type { CareLog, Journal, Plant } from './types'
@@ -36,7 +36,7 @@ export interface BeeInput {
 const rotate = <T>(list: T[], seed: number): T[] => (list.length ? [...list.slice(seed % list.length), ...list.slice(0, seed % list.length)] : list)
 
 /** 長い名前は、吹き出しに収まるように途中まで */
-const short = (name: string) => (name.length > 12 ? `${name.slice(0, 11)}…` : name)
+const short = (name: string) => (name.length > 9 ? `${name.slice(0, 8)}…` : name)
 
 /** 育て始めた日: 入手日があればそれ、無ければ登録した日 */
 const since = (p: Plant) => p.purchaseDate || p.createdDay
@@ -183,7 +183,7 @@ function tabLines(i: BeeInput): string[] {
       '塗りの点が記録、白抜きの点が予定だよ',
       '日付を押すと、その日のお世話が見られるよ',
       '予定は、今の間隔で続けた場合の見込みだよ',
-      '過去の日を選んで「記録」で、付け忘れを入れられるよ',
+      '過去の日を選ぶと、付け忘れも記録できるよ',
     ]
   }
   if (i.tab === 'tl') {

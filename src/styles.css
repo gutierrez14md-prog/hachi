@@ -358,7 +358,8 @@ i, .sci {
 .head {
   display: flex;
   align-items: center;
-  gap: 12px;
+  /* 吹き出しのしっぽが入るぶん、ロゴとの間を空ける */
+  gap: 20px;
   margin: 22px 0 10px -2px;
 }
 .brand {
@@ -369,26 +370,28 @@ i, .sci {
 .bubble {
   position: relative;
   min-width: 0;
-  padding: 6px 11px;
-  border-radius: 13px;
+  padding: 7px 12px;
+  border-radius: 14px;
   background: var(--surface);
   box-shadow: var(--shadow);
-  font-size: 12px;
-  font-weight: 500;
+  /* 丸文字 (Hachi Maru Pop。Bee.tsx が読み込む)。読み込むまでは本文の書体 */
+  font-family: 'Hachi Maru Pop', var(--font-body), sans-serif;
+  font-size: 13.5px;
+  font-weight: 400;
   line-height: 1.4;
   text-align: left;
 }
+/* しっぽ: ハチのほうへ長くとがらせた三角 */
 .bubble::before {
   content: '';
   position: absolute;
-  left: -5px;
+  left: -14px;
   top: 50%;
-  width: 11px;
-  height: 11px;
-  margin-top: -5.5px;
-  border-radius: 2px;
+  width: 15px;
+  height: 14px;
+  margin-top: -7px;
   background: inherit;
-  transform: rotate(45deg);
+  clip-path: polygon(100% 0, 0 62%, 100% 100%);
 }
 .bubble span {
   position: relative;
