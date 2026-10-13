@@ -149,7 +149,8 @@ export default function App() {
   return (
     <Ctx.Provider value={ctx}>
       <main className="page">
-        <span className="brand">Hachi</span>
+        {/* ロゴ: 「Hachi」の文字と、鉢を抱えたハチのキャラクター (public/logo.png。元の絵は public/mascot.png) */}
+        <img className="brand" src={`${import.meta.env.BASE_URL}logo.png`} alt="Hachi" width={344} height={144} />
         {tab === 'home' && <Home />}
         {tab === 'cal' && <CalendarView />}
         {tab === 'tl' && <Timeline />}

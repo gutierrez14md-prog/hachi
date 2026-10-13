@@ -261,10 +261,17 @@ i, .sci {
 }
 .brand {
   display: block;
+  width: auto;
+  height: 44px;
+  margin: -4px 0 10px -2px;
+  /* 読み込めなかったときは alt の「Hachi」が出る。そのときの字 */
   font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  margin-bottom: 14px;
+}
+/* ロゴの線は黒なので、Dark では明るさだけを反転して白い線にする (葉の緑は緑のまま残る) */
+:root[data-theme='dark'] .brand {
+  filter: invert(1) hue-rotate(180deg);
 }
 .top {
   margin-bottom: 16px;

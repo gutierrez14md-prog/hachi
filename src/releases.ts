@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.18.0',
+    date: '2026-10-13',
+    items: ['アプリの上部のロゴを、鉢を抱えたハチのキャラクター入りのものに変更'],
+  },
+  {
     version: '4.17.0',
     date: '2026-10-13',
     items: [
