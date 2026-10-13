@@ -1,10 +1,12 @@
 // ハチのひとこと: ロゴの右の吹き出しに出す言葉。
 // いまの状況 (今日のお世話、天気、季節、記録の数 など) から言えることを集めて並べる。
 // 先頭は、そのタブでいちばん役に立つ一言 (ホームなら今日のお世話)。吹き出しを押すと、次の言葉に替わる。
+// 豆知識、お迎えをそそのかす言葉、登録した株のことを話す言葉は src/beeMore.ts にある。
 // 言葉を足すときは、2 行に収まる長さにする (吹き出しは 1 行に 12 文字ほど。全角で 22 文字くらいまで)
 import { addDays, diffDays, monthOf } from './lib/date'
 import type { Weather } from './lib/weather'
-import type { CareLog, Journal, Plant } from './types'
+import { plantLines, rng, short, shuffle, since, triviaLines, wantLines } from './beeMore'
+import type { CareLog, Group, Journal, Plant } from './types'
 
 export type BeeTab = 'home' | 'cal' | 'tl' | 'set'
 
@@ -30,16 +32,22 @@ export interface BeeInput {
   weather: Weather | null
   /** 最後にバックアップを書き出した日 (無ければ null) */
   lastBackup: string | null
+  /** 分類 (豆知識や、分類ごとの株数の話に使う) */
+  groups: Group[]
+  /** アーカイブした株数 */
+  archived: number
+  /** 株ごとの、次の水やりの日 (予定が無ければ null) */
+  nextWater: Record<string, string | null>
+  /** 曜日 (0 = 日曜) */
+  weekday: number
 }
 
 /** 同じ日・同じ場面では同じ順になるように、日付から決めた数だけ先頭をずらす (日によって、最初の一言が変わる) */
 const rotate = <T>(list: T[], seed: number): T[] => (list.length ? [...list.slice(seed % list.length), ...list.slice(0, seed % list.length)] : list)
 
-/** 長い名前は、吹き出しに収まるように途中まで */
-const short = (name: string) => (name.length > 9 ? `${name.slice(0, 8)}…` : name)
-
-/** 育て始めた日: 入手日があればそれ、無ければ登録した日 */
-const since = (p: Plant) => p.purchaseDate || p.createdDay
+/** 言葉の長さ (全角 1、半角 0.55)。吹き出しは 1 行に 12 文字と少し入り、2 行までなので、23 を超えるものは出さない */
+const width = (line: string) => [...line].reduce((n, c) => n + (c.charCodeAt(0) <= 0x7f ? 0.55 : 1), 0)
+const MAX_WIDTH = 23
 
 /** 今日のお世話についての一言 (ホームの先頭に出す) */
 function careLines(i: BeeInput): string[] {
@@ -213,13 +221,29 @@ export function beeLines(i: BeeInput): string[] {
   if (!i.plants.length) return []
   // 日付から決めた数。同じ日は同じ並びにして、開くたびに言葉が変わらないようにする
   const seed = diffDays(i.today, '2026-01-01') + 366 * 100
+  const random = rng(seed * 7919 + i.tab.length)
   const lead = i.tab === 'home' ? careLines(i) : tabLines(i)
   // ホーム以外でも、今日のお世話が残っていれば、2 番目に知らせる
   const care = i.tab !== 'home' && i.due > 0 ? [careLines(i)[0]] : []
   // 設定のタブでは、バックアップの話を早めに出す
   const backup = backupLines(i)
-  const rest = rotate([...weatherLines(i.weather), ...hourLines(i.hour), ...seasonLines(monthOf(i.today)), ...recordLines(i), ...(i.tab === 'set' ? [] : backup), ...TIPS], seed)
+  // そのほかの話は、種類が偏らないように混ぜる (同じ日は同じ順)。
+  // お迎えの話は多いので、日替わりで何個かだけにする (毎回そればかりにならないように)
+  const rest = shuffle(
+    [
+      ...weatherLines(i.weather),
+      ...hourLines(i.hour),
+      ...seasonLines(monthOf(i.today)),
+      ...recordLines(i),
+      ...(i.tab === 'set' ? [] : backup),
+      ...TIPS,
+      ...triviaLines(i),
+      ...shuffle(wantLines(i), random).slice(0, 6),
+      ...plantLines(i, random),
+    ],
+    random,
+  )
   const all = [...rotate(lead, seed).slice(0, 1), ...care, ...(i.tab === 'set' ? backup : []), ...rotate(lead, seed).slice(1), ...rest]
-  // 同じ言葉が 2 回出ないようにする
-  return [...new Set(all)]
+  // 同じ言葉が 2 回出ないようにし、吹き出しの 2 行に収まらない長さのものは外す
+  return [...new Set(all)].filter((line) => width(line) <= MAX_WIDTH)
 }

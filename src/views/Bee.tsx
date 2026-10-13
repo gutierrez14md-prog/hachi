@@ -13,7 +13,7 @@ import { useWeather } from '../lib/weather'
  * 言葉そのものは src/bee.ts。設定の「ホームの表示」で消せる
  */
 export function BeeSays({ tab }: { tab: BeeTab }) {
-  const { plants, logs, journal, logsOf } = useApp()
+  const { plants, allPlants, groups, logs, journal, logsOf } = useApp()
   const t = today()
   const weather = useWeather(t)
   useEffect(loadBeeFont, [])
@@ -24,8 +24,10 @@ export function BeeSays({ tab }: { tab: BeeTab }) {
     const tomorrow = addDays(t, 1)
     let over = 0, snoozed = 0, feed = false, water = 0, light = 0
     const due: typeof plants = [], next: typeof plants = []
+    const nextWater: Record<string, string | null> = {}
     for (const p of plants) {
       const dates = SCHED.map((s) => [s, nextDue(p, s, logsOf(p.id))] as const)
+      nextWater[p.id] = dates[0][1]
       const now = dates.filter(([, d]) => d && d <= t)
       if (now.length) due.push(p)
       if (now.some(([, d]) => d! < t)) over += p.members?.length || 1
@@ -53,8 +55,12 @@ export function BeeSays({ tab }: { tab: BeeTab }) {
       journal,
       weather,
       lastBackup: lastBackup(),
+      groups,
+      archived: heads(allPlants.filter((p) => p.archivedDay)),
+      nextWater,
+      weekday: new Date().getDay(),
     })
-  }, [tab, t, plants, logs, journal, logsOf, weather])
+  }, [tab, t, plants, allPlants, groups, logs, journal, logsOf, weather])
 
   // タブを替えたとき、先頭の一言が変わったとき (お世話を記録した、など) は、先頭に戻す
   const lead = lines[0]
