@@ -15,7 +15,7 @@ import { PhotoAdjust } from './views/PhotoAdjust'
 /**
  * ロゴ: 「Hachi」の文字と、鉢を抱えたハチのキャラクター。
  * 絵は 2 枚ある: 黒い線の logo.png と、Dark 用に線だけ白くした logo-dark.png (どちらを出すかは CSS がテーマで切り替える)。
- * 元の絵は public/mascot.png で、scripts/paint-logo.ps1 が余白を切って色を塗り、この 2 枚を作る
+ * 元の絵は public/mascot.png で、scripts/paint-logo.ps1 が余白を切って、この 2 枚を作る (色は塗らず、元の絵のまま)
  */
 export function Logo({ className = '' }: { className?: string }) {
   const src = (name: string) => `${import.meta.env.BASE_URL}${name}`
