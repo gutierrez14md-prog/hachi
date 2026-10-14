@@ -27,9 +27,9 @@ function Make([int]$size, [double]$scale, [string]$name) {
   $bmp.Dispose()
   "$name ${size}x${size}, " + (Get-Item "$OutDir\$name").Length + " bytes"
 }
-Make 180 0.80 "icon-180.png"
-Make 192 0.66 "icon-192.png"
-Make 512 0.66 "icon-512.png"
+Make 180 0.68 "icon-180.png"
+Make 192 0.58 "icon-192.png"
+Make 512 0.58 "icon-512.png"
 $art.Dispose()
 
 # Preview: the iPhone icon with rounded corners, and the Android icon cropped to a circle, on a grey background.

@@ -19,6 +19,11 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.23.2',
+    date: '2026-10-14',
+    items: ['アプリのアイコンのハチを少し小さく調整'],
+  },
+  {
     version: '4.23.1',
     date: '2026-10-14',
     items: ['写真が多いと、バックアップの書き出しでアプリが落ちることがある不具合を修正（写真を 1 枚ずつ処理して、メモリを使いすぎないよう変更）', 'バックアップの読み込みも、写真を少しずつ処理するよう変更'],
