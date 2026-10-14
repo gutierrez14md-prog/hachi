@@ -35,7 +35,11 @@ export async function exportBackup() {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-/** バックアップを読み込む。同じ ID のデータは上書き、それ以外は残す */
+/**
+ * バックアップを読み込む。同じ ID のデータは上書き、それ以外は残す。
+ * ただし、まだ何も登録していないアプリ (入れ直したばかりのアプリ) に読み込むときは、はじめから入っている分類を
+ * いったん消して、バックアップの分類だけにする。元のアプリで消した分類が残ると、元と同じ状態に戻らないため
+ */
 export async function importBackup(file: File) {
   const data = JSON.parse(await file.text())
   if (data.app !== 'hachi' || !Array.isArray(data.plants)) throw new Error('Hachi のバックアップファイルではありません')
@@ -46,6 +50,8 @@ export async function importBackup(file: File) {
     })),
   )
   await db.transaction('rw', [db.plants, db.logs, db.journal, db.photos, db.settings, db.groups], async () => {
+    const fresh = (await db.plants.count()) === 0 && (await db.logs.count()) === 0 && (await db.journal.count()) === 0
+    if (fresh && Array.isArray(data.groups)) await db.groups.clear()
     await db.groups.bulkPut(data.groups ?? [])
     await db.plants.bulkPut(data.plants)
     await db.logs.bulkPut(data.logs ?? [])

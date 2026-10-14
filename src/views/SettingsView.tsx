@@ -388,6 +388,14 @@ export function SettingsView() {
       </div>
 
       <p className="hint">{backedUp ? `最後に書き出した日: ${fmtFull(backedUp)}` : 'この端末では、まだ書き出していません。'}</p>
+      {/* 読み込んだあとに、ちゃんと戻ったかを確かめるための件数と照合コード */}
+      <button className="fold tight" onClick={() => open({ k: 'summary' })}>
+        データの内訳
+        <span className="fold-side">
+          件数と照合コード
+          <ChevronRight size={18} />
+        </span>
+      </button>
       <section className="card">
         <label className="line">
           <span className="line-main">

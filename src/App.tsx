@@ -13,6 +13,7 @@ import type { CareLog, CareType } from './types'
 import { Archive, ArchiveForm, Snooze } from './views/Archive'
 import { BeeSays } from './views/Bee'
 import { CalendarView } from './views/CalendarView'
+import { DataSummary } from './views/DataSummary'
 import { Feedback } from './views/Feedback'
 import { GroupForm } from './views/GroupForm'
 import { Home } from './views/Home'
@@ -214,6 +215,8 @@ export default function App() {
             return <Feedback key={i} />
           case 'releases':
             return <ReleaseNotes key={i} />
+          case 'summary':
+            return <DataSummary key={i} />
           case 'photo':
             return <Lightbox key={i} ids={o.ids} index={o.index} />
           case 'share':

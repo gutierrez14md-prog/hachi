@@ -19,6 +19,14 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.23.0',
+    date: '2026-10-14',
+    items: [
+      '設定に「データの内訳」を追加（植物・記録・写真などの件数と照合コード。バックアップから戻したあとに、元と同じかを確かめられる）',
+      '何も登録していないアプリにバックアップを読み込んだとき、元のアプリで消した分類が残る不具合を修正',
+    ],
+  },
+  {
     version: '4.22.0',
     date: '2026-10-14',
     items: ['アプリのアイコンを、鉢を抱えたハチのキャラクターに変更（白地に黒の線）'],

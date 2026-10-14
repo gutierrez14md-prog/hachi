@@ -16,6 +16,7 @@ export type Overlay =
   | { k: 'archiveInfo'; plantId: string }
   | { k: 'feedback' }
   | { k: 'releases' }
+  | { k: 'summary' }
   | { k: 'photo'; ids: string[]; index: number }
   | { k: 'share'; plantId: string; photoId?: string }
 

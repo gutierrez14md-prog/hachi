@@ -705,6 +705,35 @@ input[type='number'] {
 .fold + .themes {
   margin-top: 10px;
 }
+/* データの内訳: 照合コード (大きく) と、件数の一覧 */
+.sum-code {
+  margin: 0 0 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-family: var(--font-display), ui-monospace, monospace;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: center;
+  user-select: all;
+}
+.sum {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  user-select: text;
+}
+.fold.tight + .card {
+  margin-top: 14px;
+}
 /* このアプリの URL */
 .url-box {
   padding: 10px 12px;
