@@ -1,7 +1,7 @@
 import { Copy, Download, Move, Share2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { useApp } from '../ctx'
-import { db, journalPhotos } from '../db'
+import { db, journalPhotos, journalPlants } from '../db'
 import { diffDays, fromKey, today } from '../lib/date'
 import { CARD_H, CARD_W, clampFocus, drawCard, NO_FOCUS, TONES, type Brand, type Design, type Focus, type Slot, type ToneId } from '../lib/sharecard'
 import { Photo, Sheet } from '../parts'
@@ -74,15 +74,15 @@ export function ShareCard({ plantId, photoId }: { plantId: string; photoId?: str
   const [prefs, setPrefs] = useState(loadPrefs)
   const [file, setFile] = useState<File | null>(null)
 
-  // 使える写真: 植物の写真と、その株の生長記録の写真 (新しい順)。記録の写真は、その記録の日付を持つ
+  // 使える写真: 植物の写真と、その株の日記の写真 (新しい順)。記録の写真は、その記録の日付を持つ
   const shots = useMemo(() => {
     const list: Shot[] = []
     if (p?.photoId) list.push({ id: p.photoId })
-    const entries = journal.filter((j) => j.plantId === plantId).sort((a, b) => b.date.localeCompare(a.date) || b.at - a.at)
+    const entries = journal.filter((j) => journalPlants(j).includes(plantId)).sort((a, b) => b.date.localeCompare(a.date) || b.at - a.at)
     for (const j of entries)
       for (const id of journalPhotos(j)) {
         const known = list.find((s) => s.id === id)
-        // 植物の写真が生長記録の写真と同じものなら、その記録の日付を使う
+        // 植物の写真が日記の写真と同じものなら、その記録の日付を使う
         if (known) known.date ??= j.date || undefined
         else list.push({ id, date: j.date || undefined })
       }

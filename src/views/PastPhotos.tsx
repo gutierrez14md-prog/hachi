@@ -11,7 +11,7 @@ import { PlantPick } from './PlantPick'
 /** turns = 右へ 90° 回す回数 (保存するときに、その向きで書き出す) */
 type Item = { key: string; file: File; url: string; date: string; turns: number }
 
-/** このアプリを使い始める前の写真を、まとめて生長記録に入れる (ほかのアプリからの移行用) */
+/** このアプリを使い始める前の写真を、まとめて日記に入れる (ほかのアプリからの移行用) */
 export function PastPhotos(props: { plantId?: string }) {
   const { allPlants, close, toast } = useApp()
   const plants = allPlants.filter((p) => !p.archivedDay || p.id === props.plantId)

@@ -155,7 +155,7 @@ export function PlantForm({ id }: { id?: string }) {
   const archive = () => replace({ k: 'archiveInfo', plantId: f.id })
 
   const remove = async () => {
-    if (!confirm(`「${f.name}」と、そのケア記録・生長記録をすべて削除します。よろしいですか？`)) return
+    if (!confirm(`「${f.name}」と、そのケア記録・日記をすべて削除します（ほかの植物にも紐づけた日記は残ります）。よろしいですか？`)) return
     await deletePlant(f.id)
     close(2) // 編集画面と詳細画面を閉じる
   }

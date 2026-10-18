@@ -81,10 +81,13 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export const newId = () => crypto.randomUUID()
 
-/** 生長記録の写真ぜんぶ (1 枚だけ持っていた古い記録も同じ形で返す) */
+/** 日記に紐づけた植物ぜんぶ (1 つだけ持っていた古い記録も同じ形で返す) */
+export const journalPlants = (j: Journal): string[] => j.plantIds ?? (j.plantId ? [j.plantId] : [])
+
+/** 日記の写真ぜんぶ (1 枚だけ持っていた古い記録も同じ形で返す) */
 export const journalPhotos = (j: Journal): string[] => j.photoIds ?? (j.photoId ? [j.photoId] : [])
 
-/** 生長記録の写真のうち、位置と大きさを調整したものの元の写真 (いま使っている写真のぶんだけ) */
+/** 日記の写真のうち、位置と大きさを調整したものの元の写真 (いま使っている写真のぶんだけ) */
 export const journalOrigs = (j: Journal): string[] => {
   const now = journalPhotos(j)
   return Object.entries(j.photoCrops ?? {})
@@ -93,7 +96,7 @@ export const journalOrigs = (j: Journal): string[] => {
 }
 
 /**
- * どの植物・生長記録からも使われていない写真を消す (写真の差し替えや、背景を変える前の元写真、
+ * どの植物・日記からも使われていない写真を消す (写真の差し替えや、背景を変える前の元写真、
  * 保存せずに閉じたフォームで選んだ写真)。開いているフォームの写真を消さないよう、起動時にだけ呼ぶ
  */
 export async function sweepPhotos() {
@@ -114,11 +117,20 @@ export async function sweepPhotos() {
 export async function deletePlant(id: string) {
   await db.transaction('rw', db.plants, db.logs, db.journal, db.photos, async () => {
     const plant = await db.plants.get(id)
-    const entries = await db.journal.where('plantId').equals(id).toArray()
+    const linked = await db.journal.filter((j) => journalPlants(j).includes(id)).toArray()
+    // ほかの植物にも紐づけた日記は残して、この植物だけ外す
+    const shared = linked.filter((j) => journalPlants(j).length > 1)
+    const entries = linked.filter((j) => !shared.includes(j))
     const photoIds = [plant?.photoId, plant?.photoCrop?.origId, ...entries.flatMap(journalPhotos), ...entries.flatMap(journalOrigs)].filter((p): p is string => !!p)
     await db.photos.bulkDelete(photoIds)
     await db.logs.where('plantId').equals(id).delete()
-    await db.journal.where('plantId').equals(id).delete()
+    await db.journal.bulkDelete(entries.map((j) => j.id))
+    await db.journal.bulkPut(
+      shared.map((j) => {
+        const plantIds = journalPlants(j).filter((x) => x !== id)
+        return { ...j, plantIds, plantId: plantIds[0] }
+      }),
+    )
     await db.plants.delete(id)
   })
 }

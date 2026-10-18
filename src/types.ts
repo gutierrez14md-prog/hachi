@@ -170,7 +170,10 @@ export interface CareLog {
 
 export interface Journal {
   id: string
+  /** 1 つ目の植物 (植物が 1 つだけだったころの持ち方)。読むときは db.ts の journalPlants を使う */
   plantId: string
+  /** 紐づけた植物ぜんぶ (複数のとき)。無ければ plantId の 1 つだけ */
+  plantIds?: string[]
   /** YYYY-MM-DD。past の記録は日付不明 ('') もある */
   date: string
   text: string

@@ -6,7 +6,7 @@ import { heads } from './schedule'
  * 登録してあるデータの内訳 (件数) と、照合コードを作る。
  * バックアップから戻したあとに、元のアプリと見比べて、ちゃんと戻ったかを確かめるためのもの。
  *
- * 照合コード = 植物・記録・生長記録・分類・設定・写真の中身ぜんぶから計算した 8 桁の符号。
+ * 照合コード = 植物・記録・日記・分類・設定・写真の中身ぜんぶから計算した 8 桁の符号。
  * 1 件でも、1 文字でも違えば別の符号になるので、同じなら中身まで同じとわかる。
  * 写真は、どこかで使われているものだけを数える (使われなくなった写真は、次の起動時に消えるので、数に入れると合わなくなる)
  */
@@ -20,7 +20,7 @@ export async function dataSummary(): Promise<{ code: string; lines: string[] }> 
     db.photos.toArray(),
   ])
 
-  // 使われている写真 (植物の写真、生長記録の写真、位置や明るさを調整する前の元の写真)
+  // 使われている写真 (植物の写真、日記の写真、位置や明るさを調整する前の元の写真)
   const used = new Set<string>()
   for (const p of plants) {
     if (p.photoId) used.add(p.photoId)
@@ -67,7 +67,7 @@ export async function dataSummary(): Promise<{ code: string; lines: string[] }> 
       .map(([label, n]) => `  ${label}: ${n}件`),
     ...(dates.length ? [`  期間: ${dates[0]} 〜 ${dates[dates.length - 1]}`] : []),
     '',
-    `生長記録: ${journal.length}件`,
+    `日記: ${journal.length}件`,
     `  写真: ${shots}枚`,
     `  過去の写真として追加: ${journal.filter((j) => j.past).length}件`,
     '',

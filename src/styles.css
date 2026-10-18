@@ -1726,8 +1726,21 @@ input[type='number'] {
   color: var(--muted);
   font-size: 12px;
 }
-.entry-plant {
-  margin-left: 10px;
+/* 日付・過去の写真の印・紐づけた植物。植物が多いときは折り返す */
+.entry-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  min-width: 0;
+  padding: 6px 0;
+}
+.entry-meta .past-tag {
+  margin-left: 0;
+}
+.entry-with {
+  color: var(--muted);
+  font-size: 12px;
 }
 .entry-img {
   display: block;
@@ -1755,7 +1768,7 @@ input[type='number'] {
   max-height: none;
   scroll-snap-align: start;
 }
-/* 生長記録の写真えらび: 3 列のタイル */
+/* 日記の写真えらび: 3 列のタイル */
 .shots {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

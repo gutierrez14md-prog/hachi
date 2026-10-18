@@ -185,7 +185,7 @@ export default function App() {
                     <Droplet /> ケアを記録
                   </button>
                   <button onClick={() => replace({ k: 'journal' })}>
-                    <Camera /> 生長記録を書く
+                    <Camera /> 日記を書く
                   </button>
                   <button onClick={() => replace({ k: 'past' })}>
                     <History /> 過去の写真をまとめて追加

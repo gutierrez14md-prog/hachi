@@ -472,7 +472,7 @@ export function SettingsView() {
           <span>{logs.length}件</span>
         </div>
         <div className="line stat">
-          <b>生長記録</b>
+          <b>日記</b>
           <span>{journal.length}件</span>
         </div>
         <label className="line stat">

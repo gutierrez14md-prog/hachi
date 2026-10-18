@@ -146,11 +146,11 @@ function recordLines(i: BeeInput): string[] {
   if (i.snoozed > 0) out.push(`${i.snoozed}株は、延期中だよ`)
   if (i.plants.some((p) => p.care.water.light?.includes(monthOf(i.today)))) out.push('今月は、ちょろ水の株があるよ')
 
-  // 生長記録
+  // 日記
   const dated = i.journal.filter((j) => j.date).sort((a, b) => b.date.localeCompare(a.date))
-  if (!i.journal.length) out.push('生長記録、まだないね。写真を1枚どう？')
+  if (!i.journal.length) out.push('日記、まだないね。写真を1枚どう？')
   else {
-    out.push(`生長記録は${i.journal.length}件。たまってきたね`)
+    out.push(`日記は${i.journal.length}件。たまってきたね`)
     const gap = dated[0] ? diffDays(i.today, dated[0].date) : 0
     if (gap >= 14) out.push(`最後の写真から${gap}日。変化はあった？`)
   }
@@ -197,7 +197,7 @@ function tabLines(i: BeeInput): string[] {
   if (i.tab === 'tl') {
     const n = i.journal.length
     return [
-      n ? `生長記録は、${n}件だよ` : '写真を撮って、生長を残そう',
+      n ? `日記は、${n}件だよ` : '写真を撮って、生長を残そう',
       '写真は、押すと大きく見られるよ',
       '同じ場所・同じ向きで撮ると、変化がわかるよ',
       '分類や植物で、絞り込めるよ',

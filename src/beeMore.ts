@@ -2,6 +2,7 @@
 // 集めて順番を決めるのは src/bee.ts。ここは「いま言えること」を出すだけ。
 // 豆知識は、広く知られた確かなことだけを書く (育て方の細かい数字のように、条件で変わることは書かない)。
 // どの言葉も、吹き出しの 2 行に収まる長さにする (全角 22 文字くらいまで。長すぎるものは bee.ts が外す)
+import { journalPlants } from './db'
 import { diffDays, monthOf } from './lib/date'
 import type { BeeInput } from './bee'
 import type { Plant } from './types'
@@ -163,9 +164,9 @@ function aboutPlant(p: Plant, i: BeeInput): string[] {
   if (repot && diffDays(i.today, repot) >= 365) out.push(`${n}、植え替えから1年以上だね`)
   else if (!repot && days >= 365) out.push(`${n}、植え替えはした？`)
 
-  const shots = i.journal.filter((j) => j.plantId === p.id)
+  const shots = i.journal.filter((j) => journalPlants(j).includes(p.id))
   const lastShot = shots.reduce((d, j) => (j.date > d ? j.date : d), '')
-  if (!shots.length) out.push(`${n}の生長記録、つけてみない？`)
+  if (!shots.length) out.push(`${n}の日記、つけてみない？`)
   else if (lastShot && diffDays(i.today, lastShot) >= 30) out.push(`${n}、前の写真から変わったかな`)
   else out.push(`${n}の記録は、${shots.length}件あるよ`)
   return out
@@ -189,7 +190,7 @@ function aboutAll(i: BeeInput): string[] {
     const byName = new Map(i.plants.map((p) => [p.id, p.name]))
     const top = count(i.logs.filter((l) => l.type === 'water' && byName.has(l.plantId)).map((l) => l.plantId))
     if (top && top[1] >= 5) out.push(`水やりの回数1位は、${short(byName.get(top[0])!)}`)
-    const shot = count(i.journal.filter((j) => byName.has(j.plantId)).map((j) => j.plantId))
+    const shot = count(i.journal.flatMap(journalPlants).filter((id) => byName.has(id)))
     if (shot && shot[1] >= 3) out.push(`写真がいちばん多いのは、${short(byName.get(shot[0])!)}`)
   }
 

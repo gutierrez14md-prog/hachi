@@ -176,7 +176,7 @@ export function PhotoPicker({ id, crop, onChange }: { id?: string; crop?: PhotoC
 const MAX_SHOTS = 10
 
 /**
- * 写真を複数枚選ぶ欄 (生長記録用)。1 枚ずつ外したり、位置と大きさを調整したり、回したり、背景を変えたりできる。
+ * 写真を複数枚選ぶ欄 (日記用)。1 枚ずつ外したり、位置と大きさを調整したり、回したり、背景を変えたりできる。
  * crops = 位置と大きさを調整した写真の、元の写真とその調整 (キーは調整後の写真の id)
  */
 export function PhotosPicker({

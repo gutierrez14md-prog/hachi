@@ -2,7 +2,7 @@ import { ArchiveRestore, CalendarClock, Camera, History, MapPin, Pencil, Share2,
 import { useState } from 'react'
 import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
 import { useApp } from '../ctx'
-import { db } from '../db'
+import { db, journalPlants } from '../db'
 import { fmtDay, fmtFull, monthsText, today } from '../lib/date'
 import { byWater, intervalOn, isSnoozed, lastDone, lightWater, nextDue } from '../lib/schedule'
 import { careIcon, careLabel, logIcon, METHODS, planIcon } from '../method'
@@ -24,7 +24,7 @@ export function PlantDetail({ id }: { id: string }) {
 
   const t = today()
   const logs = [...logsOf(id)].sort((a, b) => b.date.localeCompare(a.date) || b.at - a.at)
-  const entries = sortJournal(journal.filter((j) => j.plantId === id))
+  const entries = sortJournal(journal.filter((j) => journalPlants(j).includes(id)))
   const sched = SCHED.filter((s) => p.care[s].enabled)
   const facts = [
     ['分類', groups.find((g) => g.id === p.groupId)?.name],
@@ -170,7 +170,7 @@ export function PlantDetail({ id }: { id: string }) {
       )}
 
       <div className="list-head">
-        <h3 className="sec">生長記録</h3>
+        <h3 className="sec">日記</h3>
         <span className="row">
           <button className="btn ghost sm" onClick={() => open({ k: 'past', plantId: id })}>
             <History size={15} /> 過去の写真
@@ -183,7 +183,7 @@ export function PlantDetail({ id }: { id: string }) {
       {entries.length ? (
         <div className="tl">
           {entries.map((j) => (
-            <JournalCard key={j.id} entry={j} />
+            <JournalCard key={j.id} entry={j} here={id} />
           ))}
         </div>
       ) : (

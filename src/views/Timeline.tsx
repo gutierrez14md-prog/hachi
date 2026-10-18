@@ -1,7 +1,7 @@
 import { Images, Pencil, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import { useApp } from '../ctx'
-import { journalPhotos } from '../db'
+import { journalPhotos, journalPlants } from '../db'
 import { fmtDay, fmtFull, today } from '../lib/date'
 import { Photo } from '../parts'
 import type { Journal } from '../types'
@@ -12,24 +12,37 @@ export const sortJournal = (list: Journal[]) =>
 
 const entryDate = (date: string) => (!date ? '日付不明' : date.slice(0, 4) === today().slice(0, 4) ? fmtDay(date) : fmtFull(date))
 
-export function JournalCard({ entry, plantName }: { entry: Journal; plantName?: string }) {
-  const { open } = useApp()
+/** 紐づけた植物の名前は、これより多ければ「ほか N 株」にまとめる */
+const SHOW_PLANTS = 3
+
+/**
+ * here = 植物の詳細から見ているときの、その植物。名前の一覧からは外し、投稿用の画像もその植物で作る。
+ * タイムラインでは、紐づけた植物の名前を出す
+ */
+export function JournalCard({ entry, here }: { entry: Journal; here?: string }) {
+  const { allPlants, open } = useApp()
   const photos = journalPhotos(entry)
+  const linked = journalPlants(entry).flatMap((id) => allPlants.find((p) => p.id === id) ?? [])
+  const others = linked.filter((p) => p.id !== here)
+  const shareFor = here ?? linked[0]?.id
   return (
     <article className={`entry ${entry.past ? 'past' : ''}`}>
       <header>
-        <span>
+        <span className="entry-meta">
           <time>{entryDate(entry.date)}</time>
           {entry.past && <span className="past-tag">過去の写真</span>}
-          {plantName && (
-            <button className="entry-plant" onClick={() => open({ k: 'plant', id: entry.plantId })}>
-              {plantName}
+          {/* 植物の詳細では、ほかにも紐づけた植物があるときだけ「ほかに〜」として出す */}
+          {here && others.length > 0 && <span className="entry-with">ほかに</span>}
+          {others.slice(0, SHOW_PLANTS).map((p) => (
+            <button key={p.id} className="entry-plant" onClick={() => open({ k: 'plant', id: p.id })}>
+              {p.name}
             </button>
-          )}
+          ))}
+          {others.length > SHOW_PLANTS && <span className="entry-with">ほか{others.length - SHOW_PLANTS}株</span>}
         </span>
         <span className="entry-acts">
-          {photos.length > 0 && (
-            <button className="icon-btn muted" onClick={() => open({ k: 'share', plantId: entry.plantId, photoId: photos[0] })} aria-label="投稿用の画像を作る">
+          {photos.length > 0 && shareFor && (
+            <button className="icon-btn muted" onClick={() => open({ k: 'share', plantId: shareFor, photoId: photos[0] })} aria-label="投稿用の画像を作る">
               <Share2 size={15} />
             </button>
           )}
@@ -59,9 +72,9 @@ export function Timeline() {
   const [grp, setGrp] = useState('')
   const usedGroups = groups.filter((g) => plants.some((p) => p.groupId === g.id))
   const inGroup = new Set(allPlants.filter((p) => !grp || p.groupId === grp).map((p) => p.id))
-  // アーカイブした株の記録もタイムラインには残す
-  const names = new Map(allPlants.map((p) => [p.id, p.name]))
-  const entries = sortJournal(journal).filter((j) => names.has(j.plantId) && inGroup.has(j.plantId) && (!plantId || j.plantId === plantId))
+  // アーカイブした株の記録もタイムラインには残す。複数の植物に紐づけた日記は、どれか 1 つが当てはまれば出す
+  const known = new Set(allPlants.map((p) => p.id))
+  const entries = sortJournal(journal).filter((j) => journalPlants(j).some((id) => known.has(id) && inGroup.has(id) && (!plantId || id === plantId)))
 
   let month = ''
   return (
@@ -107,11 +120,11 @@ export function Timeline() {
           <div className="empty-icon">
             <Images size={30} />
           </div>
-          <p>写真と一言で、生長の記録を残せます。</p>
+          <p>写真とひとことで、生長の様子や作業のことを残せます。</p>
           {plants.length > 0 && (
             <>
               <button className="btn primary" onClick={() => open({ k: 'journal', plantId: plantId || undefined })}>
-                生長記録を書く
+                日記を書く
               </button>
               <button className="btn ghost" onClick={() => open({ k: 'past', plantId: plantId || undefined })}>
                 過去の写真をまとめて追加
@@ -129,7 +142,7 @@ export function Timeline() {
           return (
             <div key={j.id}>
               {head && <h2 className="tl-month">{m}</h2>}
-              <JournalCard entry={j} plantName={names.get(j.plantId)} />
+              <JournalCard entry={j} />
             </div>
           )
         })}
