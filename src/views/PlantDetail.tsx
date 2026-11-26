@@ -1,10 +1,11 @@
 import { ArchiveRestore, CalendarClock, Camera, History, MapPin, Pencil, Share2, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
+import { ALL_TYPES, CARE, careVar, DRY, dryVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db, journalPlants } from '../db'
 import { fmtDay, fmtFull, monthsText, today } from '../lib/date'
-import { byWater, intervalOn, isSnoozed, lastDone, lightWater, nextDue } from '../lib/schedule'
+import { byWater, dryWake, intervalOn, isSnoozed, lastDone, lightWater, nextDue } from '../lib/schedule'
+import { dryText } from './Dry'
 import { careIcon, careLabel, logIcon, METHODS, planIcon } from '../method'
 import { DueTag, Photo, SciName, Sheet } from '../parts'
 import { archiveText } from './Archive'
@@ -101,7 +102,33 @@ export function PlantDetail({ id }: { id: string }) {
         </dl>
       )}
 
-      {!archived && sched.length > 0 && (
+      {/* 断水中: 水やり・肥料・活力剤の予定のかわりに、断水の様子を 1 行で出す。押すと、目安を直すか終える */}
+      {!archived && p.dry && (
+        <section className="card">
+          <h3 className="card-t">次のケア</h3>
+          <div className="line">
+            <span className="care-ic" style={dryVar}>
+              <DRY.Icon size={18} />
+            </span>
+            <span className="line-main">
+              <span>
+                <b>
+                  断水中{' '}
+                  <span className="soft">
+                    {p.dry.until ? dryWake(p, t) ? <span className="urg today">再開の目安</span> : `再開の目安 ${fmtDay(p.dry.until)}` : ''}
+                  </span>
+                </b>
+                <small>{dryText(p, t)} ・ 水やり・肥料・活力剤はお休み</small>
+              </span>
+            </span>
+            <button className="pill" style={dryVar} onClick={() => open({ k: 'dry', plantIds: [id] })}>
+              再開
+            </button>
+          </div>
+        </section>
+      )}
+
+      {!archived && !p.dry && sched.length > 0 && (
         <section className="card">
           <h3 className="card-t">次のケア</h3>
           {sched.map((s) => {
@@ -136,6 +163,12 @@ export function PlantDetail({ id }: { id: string }) {
                 {due && due <= t && (
                   <button className="icon-btn muted" onClick={() => open({ k: 'snooze', plantIds: [id] })} aria-label={`${label}を延期`}>
                     <CalendarClock size={18} />
+                  </button>
+                )}
+                {/* 落葉しきったときなどに、水やりのかわりに断水を始める */}
+                {s === 'water' && (
+                  <button className="icon-btn muted" onClick={() => open({ k: 'dry', plantIds: [id] })} aria-label="断水を始める">
+                    <DRY.Icon size={18} />
                   </button>
                 )}
                 <button className="pill" style={careVar(s)} onClick={() => record([id], s)}>

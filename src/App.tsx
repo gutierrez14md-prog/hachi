@@ -11,6 +11,7 @@ import { careLabel } from './method'
 import { Logo, PotIcon } from './parts'
 import type { CareLog, CareType } from './types'
 import { Archive, ArchiveForm, Snooze } from './views/Archive'
+import { DrySheet } from './views/Dry'
 import { BeeSays } from './views/Bee'
 import { CalendarView } from './views/CalendarView'
 import { DataSummary } from './views/DataSummary'
@@ -207,6 +208,8 @@ export default function App() {
             return <GroupForm key={i} id={o.id} />
           case 'snooze':
             return <Snooze key={i} plantIds={o.plantIds} types={o.types} onDone={o.onDone} />
+          case 'dry':
+            return <DrySheet key={i} plantIds={o.plantIds} onDone={o.onDone} />
           case 'archive':
             return <Archive key={i} />
           case 'archiveInfo':

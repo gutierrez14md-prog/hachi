@@ -94,6 +94,17 @@ export interface ArchiveInfo {
   note?: string
 }
 
+/**
+ * 断水。落葉しきった塊根植物などで、春まで水を切るときに株ごとに付ける。
+ * 入っている間は、水やり・肥料・活力剤の予定を出さない。外すと (断水を終える)、ふだんの予定に戻る
+ */
+export interface Dry {
+  /** 断水を始めた日 YYYY-MM-DD */
+  from: string
+  /** 再開の目安 YYYY-MM-DD (任意)。この日になったら「再開の目安」として今日のケアに出す (自動では再開しない) */
+  until?: string
+}
+
 export interface Plant {
   id: string
   name: string
@@ -142,6 +153,13 @@ export interface Plant {
   snooze?: Partial<Record<SchedType, string>>
   /** 水やりに合わせる肥料と活力剤が同じ回に重なったら、同じ日にあげず、交互にずらす */
   stagger?: boolean
+  /** 断水中なら、始めた日と再開の目安 */
+  dry?: Dry
+  /**
+   * 最後に断水を終えた日。この日より前には予定を出さない
+   * (断水前の水やりから数えると、再開した日に「◯日超過」と出てしまうため。再開した日が最初の予定になる)
+   */
+  dryEnded?: string
 }
 
 /** 分類 (アガベ、サボテン…) と、そのケア設定のプリセット */

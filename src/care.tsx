@@ -1,4 +1,4 @@
-import { Bug, Droplet, Ellipsis, Scissors, Shovel, Sparkles, SprayCan, Sprout, type LucideIcon } from 'lucide-react'
+import { Bug, Droplet, DropletOff, Ellipsis, Scissors, Shovel, Sparkles, SprayCan, Sprout, type LucideIcon } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import type { CareType, SchedType } from './types'
 
@@ -18,3 +18,7 @@ export const ALL_TYPES = Object.keys(CARE) as CareType[]
 
 /** ケア種別の色を CSS 変数 --c として渡す */
 export const careVar = (type: CareType) => ({ '--c': CARE[type].color }) as CSSProperties
+
+/** 断水 (ケアの種類ではなく、株の状態)。乾いた土の色 */
+export const DRY = { label: '断水', color: '#A0835F', Icon: DropletOff }
+export const dryVar = { '--c': DRY.color } as CSSProperties

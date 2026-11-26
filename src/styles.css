@@ -327,6 +327,12 @@ i, .sci {
   background: var(--today-bg);
   color: var(--today-ink);
 }
+/* 断水中: 急ぎではないので、線だけの控えめな札 */
+.urg.dry {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--muted);
+}
 .soft {
   color: var(--muted);
   font-weight: 400;
@@ -1347,10 +1353,13 @@ input[type='number'] {
   display: grid;
   gap: 10px;
 }
-/* 下のバーのボタンは 3 つ並ぶので、字を折り返さず、左右の余白を詰める */
+/* 下のバーのボタンは 4 つ並ぶので、字を折り返さず、左右の余白とすき間を詰める */
+.bulk-bar .row.gap {
+  gap: 6px;
+}
 .bulk-bar .row.gap .btn {
   white-space: nowrap;
-  padding-inline: 12px;
+  padding-inline: 10px;
 }
 .bulk-what {
   flex: 1;
@@ -1566,6 +1575,11 @@ input[type='number'] {
 .tile-text .urg.over {
   background: #c8463b;
   color: #fff;
+}
+.tile-text .urg.dry {
+  background: #fff;
+  box-shadow: none;
+  color: #6b5a44;
 }
 .tiles.mini .due-ics {
   top: 4px;

@@ -12,6 +12,8 @@ export type Overlay =
   | { k: 'group'; id?: string }
   /** 延期。types を渡すと、今日やるケアではなく、そのケアを延期する (まとめて延期)。onDone = 延期したあとに呼ぶ */
   | { k: 'snooze'; plantIds: string[]; types?: SchedType[]; onDone?: () => void }
+  /** 断水を始める / 再開の目安を直す / 終える。onDone = 決めたあとに呼ぶ */
+  | { k: 'dry'; plantIds: string[]; onDone?: () => void }
   | { k: 'archive' }
   | { k: 'archiveInfo'; plantId: string }
   | { k: 'feedback' }

@@ -1,14 +1,15 @@
 import { AlignJustify, Archive, BookOpen, Download, CalendarClock, CalendarDays, Check, ChevronDown, ChevronUp, Droplets, Grid2x2, Grid3x3, LayoutList, ListChecks, MapPin, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { ALL_TYPES, CARE, careVar, SCHED } from '../care'
+import { ALL_TYPES, CARE, careVar, DRY, dryVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { addDays, diffDays, fmtDay, fmtFull, fromKey, today, urgency, type Urgency } from '../lib/date'
 import { careLabel, METHOD_IDS, METHODS, planIcon } from '../method'
-import { heads, nextDue } from '../lib/schedule'
+import { dryWake, heads, nextDue } from '../lib/schedule'
 import { exportBackup, lastBackup } from '../lib/backup'
 import { describe, useWeather } from '../lib/weather'
 import { CarePills, DueTag, Logo, Photo, SciName, SciText } from '../parts'
 import { archivedOf } from './Archive'
+import { dryText } from './Dry'
 import type { CareType, Plant, SchedType } from '../types'
 
 type Sort = 'water' | 'care' | 'name' | 'sci' | 'new' | 'days-desc' | 'days-asc' | 'price-desc' | 'price-asc'
@@ -44,7 +45,8 @@ const GROUP_BYS: [GroupBy, string][] = [
 ]
 
 /**
- * まとめて記録・延期: 一覧で株を選び (sel)、下のバーでケアの種類を選んで (types)、まとめて記録するか、まとめて延期する。
+ * まとめて記録・延期・断水: 一覧で株を選び (sel)、下のバーでケアの種類を選んで (types)、まとめて記録するか、まとめて延期する。
+ * 断水は種類を問わず、選んだ株の断水を始める (すべて断水中なら、目安を直すか終える)。
  * 選んでいる間は、一覧の株を押すと詳細が開くかわりに、選択が入る
  */
 type Bulk = { types: CareType[]; sel: string[]; /** 記録する日。ふつうは今日。付け忘れたぶんを入れるときは、過去の日 */ date: string }
@@ -75,6 +77,10 @@ function DueIcons({ p, due, t, size = 11, className = '' }: { p: Plant; due: Due
     </span>
   )
 }
+
+/** 断水中の札。再開の目安の日になったら、今日のケアと同じ色で「再開の目安」 */
+const DryTag = ({ p, t }: { p: Plant; t: string }) =>
+  dryWake(p, t) ? <span className="urg today">再開の目安</span> : <span className="urg dry">断水中</span>
 
 /** バックアップを知らせる間隔 (日)。書き出してから、または「あとで」を押してからの日数 */
 const BACKUP_EVERY = 30
@@ -135,6 +141,9 @@ export function Home() {
   const tomorrow = addDays(t, 1)
   const dueTomorrow = rows.filter((r) => SCHED.some((s) => r.due[s] === tomorrow)).map((r) => r.p)
   const waterDue = dueNow.filter((r) => r.types.includes('water')).map((r) => r.p.id)
+  // 断水中で、再開の目安の日になった株 (今日のケアに「再開の目安」として出す)
+  const wakeNow = plants.filter((p) => dryWake(p, t))
+  const todayCount = heads([...dueNow.map((r) => r.p), ...wakeNow])
 
   const locations = [...new Set(plants.map((p) => p.location).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ja'))
   // 絞り込みに出すのは、実際に株がある分類だけ
@@ -254,7 +263,9 @@ export function Home() {
                           {' ・ '}
                         </>
                       )}
-                      {!s ? (
+                      {p.dry ? (
+                        <DryTag p={p} t={t} />
+                      ) : !s ? (
                         `${careLabel('water', p)}の予定なし`
                       ) : due[s]! <= t ? (
                         <>
@@ -269,7 +280,13 @@ export function Home() {
                   </span>
                   {mark(p)}
                 </button>
-                {!picking && (
+                {/* 断水中の株は、しずくのかわりに断水の印。押すと、再開の目安を直すか、断水を終える */}
+                {!picking && p.dry && (
+                  <button className="drop" style={dryVar} onClick={() => open({ k: 'dry', plantIds: [p.id] })} aria-label={`${p.name}の断水`}>
+                    <DRY.Icon size={20} />
+                  </button>
+                )}
+                {!picking && !p.dry && (
                   <button
                     className={`drop ${late ? 'on' : ''}`}
                     style={careVar('water')}
@@ -298,9 +315,17 @@ export function Home() {
                   <Photo id={p.photoId} className="tile-img" />
                   <span className="tile-text">
                     <b>{p.name}</b>
-                    {view === 'tile' && <small>{sortKey ? sortKey(p) : s ? <DueTag due={due[s]!} /> : ''}</small>}
+                    {view === 'tile' && <small>{sortKey ? sortKey(p) : p.dry ? <DryTag p={p} t={t} /> : s ? <DueTag due={due[s]!} /> : ''}</small>}
                   </span>
                   <DueIcons p={p} due={due} t={t} size={view === 'mini' ? 9 : 11} className="on-tile" />
+                  {/* 断水中の株には、右上に断水の印 (断水中は予定が無いので、ケアの印とは重ならない) */}
+                  {p.dry && (
+                    <span className="due-ics on-tile" role="img" aria-label="断水中">
+                      <span className="due-ic" style={dryVar}>
+                        <DRY.Icon size={view === 'mini' ? 9 : 11} strokeWidth={2.5} />
+                      </span>
+                    </span>
+                  )}
                   {mark(p)}
                 </button>
               </li>
@@ -353,7 +378,7 @@ export function Home() {
                 <b>{p.name}</b>
                 <span>
                   <DueIcons p={p} due={due} t={t} />
-                  {sortKey ? sortKey(p) : s ? <DueTag due={due[s]!} /> : '—'}
+                  {sortKey ? sortKey(p) : p.dry ? <DryTag p={p} t={t} /> : s ? <DueTag due={due[s]!} /> : '—'}
                 </span>
               </button>
             </li>
@@ -396,7 +421,7 @@ export function Home() {
       <div>
         <p className="eyebrow">今日のケア</p>
         <p className="hero-n">
-          {heads(dueNow.map((r) => r.p))}
+          {todayCount}
           <small>株</small>
         </p>
       </div>
@@ -423,7 +448,7 @@ export function Home() {
               <p className="eyebrow">今日のケア</p>
               <p className="eyebrow">育てている株</p>
               <p className="hero-n">
-                {heads(dueNow.map((r) => r.p))}
+                {todayCount}
                 <small>株</small>
               </p>
               <p className="hero-n">
@@ -499,7 +524,7 @@ export function Home() {
         </section>
       )}
 
-      {dueNow.length > 0 && !picking && (
+      {dueNow.length + wakeNow.length > 0 && !picking && (
         <section className={`card due ${dueOpen ? '' : 'folded'}`}>
           <button
             className="due-head"
@@ -510,7 +535,7 @@ export function Home() {
             }}
           >
             <b>今日のケア</b>
-            <span>{dueNow.length}件</span>
+            <span>{dueNow.length + wakeNow.length}件</span>
             {dueOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </button>
           {dueOpen && dueNow.map(({ p, types, due }) => {
@@ -530,10 +555,37 @@ export function Home() {
                   <button className="icon-btn muted" onClick={() => open({ k: 'snooze', plantIds: [p.id] })} aria-label={`${p.name}のケアを延期`}>
                     <CalendarClock size={18} />
                   </button>
+                  {/* 水やりの日に、水をやるかわりに断水を始める (落葉しきった、など) */}
+                  {types.includes('water') && (
+                    <button className="icon-btn muted" onClick={() => open({ k: 'dry', plantIds: [p.id] })} aria-label={`${p.name}の断水を始める`}>
+                      <DRY.Icon size={18} />
+                    </button>
+                  )}
                 </div>
               </div>
             )
           })}
+          {/* 断水中で、再開の目安の日になった株。「再開」で、目安を延ばすか断水を終えるかを選ぶ */}
+          {dueOpen &&
+            wakeNow.map((p) => (
+              <div className="due-row" key={p.id}>
+                <button className="due-plant" onClick={() => open({ k: 'plant', id: p.id })}>
+                  <Photo id={p.photoId} className="thumb sm" />
+                  <span>
+                    <b>{p.name}</b>
+                    <small>
+                      <span className="urg today">再開の目安</span> {dryText(p, t)}
+                    </small>
+                  </span>
+                </button>
+                <div className="due-acts">
+                  <button className="pill" style={dryVar} onClick={() => open({ k: 'dry', plantIds: [p.id] })}>
+                    <DRY.Icon size={15} />
+                    断水を見直す
+                  </button>
+                </div>
+              </div>
+            ))}
           {dueOpen && waterDue.length > 1 && (
             <button className="btn ghost full" onClick={() => record(waterDue, 'water')}>
               <Check size={16} /> {waterDue.length}株まとめて水やり済みにする
@@ -606,7 +658,7 @@ export function Home() {
       </div>
       {!picking && (
         <button className="btn ghost full bulk-start" onClick={() => setBulk({ types: ['water'], sel: [], date: t })}>
-          <ListChecks size={16} /> まとめて記録・延期
+          <ListChecks size={16} /> まとめて記録・延期・断水
         </button>
       )}
 
@@ -721,6 +773,14 @@ export function Home() {
                   onClick={() => open({ k: 'snooze', plantIds: bulk.sel, types: SCHED.filter((s) => bulk.types.includes(s)), onDone: () => setBulk(null) })}
                 >
                   <CalendarClock size={16} /> 延期
+                </button>
+                {/* 選んだ株の断水を始める (すべて断水中の株なら、目安を直すか終える)。ケアの種類は問わない */}
+                <button
+                  className="btn ghost"
+                  disabled={!bulk.sel.length}
+                  onClick={() => open({ k: 'dry', plantIds: bulk.sel, onDone: () => setBulk(null) })}
+                >
+                  <DRY.Icon size={16} /> 断水
                 </button>
                 <button
                   className="btn primary grow"

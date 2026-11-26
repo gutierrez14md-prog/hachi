@@ -51,6 +51,7 @@ export function BeeSays({ tab }: { tab: BeeTab }) {
       dueFeed: feed,
       dueAllLight: water > 0 && water === light && !feed,
       snoozed,
+      dry: heads(plants.filter((p) => p.dry)),
       logs,
       journal,
       weather,

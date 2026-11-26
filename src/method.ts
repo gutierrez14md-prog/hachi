@@ -1,5 +1,5 @@
 import { GlassWater, Pipette, RefreshCw, SprayCan, Waves, type LucideIcon } from 'lucide-react'
-import { CARE } from './care'
+import { CARE, DRY } from './care'
 import { LIGHT, lightWater } from './lib/schedule'
 import type { CareLog, CareType, Method, Plant } from './types'
 
@@ -36,9 +36,12 @@ export const LIGHT_ICON: LucideIcon = Pipette
 export const planIcon = (type: CareType, p: Pick<Plant, 'care' | 'method' | 'waterLabel'>, day: string): LucideIcon =>
   type === 'water' && lightWater(p, day) ? LIGHT_ICON : careIcon(type, p)
 
-/** 記録のアイコン。ちょろ水として残した水やり (メモが「ちょろ水」) は、ちょろ水のアイコン */
+/**
+ * 記録のアイコン。ちょろ水として残した水やり (メモが「ちょろ水」) は、ちょろ水のアイコン。
+ * 断水の始めと終わり (種類は「その他」で、メモが「断水…」) は、断水のアイコン
+ */
 export const logIcon = (l: Pick<CareLog, 'type' | 'note'>, p?: { method?: Method; waterLabel?: string }): LucideIcon =>
-  l.type === 'water' && l.note === LIGHT ? LIGHT_ICON : careIcon(l.type, p)
+  l.type === 'water' && l.note === LIGHT ? LIGHT_ICON : l.type === 'other' && l.note.startsWith(DRY.label) ? DRY.Icon : careIcon(l.type, p)
 
 /** 記録の呼び名。ちょろ水として残した水やりは「ちょろ水」 */
 export const logLabel = (l: Pick<CareLog, 'type' | 'note'>, p?: { method?: Method; waterLabel?: string }) =>

@@ -41,12 +41,16 @@ export async function checkNotify() {
 export async function syncReminder(plants: Plant[], logsOf: (id: string) => CareLog[], settings: Settings) {
   const t = today()
   const days: Record<string, string[]> = {}
-  for (const p of plants)
-    for (const s of SCHED)
-      for (const d of projected(p, s, logsOf(p.id), t, addDays(t, 60))) {
-        const list = (days[d] ??= [])
-        if (!list.includes(p.name)) list.push(p.name)
-      }
+  const add = (d: string, name: string) => {
+    const list = (days[d] ??= [])
+    if (!list.includes(name)) list.push(name)
+  }
+  for (const p of plants) {
+    for (const s of SCHED) for (const d of projected(p, s, logsOf(p.id), t, addDays(t, 60))) add(d, p.name)
+    // 断水中の株は、再開の目安の日に知らせる (過ぎていれば、断水を終えるまで今日に)
+    const until = p.dry?.until
+    if (until && until <= addDays(t, 60)) add(until < t ? t : until, p.name)
+  }
 
   const nav = navigator as Nav
   const count = days[t]?.length ?? 0

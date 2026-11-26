@@ -94,7 +94,8 @@ function waterings(p: Plant, logs: CareLog[], visit: (date: string, given: Sched
 /** 次の予定日。過去日なら期限超過。予定なしなら null */
 export function nextDue(p: Plant, type: SchedType, logs: CareLog[]): string | null {
   const s = p.care[type]
-  if (!s.enabled) return null
+  // 断水中は、水やりも、肥料・活力剤も出さない
+  if (!s.enabled || p.dry) return null
   if (byWater(p, type)) {
     let found: string | null = null
     waterings(p, logs, (d, given) => !given.includes(type) || ((found = d), false))
@@ -104,9 +105,14 @@ export function nextDue(p: Plant, type: SchedType, logs: CareLog[]): string | nu
   let due = last ? nextAfter(p, s, last) : skipPause(p, s, s.start || p.createdDay)
   // 開始日より前には出さない (開始日を決める前に付けた記録が残っていても)
   if (due && last && s.start && s.start > due) due = skipPause(p, s, s.start)
+  // 断水を終えた日より前には出さない (断水前の記録から数えた、過ぎた予定を出さない)
+  if (due && p.dryEnded && p.dryEnded > due) due = skipPause(p, s, p.dryEnded)
   const until = p.snooze?.[type]
   return due && until && until > due ? until : due
 }
+
+/** 断水中で、再開の目安の日になった (過ぎた) か */
+export const dryWake = (p: Pick<Plant, 'dry'>, day: string) => !!p.dry?.until && p.dry.until <= day
 
 /** 次の予定が「延期」で後ろへ送られているか */
 export const isSnoozed = (p: Plant, type: SchedType, due: string | null) => !!due && p.snooze?.[type] === due

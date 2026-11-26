@@ -27,6 +27,8 @@ export interface BeeInput {
   dueAllLight: boolean
   /** 延期中の株数 */
   snoozed: number
+  /** 断水中の株数 */
+  dry: number
   logs: CareLog[]
   journal: Journal[]
   weather: Weather | null
@@ -144,6 +146,7 @@ function recordLines(i: BeeInput): string[] {
   const week = i.logs.filter((l) => l.date > addDays(i.today, -7) && l.date <= i.today).length
   if (week >= 5) out.push(`この1週間で、${week}回お世話したね`)
   if (i.snoozed > 0) out.push(`${i.snoozed}株は、延期中だよ`)
+  if (i.dry > 0) out.push(`${i.dry}株は断水中。春までおやすみ`)
   if (i.plants.some((p) => p.care.water.light?.includes(monthOf(i.today)))) out.push('今月は、ちょろ水の株があるよ')
 
   // 日記
