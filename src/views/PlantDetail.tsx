@@ -4,7 +4,7 @@ import { ALL_TYPES, CARE, careVar, DRY, dryVar, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db, journalPlants } from '../db'
 import { fmtDay, fmtFull, monthsText, today } from '../lib/date'
-import { byWater, dryWake, intervalOn, isSnoozed, lastDone, lightWater, nextDue } from '../lib/schedule'
+import { byWater, dryWake, intervalOn, isSnoozed, lastDone, lightWater, nextDue, waterGaps } from '../lib/schedule'
 import { dryText } from './Dry'
 import { careIcon, careLabel, logIcon, METHODS, planIcon } from '../method'
 import { DueTag, Photo, SciName, Sheet } from '../parts'
@@ -27,6 +27,7 @@ export function PlantDetail({ id }: { id: string }) {
   const logs = [...logsOf(id)].sort((a, b) => b.date.localeCompare(a.date) || b.at - a.at)
   const entries = sortJournal(journal.filter((j) => journalPlants(j).includes(id)))
   const sched = SCHED.filter((s) => p.care[s].enabled)
+  const gaps = p.care.water.enabled ? waterGaps(logs) : []
   const facts = [
     ['分類', groups.find((g) => g.id === p.groupId)?.name],
     ['栽培方法', p.method && METHODS[p.method].label],
@@ -177,6 +178,21 @@ export function PlantDetail({ id }: { id: string }) {
               </div>
             )
           })}
+          {/* 水やりの実績の間隔 (古い順)。「土がまだ湿っていた」で延ばした回には、手の印 */}
+          {gaps.length > 0 && (
+            <div className="gaps">
+              <small>最近の{careLabel('water', p)}の間隔</small>
+              <span className="gaps-v">
+                {gaps.map((g) => (
+                  <span key={g.to} className={g.wet ? 'wet' : ''} title={`${fmtDay(g.from)} → ${fmtDay(g.to)}${g.wet ? '（土がまだ湿っていて延ばした）' : ''}`}>
+                    {g.days}
+                    {g.wet > 0 && <CARE.check.Icon size={11} aria-label="まだ湿っていて延ばした" />}
+                  </span>
+                ))}
+                <small>日</small>
+              </span>
+            </div>
+          )}
         </section>
       )}
 

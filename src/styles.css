@@ -2946,3 +2946,32 @@ button.banner {
   box-shadow: inset 0 0 0 2px var(--ink);
   font-weight: 700;
 }
+/* 詳細の「次のケア」の下に出す、水やりの実績の間隔 (古い順に数字を並べる) */
+.gaps {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0 2px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+.gaps-v {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.gaps-v > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+/* 「土がまだ湿っていた」で延ばした回は、確認の色と手の印 */
+.gaps-v > span.wet {
+  color: #6f8796;
+}

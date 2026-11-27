@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { CARE, SCHED } from '../care'
 import { useApp } from '../ctx'
-import { db } from '../db'
+import { db, newId } from '../db'
 import { addDays, fmtDay, fmtFull, today } from '../lib/date'
 import { nextDue } from '../lib/schedule'
 import { DateInput, Field, Photo, SciName, Sheet } from '../parts'
-import type { ArchiveInfo, ArchiveReason, Plant, SchedType } from '../types'
+import type { ArchiveInfo, ArchiveReason, CareLog, Plant, SchedType } from '../types'
+
+/** 延期の理由に「土がまだ湿っていた」を選んだときの、確認の記録のメモ */
+export const WET = '土がまだ湿っていた'
 
 export const ARCHIVE_REASONS: [ArchiveReason, string][] = [
   ['dead', '枯れた'],
@@ -152,18 +155,29 @@ export function Snooze({ plantIds, types, onDone }: { plantIds: string[]; types?
   })
   const one = plantIds.length === 1 ? allPlants.find((x) => x.id === plantIds[0]) : undefined
   const who = one ? one.name : `${targets.length}株`
+  // 水やりを延ばすときは理由を聞く。「土がまだ湿っていた」なら確認の記録を残し、水やりの間隔の実績に入れる
+  // (雨や留守で延ばしたぶんは、乾き方とは関係が無いので残さない)
+  const watering = targets.filter(({ which }) => which.includes('water')).map(({ p }) => p)
+  const [wet, setWet] = useState(true)
 
   // until = その日まで予定に出さない
   const pick = async (until: string, label: string) => {
     const before = targets.map(({ p }) => ({ id: p.id, snooze: p.snooze ?? {} }))
-    await db.transaction('rw', db.plants, async () => {
+    const checks: CareLog[] = wet ? watering.map((p) => ({ id: newId(), plantId: p.id, type: 'check', date: t, note: WET, soil: 'wet', at: Date.now() })) : []
+    await db.transaction('rw', db.plants, db.logs, async () => {
       for (const { p, which } of targets) {
         const snooze = { ...(p.snooze ?? {}) }
         for (const s of which) snooze[s] = until
         await db.plants.update(p.id, { snooze })
       }
+      await db.logs.bulkAdd(checks)
     })
-    toast(`${who}のケアを${label}に延期しました`, () => db.transaction('rw', db.plants, () => Promise.all(before.map((b) => db.plants.update(b.id, { snooze: b.snooze })))))
+    toast(`${who}のケアを${label}に延期しました`, () =>
+      db.transaction('rw', db.plants, db.logs, async () => {
+        await Promise.all(before.map((b) => db.plants.update(b.id, { snooze: b.snooze })))
+        await db.logs.bulkDelete(checks.map((c) => c.id))
+      }),
+    )
     close()
     onDone?.()
   }
@@ -172,9 +186,23 @@ export function Snooze({ plantIds, types, onDone }: { plantIds: string[]; types?
     <Sheet title={`${who}のケアを延期`}>
       {types && (
         <p className="hint lead">
-          {types.map((s) => CARE[s].label).join('・')}を、選んだ日まで予定に出しません。記録は付きません。
+          {types.map((s) => CARE[s].label).join('・')}を、選んだ日まで予定に出しません。ケアの記録は付きません。
           {targets.length < plantIds.length && `（選んだ${plantIds.length}株のうち、このケアを設定している${targets.length}株が対象です）`}
         </p>
+      )}
+      {watering.length > 0 && (
+        <div className="field">
+          <span className="field-l">延ばす理由</span>
+          <div className="chips">
+            <button type="button" className={`chip ${wet ? 'on' : ''}`} aria-pressed={wet} onClick={() => setWet(true)}>
+              土がまだ湿っていた
+            </button>
+            <button type="button" className={`chip ${wet ? '' : 'on'}`} aria-pressed={!wet} onClick={() => setWet(false)}>
+              雨・留守など
+            </button>
+          </div>
+          <p className="hint">{wet ? '「確認」として記録に残り、水やりの間隔の実績に入ります。' : '記録には残しません。'}</p>
+        </div>
       )}
       <div className="opts">
         {OPTIONS.map(([days, label]) => (

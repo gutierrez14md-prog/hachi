@@ -1,5 +1,5 @@
 import type { CareLog, Plant, SchedType, Schedule } from '../types'
-import { addDays, fromKey, monthOf, toKey, today } from './date'
+import { addDays, diffDays, fromKey, monthOf, toKey, today } from './date'
 
 type Season = Pick<Plant, 'dormantMonths'>
 
@@ -109,6 +109,33 @@ export function nextDue(p: Plant, type: SchedType, logs: CareLog[]): string | nu
   if (due && p.dryEnded && p.dryEnded > due) due = skipPause(p, s, p.dryEnded)
   const until = p.snooze?.[type]
   return due && until && until > due ? until : due
+}
+
+/** 水やりの実績の間隔 1 つぶん。wet = そのあいだに「土がまだ湿っていた」で延ばした回数 */
+export interface Gap {
+  from: string
+  to: string
+  days: number
+  wet: number
+}
+
+/**
+ * 水やりの実績の間隔 (古い順、最後の n 個)。連続する 2 回の水やりのあいだの日数。
+ *   ・同じ日の水やりは 1 回とみなす
+ *   ・断水をはさんだ間隔は外す (断水を始めた日が、そのあいだにあるもの)
+ * 間隔の自動調整 (提案) の材料にもする
+ */
+export function waterGaps(logs: CareLog[], n = 6): Gap[] {
+  const days = [...new Set(logs.filter((l) => l.type === 'water').map((l) => l.date))].sort()
+  const dryStarts = logs.filter((l) => l.type === 'other' && l.note.startsWith('断水開始')).map((l) => l.date)
+  const wets = logs.filter((l) => l.type === 'check' && l.soil === 'wet').map((l) => l.date)
+  const out: Gap[] = []
+  for (let i = 1; i < days.length; i++) {
+    const [from, to] = [days[i - 1], days[i]]
+    if (dryStarts.some((d) => d >= from && d < to)) continue
+    out.push({ from, to, days: diffDays(to, from), wet: wets.filter((d) => d >= from && d < to).length })
+  }
+  return out.slice(-n)
 }
 
 /** 断水中で、再開の目安の日になった (過ぎた) か */

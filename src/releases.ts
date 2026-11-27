@@ -19,6 +19,14 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.26.0',
+    date: '2026-11-27',
+    items: [
+      '水やりの延期に理由の選択を追加（「土がまだ湿っていた」を選ぶと、ケア履歴に「確認」として残る）',
+      '植物の詳細に最近の水やりの間隔を追加（実際に水やりした日のあいだの日数を古い順に表示。湿っていて延ばした回には手の印）',
+    ],
+  },
+  {
     version: '4.25.0',
     date: '2026-11-26',
     items: [

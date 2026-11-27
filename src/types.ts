@@ -1,6 +1,10 @@
 /** 間隔を決めて予定を立てるケア */
 export type SchedType = 'water' | 'fertilizer' | 'tonic'
-export type CareType = SchedType | 'mist' | 'repot' | 'prune' | 'pesticide' | 'other'
+/**
+ * check = 確認 (土の様子を見ただけで、ケアはしていない)。自分で選んで記録する種類ではなく、
+ * 延期の理由に「土がまだ湿っていた」を選んだときに付く。水やりの間隔の実績を読むための手がかり
+ */
+export type CareType = SchedType | 'mist' | 'repot' | 'prune' | 'pesticide' | 'other' | 'check'
 
 export interface Schedule {
   enabled: boolean
@@ -184,6 +188,8 @@ export interface CareLog {
   date: string
   note: string
   at: number
+  /** 確認 (check) のときの土の様子。wet = まだ湿っていた (水やりを延ばした) */
+  soil?: 'wet' | 'dry'
 }
 
 export interface Journal {

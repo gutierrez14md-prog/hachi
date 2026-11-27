@@ -1,6 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { ALL_TYPES, careVar, SCHED } from '../care'
+import { careVar, LOG_TYPES, SCHED } from '../care'
 import { useApp } from '../ctx'
 import { db } from '../db'
 import { addDays, fmtDay, today } from '../lib/date'
@@ -34,7 +34,7 @@ export function PlantCalendar({ plant: p, logs }: { plant: Plant; logs: CareLog[
   }, [p, logs, archived, first, last])
 
   // 凡例に出すのは、この株で予定を立てているケアと、記録のあるケアだけ
-  const used = ALL_TYPES.filter((ty) => (!archived && SCHED.includes(ty as SchedType) && p.care[ty as SchedType].enabled) || logs.some((l) => l.type === ty))
+  const used = LOG_TYPES.filter((ty) => (!archived && SCHED.includes(ty as SchedType) && p.care[ty as SchedType].enabled) || logs.some((l) => l.type === ty))
   const selDone = done.get(sel) ?? []
   const selPlan = plan.get(sel) ?? []
   const heading = sel === t ? '今日' : sel === addDays(t, 1) ? '明日' : fmtDay(sel)

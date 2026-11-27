@@ -1,4 +1,4 @@
-import { ALL_TYPES, CARE } from '../care'
+import { CARE, LOG_TYPES } from '../care'
 import { db, journalOrigs, journalPhotos } from '../db'
 import { heads } from './schedule'
 
@@ -62,7 +62,7 @@ export async function dataSummary(): Promise<{ code: string; lines: string[] }> 
     `分類: ${groups.length}件`,
     '',
     `ケア記録: ${logs.length}件`,
-    ...ALL_TYPES.map((ty) => [CARE[ty].label, logs.filter((l) => l.type === ty).length] as const)
+    ...LOG_TYPES.map((ty) => [CARE[ty].label, logs.filter((l) => l.type === ty).length] as const)
       .filter(([, n]) => n > 0)
       .map(([label, n]) => `  ${label}: ${n}件`),
     ...(dates.length ? [`  期間: ${dates[0]} 〜 ${dates[dates.length - 1]}`] : []),
