@@ -19,6 +19,14 @@ export type Release = { version: string; date: string; items: string[] }
 
 export const RELEASES: Release[] = [
   {
+    version: '4.27.0',
+    date: '2026-11-27',
+    items: [
+      '新しい植物の初期設定に水やりを追加（間隔・休眠期の扱い・ちょろ水の月。分類を選ばずに追加するときに入る）',
+      '設定の「新しい植物の初期設定」を独立した欄に変更し、休眠期の月の初期値もここにまとめた',
+    ],
+  },
+  {
     version: '4.26.0',
     date: '2026-11-27',
     items: [

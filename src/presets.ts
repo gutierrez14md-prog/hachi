@@ -15,6 +15,10 @@ export const defaultCare = (): CareSettings => ({
   tonic: sched(false, 14, 'pause', 30),
 })
 
+/** 分類を選ばずに追加する植物のケア: 水やり・肥料・活力剤とも、設定で決めた初期設定 (決めていなければ defaultCare) */
+export const newPlantCare = (d?: CareDefaults): CareSettings =>
+  withCareDefaults({ ...defaultCare(), ...(d?.water ? { water: structuredClone(d.water) } : {}) }, d)
+
 /**
  * 肥料と活力剤に、設定で決めた初期設定を当てはめる。
  * もとの設定 (分類のプリセットなど) でオンになっているケアは、そちらを優先する。水やりには触れない

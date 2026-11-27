@@ -42,8 +42,12 @@ export interface Schedule {
 
 export type CareSettings = Record<SchedType, Schedule>
 
-/** 新しい植物に入れる、肥料と活力剤の初期設定 (設定で決める)。stagger = 同じ回に重なったら交互にずらす */
+/**
+ * 新しい植物に入れる、ケアの初期設定 (設定で決める)。stagger = 同じ回に重なったら交互にずらす。
+ * water は分類を選ばずに追加するときだけ使う (分類を選べば、分類の水やりの設定が入る)。入っていなければ 7 日ごと
+ */
 export interface CareDefaults {
+  water?: Schedule
   fertilizer: Schedule
   tonic: Schedule
   stagger?: boolean

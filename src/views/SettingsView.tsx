@@ -23,13 +23,15 @@ export function SettingsView() {
   const [guideOpen, setGuideOpen] = useState(false)
   const [themeOpen, setThemeOpen] = useState(false)
   const [careOpen, setCareOpen] = useState(false)
-  // 新しい植物の、肥料と活力剤の初期設定 (決めていなければ、どちらもオフ)
+  // 新しい植物の、ケアの初期設定 (決めていなければ、水やりは 7 日ごと、肥料と活力剤はオフ)
   // 数字を打っている途中で欄が巻き戻らないよう、画面では手元の値を持ち、変えるたびに保存する
   const [careDefaults, setCareDefaults] = useState<CareDefaults>(() => settings.careDefaults ?? { fertilizer: defaultCare().fertilizer, tonic: defaultCare().tonic })
   const saveCare = (next: CareDefaults) => {
     setCareDefaults(next)
     save({ careDefaults: next })
   }
+  // 水やりは、決めていなければ分類を選ばないときと同じ 7 日ごと
+  const careOf = (s: 'water' | 'fertilizer' | 'tonic') => (s === 'water' ? (careDefaults.water ?? defaultCare().water) : careDefaults[s])
   const brief = (c: Schedule) => (!c.enabled ? 'オフ' : c.everyWater ? (c.everyWater === 1 ? '毎回' : `${c.everyWater}回に1回`) : c.monthly ? '月ごと' : `${c.days}日ごと`)
   const [backedUp, setBackedUp] = useState(lastBackup)
   const [fontOpen, setFontOpen] = useState(false)
@@ -172,29 +174,43 @@ export function SettingsView() {
           <input type="checkbox" className="switch" checked={!!settings.careWithWater} onChange={(e) => save({ careWithWater: e.target.checked })} />
         </label>
       </section>
+
       {/* 植物をたくさん登録するときに、毎回同じ設定を入れなくて済むように */}
+      <h3 className="sec">新しい植物の初期設定</h3>
       <button className="fold tight" aria-expanded={careOpen} onClick={() => setCareOpen((o) => !o)}>
-        新しい植物の初期設定
+        ケアの間隔
         <span className="fold-side">
-          {CARE.fertilizer.label} {brief(careDefaults.fertilizer)} / {CARE.tonic.label} {brief(careDefaults.tonic)}
+          {/* 文字で並べるとスマホの幅に収まらないので、ケアのアイコンと間隔だけにする */}
+          {(['water', 'fertilizer', 'tonic'] as const).map((s) => {
+            const { Icon, label } = CARE[s]
+            return (
+              <span key={s} className="fold-care" aria-label={`${label} ${brief(careOf(s))}`}>
+                <Icon size={13} />
+                {brief(careOf(s))}
+              </span>
+            )
+          })}
           <ChevronDown size={18} className={careOpen ? 'flip' : ''} />
         </span>
       </button>
       {careOpen && (
         <div className="care-defaults">
           <p className="hint">
-            植物を追加するときに、はじめから入る設定です。分類で肥料・活力剤をオンにしている場合は、分類の設定が入ります。登録済みの植物は変わりません。
+            植物を追加するときに、はじめから入る設定です。分類を選んだときは、水やりは分類の設定が入ります。肥料・活力剤は、分類でオンにしている場合だけ分類の設定が入ります。登録済みの植物は変わりません。
           </p>
           <CareEditor
-            only={['fertilizer', 'tonic']}
-            care={{ ...defaultCare(), fertilizer: careDefaults.fertilizer, tonic: careDefaults.tonic }}
+            only={['water', 'fertilizer', 'tonic']}
+            required={['water']}
+            care={{ water: careOf('water'), fertilizer: careDefaults.fertilizer, tonic: careDefaults.tonic }}
             dormantMonths={settings.dormantMonths}
-            onChange={({ care }) => care && saveCare({ ...careDefaults, fertilizer: care.fertilizer, tonic: care.tonic })}
+            onChange={({ care }) => care && saveCare({ ...careDefaults, water: care.water, fertilizer: care.fertilizer, tonic: care.tonic })}
             stagger={careDefaults.stagger}
             onStagger={(on) => saveCare({ ...careDefaults, stagger: on || undefined })}
           />
         </div>
       )}
+      <p className="field-l gap-top">休眠期の月</p>
+      <MonthChips value={settings.dormantMonths} onChange={(dormantMonths) => save({ dormantMonths })} />
 
       <h3 className="sec">ホームの表示</h3>
       <section className="card">
@@ -348,9 +364,6 @@ export function SettingsView() {
         </button>
       </section>
       )}
-
-      <h3 className="sec">休眠期の月（新しい植物の初期値）</h3>
-      <MonthChips value={settings.dormantMonths} onChange={(dormantMonths) => save({ dormantMonths })} />
 
       <h3 className="sec">バックアップ</h3>
       <p className="warn">

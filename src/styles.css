@@ -2975,3 +2975,11 @@ button.banner {
 .gaps-v > span.wet {
   color: #6f8796;
 }
+/* 設定の「ケアの間隔」の右に並べる、ケアのアイコンと間隔 */
+.fold-care {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: 6px;
+  white-space: nowrap;
+}

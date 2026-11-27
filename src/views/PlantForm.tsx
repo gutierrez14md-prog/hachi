@@ -6,7 +6,7 @@ import { db, deletePlant, newId } from '../db'
 import { today } from '../lib/date'
 import { DateInput, Field, PhotoPicker, Sheet } from '../parts'
 import { crossText, fromFlat } from '../lib/cross'
-import { withCareDefaults, defaultCare } from '../presets'
+import { newPlantCare, withCareDefaults } from '../presets'
 import { careIcon, careLabel, METHOD_IDS, METHODS } from '../method'
 import type { Member, Method, Plant, SchedType, Cross } from '../types'
 import { CareEditor, cleanCare, hasInterval, WaterLabelField } from './CareEditor'
@@ -28,8 +28,8 @@ export function PlantForm({ id }: { id?: string }) {
         location: '',
         profile: '',
         dormantMonths: settings.dormantMonths,
-        // 肥料と活力剤は、設定で決めた初期設定から始める
-        care: withCareDefaults(defaultCare(), settings.careDefaults),
+        // 水やり・肥料・活力剤は、設定で決めた初期設定から始める (分類を選べば、分類の設定に替わる)
+        care: newPlantCare(settings.careDefaults),
         stagger: settings.careDefaults?.stagger || undefined,
         createdDay: today(),
       },
